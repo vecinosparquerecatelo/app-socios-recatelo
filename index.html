@@ -1,0 +1,1029 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#3e625c">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Recatelo">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+<title>Vecinos Parque-Recatelo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap">
+<style>
+/* Layout: app de una columna para móvil; cabecera con pestañas fijas, tarjetas por sección, botón flotante "Añadir" solo para la directiva */
+:root{
+  --bg:#f3f4ef; --surface:#ffffff; --ink:#1d2722; --muted:#5d6a62; --line:#dbe0d6;
+  --green:#3e625c; --green-soft:#e1ecea; --amber:#b86a12; --amber-soft:#f8ebd9;
+  --red:#a8382f; --red-soft:#f6e1de; --blue:#2d5a85; --blue-soft:#e0eaf3;
+  --display:"Bricolage Grotesque", "Trebuchet MS", system-ui, sans-serif;
+  --body:"Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+  --r:14px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#121815; --surface:#1b231f; --ink:#e7ece8; --muted:#9fb0a6; --line:#2d3833;
+  --green:#7fc39f; --green-soft:#1f3329; --amber:#e6a85a; --amber-soft:#3a2b17;
+  --red:#ee8f86; --red-soft:#3d2220; --blue:#8fb8e0; --blue-soft:#1d2b3a; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#121815; --surface:#1b231f; --ink:#e7ece8; --muted:#9fb0a6; --line:#2d3833;
+  --green:#7fc39f; --green-soft:#1f3329; --amber:#e6a85a; --amber-soft:#3a2b17;
+  --red:#ee8f86; --red-soft:#3d2220; --blue:#8fb8e0; --blue-soft:#1d2b3a; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.5}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--green)}
+.wrap{max-width:760px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header.top{background:var(--green);color:#fff;position:sticky;top:env(safe-area-inset-top,0px);z-index:5}
+:root:not([data-theme="light"]) header.top{color:var(--bg)}
+@media (prefers-color-scheme: light){header.top{color:#fff}}
+:root[data-theme="light"] header.top{color:#fff}
+.brand{display:flex;align-items:center;gap:12px;padding-block:14px 8px}
+.brand svg{flex:none}
+.brand h1{font-family:var(--display);font-weight:800;font-size:1.3rem;line-height:1.1;margin:0;text-wrap:balance}
+.brand small{display:block;font-size:.8rem;opacity:.85;letter-spacing:.04em;text-transform:uppercase}
+nav.tabs{display:flex;gap:6px;overflow-x:auto;padding-block:4px 10px;scrollbar-width:none}
+nav.tabs::-webkit-scrollbar{display:none}
+nav.tabs button{flex:none;border:0;border-radius:999px;padding:8px 14px;font:inherit;font-size:.95rem;font-weight:700;background:rgba(255,255,255,.14);color:inherit;cursor:pointer}
+nav.tabs button[aria-selected="true"]{background:var(--bg);color:var(--green)}
+nav.tabs button:focus-visible,button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+main{padding-block:20px 110px;display:grid;gap:22px}
+h2{font-family:var(--display);font-weight:800;font-size:1.5rem;margin:0;text-wrap:balance}
+h3{font-family:var(--display);font-weight:600;font-size:1.12rem;margin:0;text-wrap:balance}
+.lead{color:var(--muted);margin:4px 0 0;max-width:62ch}
+.stack{display:grid;gap:12px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px;display:grid;gap:8px;min-width:0}
+.meta{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;color:var(--muted);font-size:.88rem}
+.pill{display:inline-block;border-radius:999px;padding:2px 10px;font-size:.8rem;font-weight:700;letter-spacing:.02em}
+.p-green{background:var(--green-soft);color:var(--green)} .p-amber{background:var(--amber-soft);color:var(--amber)}
+.p-red{background:var(--red-soft);color:var(--red)} .p-blue{background:var(--blue-soft);color:var(--blue)}
+.body{white-space:pre-line;margin:0;overflow-wrap:anywhere}
+.empty{border:2px dashed var(--line);border-radius:var(--r);padding:20px;color:var(--muted);text-align:left}
+.empty strong{color:var(--ink);display:block;margin-bottom:2px}
+.filters{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px}
+.filters button{flex:none;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:6px 12px;font:inherit;font-size:.9rem;cursor:pointer}
+.filters button[aria-pressed="true"]{background:var(--green);border-color:var(--green);color:var(--surface)}
+.cuota{background:var(--green);color:var(--surface);border-radius:var(--r);padding:20px;display:grid;gap:6px}
+.cuota .big{font-family:var(--display);font-weight:800;font-size:3rem;line-height:1;font-variant-numeric:tabular-nums}
+.cuota .big span{font-size:1.1rem;font-weight:600}
+.cuota p{margin:0}
+.grid2{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+.colectivo{display:grid;grid-template-columns:44px 1fr;gap:12px;align-items:start}
+.colectivo .ico{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;background:var(--amber-soft);color:var(--amber)}
+.photos{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.photo{background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden;display:grid;min-width:0}
+.photo img,.photo .ph{width:100%;aspect-ratio:4/3;object-fit:cover;display:block;max-width:100%;background:var(--green-soft)}
+.posters .photo img,.posters .photo .ph{aspect-ratio:3/4;object-fit:contain;background:var(--bg)}
+.photo .ph{display:grid;place-items:center;color:var(--muted);font-size:.85rem}
+.photo .cap{padding:8px 10px;font-size:.88rem;display:grid;gap:2px}
+.card img.att{border-radius:10px;max-height:320px;object-fit:cover;width:100%}
+.hero{display:grid;gap:10px;padding-block:6px 4px}
+.hero-logo{width:min(420px,100%);height:auto;max-width:100%;border-radius:14px;background:#fff;padding:10px;justify-self:center}
+#brand-logo img{height:46px;width:auto;max-width:92px;object-fit:contain;border-radius:8px;background:#fff;padding:2px;display:block}
+.hero h2{font-size:clamp(1.7rem,6vw,2.4rem);line-height:1.08;color:var(--green)}
+.hero p{margin:0;max-width:62ch;font-size:1.05rem}
+.hero .firma{font-family:var(--display);font-weight:600;color:var(--green)}
+.hero .eyebrow{font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;font-weight:700;color:var(--amber)}
+.check{display:flex;gap:10px;align-items:flex-start;font-weight:400}
+.check input{width:22px;height:22px;flex:none;margin-top:2px}
+.legal p{margin:0;max-width:65ch}
+.tbl{width:100%;border-collapse:collapse;font-size:.9rem;font-variant-numeric:tabular-nums}
+.tbl th,.tbl td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
+footer a{color:inherit}
+.insc summary{cursor:pointer;font-weight:700;color:var(--green)}
+.insc ol{margin:6px 0 0;padding-left:22px}
+.iban{font-variant-numeric:tabular-nums;font-weight:700;letter-spacing:.03em;user-select:all}
+.legaltext{gap:0;line-height:1.6}
+.legaltext h3{scroll-margin-top:130px;font-size:1.05rem;color:var(--green);margin:22px 0 6px;text-transform:none}
+.legaltext h3:first-child{margin-top:0}
+.legaltext h4{font-family:var(--body);font-size:1rem;margin:14px 0 4px}
+.legaltext p{margin:0 0 8px;max-width:68ch;overflow-wrap:anywhere}
+.legaltext ul,.legaltext ol{margin:0 0 8px;padding-left:22px}
+.next{background:var(--amber-soft);border:1px solid transparent;border-radius:var(--r);padding:16px;display:grid;gap:6px}
+.next .eyebrow{font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;font-weight:700;color:var(--amber)}
+.festas{border-radius:var(--r);padding:16px;background:var(--surface);border:1px solid var(--line);display:grid;gap:4px}
+.row-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.btn{border:0;border-radius:10px;padding:10px 16px;font:inherit;font-weight:700;cursor:pointer;background:var(--green);color:var(--surface)}
+.btn.ghost{background:transparent;color:var(--muted);border:1px solid var(--line)}
+.btn.danger{background:var(--red);color:var(--surface)}
+.btn.small{padding:5px 10px;font-size:.85rem}
+.fab{position:fixed;right:calc(18px + env(safe-area-inset-right,0px));bottom:calc(18px + env(safe-area-inset-bottom,0px));z-index:6;border-radius:999px;padding:14px 20px;box-shadow:0 6px 20px rgba(0,0,0,.25);font-size:1rem}
+.notice{background:var(--blue-soft);color:var(--blue);border-radius:12px;padding:10px 14px;font-size:.92rem}
+.sheet-bg{position:fixed;inset:0;background:rgba(10,15,12,.55);z-index:20;display:flex;align-items:flex-end;justify-content:center}
+.sheet{background:var(--surface);color:var(--ink);width:100%;max-width:620px;max-height:92vh;overflow:auto;border-radius:18px 18px 0 0;padding:20px max(16px,env(safe-area-inset-left,0px)) calc(20px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-right,0px));display:grid;gap:14px}
+@media (min-width:640px){.sheet-bg{align-items:center}.sheet{border-radius:18px}}
+label{display:grid;gap:4px;font-weight:700;font-size:.92rem}
+input,select,textarea{font:inherit;font-weight:400;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 12px;width:100%;min-width:0}
+textarea{min-height:120px;resize:vertical}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (max-width:420px){.two{grid-template-columns:1fr}}
+.err{color:var(--red);font-size:.9rem;margin:0}
+footer{color:var(--muted);font-size:.85rem;text-align:center;padding-bottom:20px}
+@media (prefers-reduced-motion:no-preference){.card,.photo{animation:in .25s ease both}@keyframes in{from{transform:translateY(4px)}to{transform:none}}}
+</style>
+
+<header class="top">
+  <div class="wrap">
+    <div class="brand">
+      <span id="brand-logo"><svg width="40" height="40" viewBox="0 0 40 40" aria-hidden="true"><rect width="40" height="40" rx="10" fill="currentColor" opacity=".16"/><path d="M8 30V18l6-5 6 5v12M20 30V14l6-5 6 5v16M6 30h28" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/><rect x="12" y="22" width="4" height="8" fill="currentColor"/><rect x="24" y="17" width="4" height="4" fill="currentColor"/></svg></span>
+      <div><small>Asociación de Vecinos</small><h1>Parque Rosalía de Castro-Recatelo</h1></div>
+    </div>
+    <nav class="tabs" id="tabs" role="tablist" aria-label="Secciones"></nav>
+  </div>
+</header>
+
+<div class="wrap">
+  <main id="main" aria-live="polite"></main>
+  <footer>Asoc. Vecinos Parque Rosalía de Castro-Recatelo · Gestionada por la directiva · <a href="#privacidad" id="ft-priv">Protección de datos</a></footer>
+</div>
+
+<template id="tpl-estatutos">
+<h3>TITULO I: DENOMINACIÓN Y RÉGIMEN DE LA ASOCIACIÓN</h3>
+
+<h4>Artículo 1º.-</h4>
+<p>1.- Al amparo del artículo 22 de la Constitución Española y de la Ley Orgánica 1/2002, de 22 de marzo, reguladora del derecho de asociación y demás legislación aplicable, se constituye con sede en Lugo y con la denominación de <strong>Asociación de Vecinos Parque de Rosalía de Castro-Recatelo</strong>, Asociación que carece de ánimo de lucro.</p>
+
+<p>Esta Asociación tiene personalidad jurídica propia y plena capacidad de obrar, pudiendo realizar todos aquellos actos que sean necesarios para el cumplimiento de la finalidad para la que fue creada, siempre con sujeción a lo dispuesto en el ordenamiento jurídico.</p>
+
+<p>2.- El funcionamiento de la Asociación estará regulado por los presentes estatutos y los acuerdos válidamente adoptados por su Asamblea General y órganos directivos, dentro de la esfera de su respectiva competencia. En lo no previsto se estará a lo establecido en la Ley Orgánica 1/2002, de 22 de marzo, reguladora del Derecho de Asociación.</p>
+<p>3. Esta asociación se constituye por tiempo indefinido y seguirá en todo momento los principios democráticos contenidos en el marco de la Constitución y el resto del ordenamiento jurídico.</p>
+
+<h3>TITULO II. FINES Y ACTIVIDADES DE LA ASOCIACIÓN</h3>
+
+<h4>Artículo 2º.- Fines.</h4>
+<p><strong>1. <u>Son fines de esta Asociación:</u></strong></p>
+<p>1º) La representación y defensa de los intereses generales y comunes de los asociados.</p>
+<p>2º) Informar a los asociados y difundir entre todos ellos, todo aquello que pueda ser de interés para la asociación y sus miembros y que guarde relación con los fines y objetivos de la misma.</p>
+
+
+
+<p>3º) Promocionar la participación activa de todos los asociados en el desarrollo de los fines de la asociación, así como en la ejecución de todas las actividades o acciones que la asociación desarrolle relacionadas con tales fines, promoviendo asimismo la mutua cooperación y colaboración entre todo ellos para alcanzar los objetivos propuestos por la asociación.</p>
+<p>4º) Actuar como interlocutora ante las distintas administraciones públicas y en representación de los vecinos integrados en la asociación, para la tutela y defensa de sus intereses mutuos y generales relacionados con los fines propios de la asociación y con las actuaciones comunes que la misma lleve a cabo, así como para la realización de las acciones necesarias ante los organismos pertinentes, para el buen desarrollo y ejecución de los fines de esta asociación, así como de todos los acuerdos válidamente adoptados por ésta y según lo dispuesto en estos estatutos, y para el fomento y desarrollo de cuantas acciones y actuaciones sean precisas para alcanzar dichos fines, y cualquier otro relacionado con los mismos y que redunde en beneficio de la zona de actuación fundamental de la asociación y de toda la localidad de Lugo.</p>
+<p>5º) Presentación de iniciativas-propuestas y la propuesta de firma de acuerdos o convenios con y ante las administraciones públicas y autoridades competentes, que sean acordadas por los socios, y que estén dirigidas en todo momento a la consecución de los fines de esta asociación, a la ejecución de los acuerdos adoptados por la misma para la promoción e incentivación de la mejora en la prestación y gestión de los servicios públicos en la zona y en toda la localidad, y para el fomento de la realización de todo tipo de actuaciones y acciones por parte de los servicios públicos, que redunden en beneficio de todos los vecinos y asociados.</p>
+<p>6º) Promover y gestionar ante los órganos y autoridades competentes y en nombre y representación de todos los asociados, <u>la realización de todas aquellas actuaciones que</u> <u>sean precisas para la adecuada gestión, mantenimiento y mejora por parte de dichos</u> <u>organismos y autoridades competentes,</u> de forma prioritaria en la zona que abarca el ámbito de actuación de la asociación, y de forma secundaria y subsidiaria en todas las calles de la ciudad que puedan precisarlo, <u>de la situación actual de los siguientes</u> <u>servicios públicos:</u> Regulación del tráfico en general en toda la localidad, y de forma particular en la zona del ámbito de actuación de esta asociación, especialmente en cuanto al planteamiento de una redistribución de la reserva de plazas de aparcamiento para los organismo públicos establecidos en dicha zona, ya que el número de reservas es excesivo y perjudica enormemente a los vecinos de la zona, así como mejora de los viales y el asfaltado en la zona y en toda la localidad; Mejora de la situación actual de parques y jardines; Mejora del servicio de recogida de basuras y limpieza; Solución de problemas del alumbrado así como de ruidos y contaminación ambiental en la zona, especialmente durante la celebración de fiestas populares que causan numerosos problemas de habitabilidad y convivencia a los vecinos, vulnerándose a menudo la normativa local de protección frente a la contaminación acústica y ambiental; Mejora en las actuaciones de las autoridades competentes en cuanto a la prevención del vandalismo en la zona y en toda la localidad y en todas sus manifestaciones</p>
+
+
+
+<p>7º) Incentivar la realización de acciones que favorezcan la convivencia pacífica en el vecindario, promoviendo valores de igualdad, tolerancia, respeto hacia otras creencias o forma de vida diferentes, e igualdad de trato para todos los vecinos independientemente de su condición personal o social, o su forma de pensar y vivir, respetando en todo momento los derechos individuales de cada vecino, siempre y cuando se respeten en todo momento los derechos y deberes conjuntos de toda la comunidad.</p>
+<p>8º) Fomento de la realización de actividades culturales, lúdicas y recreativas de todo tipo, para mayores y niños, en épocas concretas y significativas del año, tales como Navidad, Carnavales, Samaín, Fiestas Patronales destacadas (recuperación de la Fiesta de las Dolores que ha dejado de celebrarse, y era valorada muy positivamente por la ciudadanía en general), etc…. las cuales favorecen la convivencia de todos los vecinos, además de incentivar las visitas a nuestra localidad e incentivar el turismo, lo cual redunda en beneficio de los negocios locales incentivando así nuestra economía, y beneficia asimismo a todos los vecinos.</p>
+<p>Así pues, estas actividades pueden consistir en <u>mercadillos, conciertos al aire libre o</u> <u>en locales habilitados a tal fin, obras de teatro, campeonatos de ajedrez, billar,</u> <u>petanca y otros juegos populares similares, así como campeonatos de cualquier</u> <u>deporte; realización de talleres de variadas temáticas que puedan interesar a la</u> <u>ciudadanía; actuaciones de magia;cantos de taberna, monólogos de humor;teatro;</u> <u>exposiciones culturales de todo tipo; cine al aire libre; charlas sobre temas de interés;</u> <u>concursos o certámenes de fotografía; actuaciones para los más pequeños como</u> <u>títeres, cuentacuentos, ciclos de películas específicos para ellos; convocatoria de</u> <u>campeonatos de parkour, skate, y otras actividades de interés para los más jóvenes,</u> <u>que incentiven su interés por el deporte y la vida sana y al aire libre; promover la</u> <u>fundación de clubs de lectura, de escritura creativa, de senderismo, y en general, de</u> <u>cualquier actividad que fomente la convivencia pacífica, la participación activa de los</u> <u>vecinos en la comunidad, prestando especial atención a colectivos desfavorecidos e</u> <u>incentive los valores de respeto, tolerancia e igualdad de todos y para todos,</u> <u>promocionando en todo momento la cultura, la creatividad, y todas aquellas</u> <u>actividades que incentiven un estilo de vida sano y beneficioso para todos, de forma</u> <u>individual y colectiva.</u></p>
+<p>9º) Fomento de actuaciones que incentiven el turismo en Lugo, presentando propuestas e iniciativas a los organismos competentes, para la realización de acciones que promocionen especialmente nuestras señas de identidad y los valores que caracterizan nuestra comunidad, poniendo en alza, difundiendo y publicitando todo aquello que nuestra ciudad puede ofrecer a los visitantes foráneos, tanto desde el punto de vista de nuestro importante patrimonio cultural y arquitectónico, como en cuanto a costumbres propias de nuestra localidad, como por ejemplo el ofrecer una “tapa” gratis con cada consumición, lo cual hacen casi todas cafeterías, bares, restaurantes y locales del ramo hostelero de nuestra ciudad, y que es algo que gusta mucho a nuestros visitantes; todo ello a fin de atraer un mayor número de turistas al</p>
+
+
+
+<p>año, lo cual beneficia a la economía local y en consecuencia, a todos los vecinos de la localidad.</p>
+<p>10º) Presentación de iniciativas y propuestas, y realización de actuaciones para la promoción preferente y primordial de nuestro importante patrimonio histórico, cultural y artístico, así como para la adecuada preservación y conservación del mismo, y la mejora en la medida de lo posible la gestión del cuidado del mismo, ya que es uno de nuestros más importantes valores y debe ser por tanto prioritario para nuestros representantes, su adecuado cuidado y conservación en las mejores condiciones, ya que ello es fundamental para toda la ciudadanía y para la promoción del turismo.</p>
+<p>11º) Presentación de iniciativas y propuestas, y realización de actuaciones para el fomento de acciones por parte de los servicios públicos competentes, de acciones para la conservación y protección del Medio Ambiente –soterramiento de contenedores de recogida selectiva de basura, implantación del aparcamiento y la bicicleta eléctrica, puntos de recarga de automóviles eléctricos o pila de combustible…etc.</p>
+<p>Promoviendo asimismo entre todos los vecinos, la necesaria concienciación para contribuir activamente, tanto de forma individual y colectiva, como miembros de la comunidad, en la realización de dichas acciones de protección y preservación del Medio Ambiente, fomentando una mayor involucración, y un incremento de la participación de todos los vecinos en actuaciones y medidas de protección medioambiental.</p>
+<p>12º) Promover la realización de acuerdos con otras asociaciones y los negocios particulares dedicados al ocio la cultura, el deporte y el entretenimiento en nuestra ciudad, tales como cines, locales de conciertos, agencias de viaje, negocios de entretenimiento de los niños, el rokodromo, natación, la escuela de hípica etc…..para lograr ventajas o mejores condiciones para los asociados en la utilización de los servicios que ofertan estos negocios, que se ven también beneficiados de dichos acuerdos dado que la asociación aportaría un gran número de clientes a sus negocios a cambio de obtener mejoras o ventajas que les impulsen al uso de dichos servicios.</p>
+<p>13º) Participar activamente con otras organizaciones, grupos y/o administraciones a través de programas de ayuda o subvención y/o redes de cooperación con el fin de conseguir el beneficio y la mejora de la asociación y de sus miembros.</p>
+<p>14ª) Desarrollo de actividades, promociones y proyectos dirigidos a la sensibilización y utilización de las nuevas tecnologías, promoviendo e impulsando estas entre los socios de la Asociación y que asimismo redunden en el interés general de la ciudadanía.</p>
+<p>15ª) Vigilar y exigir que las condiciones del solar abandonado(y de las casas en ruinas del mismo), con entrada por la calle Ciudad de Vivero, no supongan ningún tipo de problema para la salud vecinal y pública en general.</p>
+<p>16º) Así mismo la Asociación quiere reconocer,expresamente, a los animales domésticos como “Seres Sintientes” y realizar ,para ello, actividades para su plena integración en la comunidad vecinal.</p>
+
+
+<h3>TITULO III. DOMICILIO Y ÁMBITO TERRITORIAL</h3>
+
+<h4>Artículo 3º.- Domicilio.</h4>
+<p>Esta Asociación tendrá su domicilio social en el Concello de Lugo (Provincia de Lugo), y su estará situado en la Rúa Pascual Veiga, 6, 27002 Lugo.</p>
+<p>En caso de cambio de domicilio social, se acordará por acuerdo de la Junta Directiva ratificado por la Asamblea General y se comunicará a los organismos pertinentes dicha modificación.</p>
+<h4>Artículo 4º.- Ámbito Territorial.</h4>
+<p>. El ámbito territorial de esta Asociación es local, ya que la misma desarrollará sus fines y actividades dentro de la localidad de Lugo y fundamentalmente y más concretamente en la zona del <strong>Parque de Rosalía de Castro y Recatelo,</strong> incluyendo asimismo en su ámbito principal de actuación, las siguientes calles de la zona antedicha: PASCUAL VEIGA, DOUTOR GARCÍA PORTELA, RIBADEO, VILLALBA, CARRIL DOS LOUREIROS, RECATELO Y CARRIL RECATELO, ISAAC DIAZ PARDO, ARMANDO</p>
+
+
+
+<p>DURÁN, MOURELO, PURO CORA, CIDADE DE VIVEIRO, AVELINO POUSA ANTELO, SANTIAGO Y ZONA PUERTA DE SANTIAGO,FRAY PLÁCIDO Y VILLA DE SARRIA.</p>
+<p><u>Todos los asociados podrán ser miembros de la Junta Directiva de esta asociación,; elegidos según lo descrito en los presentes estatutos en su apartado</u> <u>correspondiente,</u> <u>si bien, podrán formar parte de la asociación vecinos de otras calles</u> <u>de la ciudad de Lugo, que puedan estar interesados en participar en las actuaciones</u> <u>que desarrolla esta asociación de forma general en beneficio de todos los vecinos de la</u> <u>localidad y de toda la ciudadanía lucense, y de forma más particular y concreta, de los</u> <u>vecinos de la zona y las calles detalladas en el apartado anterior.</u></p>
+<p>Pero también podrán formar parte de la misma según lo descrito en el Título siguiente, todos aquellos vecinos de Lugo que estén interesados en participar, colaborar, aportar propuestas o iniciativas que redunden en beneficio de toda la ciudadanía y a todos los vecinos de la localidad de Lugo, especialmente en lo que refiere a actuaciones dirigidas a la protección y defensa del patrimonio histórico, natural-paisajístico, cultural y arquitectónico de la localidad: Parque de Rosalía de Castro; Camino de Santiago; Casco antiguo; Río Miño y su entorno; Muralla Romana; Termas; Catedral…etc.</p>
+
+<h3>TITULO IV. PERSONAS ASOCIADAS</h3>
+
+<h4>Artículo 5º: Adquisición de la condición de asociado</h4>
+<p>1. Para adquirir la condición de persona asociada, es necesario ser vecino de una de las calles o de la zona referida en el ámbito territorial de estos estatutos prioritariamente, o ser vecino de la localidad de Lugo de forma general pudiendo todos los socios ser elegidos como miembros de la Junta Directiva,y <u>podrán</u> <u>participar en la Asamblea General con voz y voto.</u></p>
+<p>2. Las personas físicas miembros de esta asociación deben ser mayores de edad.</p>
+<p>3. Las personas jurídicas para poder integrarse en esta asociación, requerirán presentar documentación acreditativa de la persona o personas que actuarán en nombre y representación de la asociación en todos los actos de la misma.</p>
+<h4>Artículo 6º.- Clases de socios.</h4>
+
+
+
+<p>Dentro de la Asociación existirán las siguientes clases de socios:</p>
+<p>a) Socios fundadores, que serán aquellos que participen en el acto de constitución de la Asociación.</p>
+<p>b) Socios de número, que serán los que ingresen después de la constitución de la Asociación.</p>
+<p>c) Socios de honor, los que por su prestigio o por haber contribuido de modo relevante a la dignificación y desarrollo de la Asociación, se hagan acreedores a tal distinción. El nombramiento de los socios de honor corresponderá a la Junta Directiva o Asamblea General.</p>
+<h4>Artículo 7. Pérdida de la condición de persona asociada</h4>
+<p>1. La condición de persona asociada se perderá:</p>
+<p>a) Por voluntad propia, que será efectiva mediante la presentación de renuncia, por escrito ante la junta directiva de la asociación, dirigida a la secretaría general de la asociación. La renuncia tendrá efectos desde la fecha da su presentación.</p>
+<p>b) Por falta de pago de las cuotas que dan derecho a pertenecer a la asociación y al disfrute de todos sus servicios y como socio de pleno derecho de la misma. Las cuotas serán las que acuerde la asociación en la Asamblea General correspondiente y según lo dispuesto en los presentes estatutos. Esta pérdida del derecho de socio, será efectiva desde la notificación fehaciente a la persona interesada, del acuerdo de pérdida de la condición de asociado por impago de cuotas, adoptado a tales efectos por la junta directiva de la asociación. Las personas que pierdan su condición de asociados por esta causa, podrán ser rehabilitados en caso de que en un plazo de 6 meses desde su expulsión de la asociación, abonen las cuotas pendientes de pago.</p>
+<p>c) Por incumplimento de los presentes estatutos o de los acuerdos válidamente adoptados por los órganos de la asociación, así como por la realización de acciones que perjudiquen gravemente los intereses de ésta o de algún miembro de la misma, siempre y cuando sea demostrable la realización de estas acciones por el asociado a fin de privarle de su condición y derechos como socio.</p>
+<p>d) Por fallecimiento de la persona física o extinción de la persona jurídica. 7</p>
+<p>2.- La expulsión de personas asociadas en los casos supuestos dos apartados b) y c) del párrafo anterior, será acordada por la Junta Directiva, después de celebrar audiencia con la persona interesada. El acuerdo de expulsión, deberá ser ratificado por Asamblea General extraordinaria, y contra su resolución, el interesado podrá recurrir ante la jurisdicción ordinaria.</p>
+<h4>Artículo 8. Derechos de los asociados</h4>
+<p>a) Participar en las actividades de la asociación</p>
+<p>b) Ser electores y elegibles para los cargos de los órganos de goberno de esta</p>
+<p>asociación</p>
+<p>c) Participar en las Asambleas Generales de la asociación con voz y voto.</p>
+<p>d) Recibir información de la composición de los órganos de representación de la asociación, del estado de cuentas y del desarrollo de sus actividades</p>
+<p>e) Acceder para su consulta, a la documentación propia de la asociación a través de sus órganos de representación.</p>
+<p>f) Ser oídas con carácter previo a la adopción de medidas disciplinarias contra ellos, así como a ser informados de todos los hechos que dieron lugar a dichas medidas, debiendo motivarse el acuerdo que, en seu caso, imponga dicha sanción</p>
+<p>g) Impugnar los acuerdos de los dos órganos de asociación que estime contrarios a la ley o a los estatutos.</p>
+<p>2. No podrán ejercer ninguno de estos derechos los asociados que no estén al día en el pago de las cuotas de la asociación.</p>
+<h4>Artículo 9. Obligaciones de los asociados</h4>
+<p>a) Cumplir los presentes estatutos de los acuerdos válidamente adoptados por los órganos de gobierno y representación de la asociación.</p>
+
+
+
+<p>b) Pagar las cuotas que se establezcan.</p>
+<p>c) Desempeñar en su caso, las obligaciones inherentes a los cargos que ocupan y para los que hayan sido elegidos</p>
+<p>d) Asistir a las Asambleas y demás actos organizados por la asociación.</p>
+
+<h3>TITULO V. ÓRGANOS DE GOBIERNO Y REPRESENTACIÓN</h3>
+<h3>CAPÍTULO I. CLASES Y DENOMINACIÓN</h3>
+
+<h4>Artículo 10º.- Clases y principios.</h4>
+<p>1. Los órganos de gobierno y representación de la Asociación son: a) La Asamblea General</p>
+<p>b) La Junta Directiva.</p>
+<p>c) Secciones: por acuerdo de la Asamblea General podrán organizarse en la Asociación aquellas Secciones que se estimen convenientes para el mejor cumplimiento de los fines de la misma.</p>
+<p>2. La organización interna y funcionamiento de la asociación deberá ser democrático, con pleno respeto al pluralismo.</p>
+
+<h3>CAPÍTULO II. ASAMBLEA GENERAL</h3>
+
+<h4>Artículo 11º.- Composición.</h4>
+<p>La Asamblea General es el órgano supremo de gobierno de la Asociación y está integrada por todos los asociados.</p>
+<h4>Artículo 12º.- Clases de Sesiones.</h4>
+<p>Las reuniones de la Asamblea General serán ordinarias y extraordinarias.</p>
+<p>- La Asamblea General Ordinaria se reunirá necesariamente al menos una vez al año, dentro de los cuatro meses siguientes al cierre del ejercicio.</p>
+
+
+
+<p>- Las Asambleas Generales Extraordinarias se celebrarán cuando las circunstancias lo aconsejen, a juicio del Presidente, cuando la Directiva lo acuerde o cuando lo proponga por escrito una décima parte de los asociados.</p>
+<h4>Artículo 13º.- Convocatoria</h4>
+<p>Las convocatorias de las Asambleas Generales se realizarán por medios telemáticos, expresando el lugar, día y hora de la reunión así como el orden del día con expresión concreta de los asuntos a tratar. Entre la convocatoria y el día señalado para la celebración de la Asamblea en primera convocatoria habrán de mediar al menos quince días, pudiendo asimismo hacerse constar si procediera la fecha y hora en que se reunirá la Asamblea en segunda convocatoria, sin que entre una y otra pueda mediar un plazo inferior a una hora.</p>
+<h4>Artículo 14º.- Quórum de asistencia y votaciones.</h4>
+<p>Las Asambleas Generales, tanto ordinarias como extraordinarias, quedarán válidamente constituidas en primera convocatoria cuando concurran a ella un tercio de los asociados con derecho a voto, y en segunda convocatoria cualquiera que sea el número de asociados con derecho a voto. Será necesaria en todo caso la presencia del Presidente y Secretario, o de las personas que legalmente les sustituyan.</p>
+<p>Los acuerdos se tomarán por mayoría simple de las personas presentes o representadas cuando los votos afirmativos superen a los negativos, no siendo computables a estos efectos los votos en blanco ni las abstenciones.</p>
+<p>Será necesario mayoría cualificada de las personas presentes o representadas, que resultará cuando los votos afirmativos superen la mitad de éstas, para:</p>
+<p>a) Nombramiento de las Juntas Directivas y Administradores.</p>
+<p>b) Acuerdo para constituir una Federación de Asociaciones o integrarse en ellas.</p>
+<p>c) Disposición o enajenación de bienes integrantes del inmovilizado. d) Modificación de estatutos.</p>
+<p>e) Disolución de la entidad.</p>
+<p>f) Acuerdo sobre compensación/remuneración de los miembros de los órganos de representación; si así se considerase necesario por razón y ejercicio en el cargo.</p>
+<h4>Artículo 15º.- Competencias.</h4>
+<p>1. Son competencia de la Asamblea General Ordinaria los asuntos siguientes: a) Aprobar, en su caso, la gestión de la Junta Directiva.</p>
+<p>b) Examinar y aprobar las cuentas anuales.</p>
+
+
+
+<p>c) Resolver sobre la aprobación del inventario anual de bienes muebles e inmuebles cuya valoración detallada de los mismos será realizada por el miembro de la Junta Directiva previamente designado por esta última.</p>
+<p>d) Aprobar o rechazar las propuestas de las Juntas Directivas en orden a las actividades de la Asociación.</p>
+<p>e) Acordar los gastos que hayan que atenderse con cuotas extraordinarias y su establecimiento, así como los de las cuotas ordinarias, fijar la cuantía de éstas y su periodicidad.</p>
+<p>f) Cualquier otra que no sea de la competencia exclusiva de la Asamblea Extraordinaria.</p>
+<p>2. Corresponde a la Asamblea General Extraordinaria:</p>
+<p>a) Nombramiento y revocación de los miembros de la Junta Directiva. b) Modificación de los Estatutos.</p>
+<p>c) Disolución de la Asociación y, en su caso, nombramiento de liquidadores. d) Expulsión de socios, a propuesta de la Junta Directiva.</p>
+<p>e) Constitución de Federaciones o integración en ellas.</p>
+<p>f) Solicitud de declaración de utilidad pública.</p>
+<h4>Artículo 16º.- Obligatoriedad de los acuerdos</h4>
+<p>Los acuerdos adoptados conforme a los preceptos anteriores obligarán a los socios, incluso a los no asistentes, llevándose a un libro de actas que firmará el Presidente y el Secretario General.</p>
+
+<h3>CAPÍTULO VI. JUNTA DIRECTIVA</h3>
+
+<h4>Artículo 17º.- Composición.</h4>
+<p>La Asociación será gestionada y representada por una Junta Directiva formada por: un Presidente, un Vicepresidente, un Secretario General, un Tesorero y un vocal (en su caso)por cada una de las calles en las que de forma principal desarrolla su actividad y ámbito de actuación la Asociación, es decir:</p>
+<p>Vocal C/ Pascual Veiga:</p>
+<p>Vocal C/Doutor García Portela:</p>
+<p>Vocal C/Vilalba:</p>
+<p>Vocal C/Carril dos Loureiros:</p>
+<p>Vocal C/Recatelo:</p>
+<p>Vocal C/Ribadeo:</p>
+<p>Vocal C/Isaac Diaz Pardo:</p>
+<p>Vocal C/Armando Durán:</p>
+<p>Vocal C/Rodriguez Mourelo:</p>
+<p>Vocal C/Cidade de Viveiro:</p>
+<p>Vocal C/Santiago y zona Puerta de Santiago:</p>
+<p>Vocal C/ Puro Cora :</p>
+<p>Vocal C/Avelino Pousa Antelo:</p>
+<p>Vocal C/Villa de Sarria:</p>
+<p>Vocal C/ Fray Plácido :</p>
+
+<p>Todos los cargos que componen la Junta Directiva serán <em>gratuitos (salvo que se</em></p>
+
+<p><em>disponga otra cosa en los Estatutos y que conste en las cuentas anuales aprobadas en Asamblea. Art. 11.5 LO 1/2002)</em>. Estos serán designados y revocados por la Asamblea General Extraordinaria<sup>1</sup>.</p>
+<p>Podrán causar baja:</p>
+<p>- Por renuncia voluntaria comunicada por escrito a la Junta Directiva. <em>-</em> Por incumplimiento de las obligaciones que tuvieran encomendadas. <em>-</em> Por expiración del mandato.</p>
+<h4>Artículo 18º. Elección de cargos.</h4>
+<p>1.- Los cargos de la Junta Directiva, tendrán una duración de 1 año, pudiendo ser reelegidos sus miembros al finalizar su mandato<em>.</em></p>
+<p>2.- La elección se efectuará por la Asamblea General mediante votación. Podrán Ser elegidos como miembros de la Junta Directiva todos los asociados-</p>
+
+<p>3.- Las vacantes que pudieran producirse en la Junta, se cubrirán provisionalmente por designación de la Junta Directiva, hasta la celebración de la Asamblea General, que elegirá a los nuevos miembros o confirmará a los designados provisionalmente.</p>
+
+<p><em>. Para ser miembros de la Junta Directiva es necesario ser mayor de edad, estar en pleno uso de los derechos civiles y no estar incurso en los motivos de incompatibilidad establecidos en la legislación vigente .</em></p>
+<p><em>(Art.11.4 LO 1/2002)</em></p>
+<h4>Artículo 19º.- Sesiones.</h4>
+
+
+
+<p>La Junta Directiva celebrará sesión cuando lo determine el Presidente, por iniciativa propia o a petición de alguno de sus miembros.</p>
+<p>Quedará constituida cuando asista la mitad más uno de sus miembros y para que sus acuerdos sean válidos deberán ser tomados por mayoría de votos. En caso de empate, el voto del Presidente será de calidad.</p>
+<p>Cuando la Junta Directiva lo estime procedente por la índole de la materia a tratar en la sesión, podrán ser invitados a tomar parte en sus deliberaciones como asesores cualificados, pero sin voto, profesionales o especialistas para clarificar asuntos concretos que figuren en el orden del día.</p>
+<p>De las sesiones levantará acta el Secretario General, con el visto bueno del Presidente y la reflejará en el libro de actas.</p>
+<h4>Artículo 20º: Competencias.</h4>
+<p>Las facultades de la Junta Directiva se extenderán, con carácter general a todos los actos propios de las finalidades de la asociación, siempre que no requieran, según estos Estatutos, autorización expresa de la Asamblea General.</p>
+<p>Son facultades particulares de la Junta Directiva:</p>
+<p>a) Dirigir las actividades sociales y llevar la gestión económica y administrativa de la Asociación, acordando realizar los oportunos contratos y actos en el periodo entre Asambleas.</p>
+<p>b) Ejecutar los acuerdos de la Asamblea General.</p>
+<p>c) Formular y someter a la aprobación de la Asamblea General los Balances y las Cuentas anuales.</p>
+<p>d) Dar cuenta de su actividad a la Asamblea General.</p>
+<p>e) Resolver sobre la admisión de nuevos asociados.</p>
+<p>f) Nombrar delegados para alguna determinada actividad de la Asociación. g) Cualquier otra facultad que no sea de la exclusiva competencia de la Asamblea General de socios.</p>
+<h4>Artículo 21º.- Presidente. Competencias.</h4>
+<p>Son atribuciones del Presidente de la Asociación:</p>
+<p>a) Ostentar la representación legal de la Asociación ante toda clase de organismos públicos o privados.</p>
+<p>b) Convocar, presidir y levantar las sesiones que celebre la Asamblea General y la Junta Directiva, así como dirigir las deliberaciones de una y otra.</p>
+<p>c) Ordenar los pagos por cuenta de fondos de la Asociación, previos a los acuerdos de gastos correspondientes.</p>
+<p>d) Autorizar con su firma los documentos, actas y correspondencia. 13</p>
+<p>e) Adoptar cualquier medida urgente que la buena marcha de la Asociación aconseje o en el desarrollo de sus actividades resulte necesaria o conveniente, sin perjuicio de dar cuenta posteriormente a la Junta Directiva.</p>
+<p>f) Velar por los fines de la Asociación y su cumplimiento.</p>
+<h4>Artículo 22º.- Vicepresidente. Competencias.</h4>
+<p>Son facultades del Vicepresidente:</p>
+<p>a) Sustituir al Presidente en caso de ausencia, enfermedad o cese. b) Las que delegue el Presidente o le atribuya la Asamblea General.</p>
+<h4>Artículo 23º.- Secretario General. Competencias.</h4>
+<p>El Secretario General tendrá a cargo la dirección de los trabajos puramente administrativos de la Asociación, expedirá certificaciones, llevará los libros de la asociación que sean legalmente establecidos y el fichero de asociados, y custodiará la documentación de la entidad, haciendo que se cursen a las comunicaciones sobre designación de Juntas Directivas y demás acuerdos sociales inscribibles a los Registros correspondientes, así como la presentación de las cuentas anuales y el cumplimiento de las obligaciones documentales en los términos que legalmente correspondan.</p>
+<h4>Artículo 24º.- Tesorero. Competencias.</h4>
+<p>Corresponde al Tesorero:</p>
+<p>a) Recaudar y custodiar los fondos de la Asociación y llevar en orden los libros de Contabilidad.</p>
+<p>b) Preparar los balances y presupuestos de la Asociación para su aprobación por la Asamblea General.</p>
+<p>c) Dar cumplimiento a las órdenes de pago que expida el Presidente. d) Llevar inventario de bienes, si los hubiera.</p>
+<h4>Artículo 25º.- Vocales. Competencia.</h4>
+
+
+
+<p>Los vocales tendrán las obligaciones propias de su cargo como miembros de la Junta Directiva, y así como las que nazcan de las delegaciones o comisiones de trabajo que la propia Junta las encomiende.</p>
+
+<h3>CAPÍTULO IV. RÉGIMEN ECONÓMICO Y PATRIMONIAL</h3>
+
+<h4>Artículo 26º.- Patrimonio.</h4>
+<p>La Asociación no cuenta con patrimonio fundacional o fondo social inicial.</p>
+<h4>Artículo 27º.- Ingresos.</h4>
+<p>Los recursos de la Asociación están constituidos por:</p>
+<p>1.- Las cuotas (ordinarias o extraordinarias) de los socios.</p>
+<p>2.- Los donativos o aportaciones que reciba.</p>
+<p>3.- Las herencias o legados que pudiera recibir de forma legal por parte de los asociados o de terceras personas.</p>
+<p>4.- Las subvenciones, ayudas y auxilios que reciba de la Administración estatal, regional, provincial o municipal, así como las que la conceden otras instituciones de carácter privado (fundaciones, otras asociaciones, etc.).</p>
+<p>5.- Cualquier otro recurso lícito.</p>
+<h4>Artículo 28º.- Cuotas.</h4>
+<p>1.- Las cuotas ordinarias o extraordinarias se establecerán por la Asamblea General, a propuesta de la Junta Directiva, y no son reintegrables en caso alguno.</p>
+<p>2.- Para la admisión de nuevos socios, podrá ser fijada por la Asamblea General, como aportación inicial, no reintegrable, una cuota de admisión.</p>
+<h4>Artículo 29º.- Obligaciones documentales y contables:</h4>
+<p>1. La asociación ha de disponer de una relación actualizada de sus asociados, llevar una contabilidad que permita obtener la imagen fiel del patrimonio, del resultado y de la situación financiera de la entidad, así como las actividades realizadas, efectuar</p>
+
+
+
+<p>un inventario de sus bienes y recoger en un libro las actas de las reuniones de sus órganos de gobierno y representación. Deberán llevar su contabilidad conforme a las normas específicas que les resulten de aplicación.</p>
+<p>2. Las cuentas de la asociación se aprobarán anualmente por la Asamblea General.</p>
+<p>3. El ejercicio asociativo y económico será anual y su cierre tendrá lugar el 31 de diciembre de cada año.</p>
+
+<h3>CAPÍTULO V. DISOLUCIÓN Y LIQUIDACIÓN DE LA ASOCIACIÓN.</h3>
+
+<h4>Artículo 30º.-</h4>
+<p>La asociación se disolverá:</p>
+<p>a) Voluntariamente cuando así lo acuerde la Asamblea General Extraordinaria, convocada al efecto, por un número de asociados no inferior al 10%. El acuerdo sobre la disolución requerirá mayoría cualificada de las personas presentes o representadas, que resultará cuando los votos afirmativos superen la mitad. <em>(Art. 12 LO 1/2002)</em></p>
+<p>b) Por las causas determinadas en el artículo 39 del Código Civil.</p>
+<p>c) Por sentencia judicial firme.</p>
+<h4>Artículo 31º.-</h4>
+<p>En caso de disolución, se nombrará una comisión liquidadora la cual, una vez extinguidas las deudas, y si existiese sobrante líquido lo destinará para fines que no desvirtúen su naturaleza no lucrativa .</p>
+
+<h3>CAPITULO VI. REFORMA DE LOS ESTATUTOS</h3>
+
+<h4>Artículo 32º.- Reforma de los Estatutos.</h4>
+<p>Las modificaciones de los presentes Estatutos será de competencia de la Asamblea General Extraordinaria, adoptándose el acuerdo por mayoría cualificada de las personas presentes o representadas, que resultará cuando los votos afirmativos superen la mitad de los asistentes.</p>
+
+
+
+<p>Las modificaciones que se realicen se comunicarán al Registro correspondiente.</p>
+<h3>DISPOSICIÓN ADICIONAL</h3>
+<p>En todo cuanto no esté previsto en los presentes Estatutos se aplicará la vigente Ley Orgánica 1/2002, de 22 de marzo, reguladora del Derecho de Asociación, y las Disposiciones Complementarias.</p>
+
+<h3>Dilixencia</h3>
+<p>MARTA FERNANDEZ RODRIGUEZ,titular da Presidencia e JUAN SOMORROSTRO FERNANDEZ,titular da secretaria da Asociación de Veciños do Parque de Rosalía de Castro-Recatelo,fan constar que os presentes estatutos están redactadps coa inclusión das modificacións acordadas na asamblea xeral celebrada en data 17 de setembro de 2024,dacordo cos requisitos establecidos na LO 1/2002 do 22 de marzo,reguladora do dereito de asociación e seguindo o procedemento previsto nos seus estatutos.</p>
+<p>En Lugo a 17 de setembro de 2024</p>
+<p>PRESIDENTA SECRETARIO</p>
+<p>MARTA FERNANDEZ RGUEZ JUAN SOMORROSTRO FDEZ</p>
+
+</template>
+<button class="btn fab" id="fab" hidden>+ Añadir</button>
+<div id="sheet-root"></div>
+
+<script src="config.js"></script>
+<script src="vendor/supabase.js"></script>
+<script src="conexion.js"></script>
+<script>
+const TABS = [
+  {id:"inicio", label:"Inicio"},
+  {id:"misdatos", label:"Mis datos"},
+  {id:"avisos", label:"Avisos"},
+  {id:"cursos", label:"Cursos"},
+  {id:"reuniones", label:"Reuniones"},
+  {id:"quejas", label:"Quejas y proyectos"},
+  {id:"colectivos", label:"Colectivos"},
+  {id:"loteria", label:"Lotería"},
+  {id:"fotos", label:"Fotos"},
+  {id:"carteles", label:"Carteles"},
+  {id:"buzon", label:"Buzón"},
+  {id:"cuota", label:"Cuota"},
+  {id:"estatutos", label:"Estatutos Asociación"},
+  {id:"privacidad", label:"Protección de datos"}
+];
+const RGPD_VERSION = "2026-10";
+const ENTIDADES = ["Alcaldía","BNG","PSOE","Subdelegación del Gobierno","Policía Local","Policía Autonómica","Policía Nacional","Otra"];
+const COLECTIVOS = [
+  {id:"protectora", name:"Protectora de Animales", desc:"Apoyamos su labor de acogida y adopción de animales abandonados."},
+  {id:"capaces", name:"Asociación Capaces", desc:"Colaboramos con la inclusión de personas con discapacidad."},
+  {id:"michos", name:"Michos", desc:"Ayudamos al cuidado de las colonias felinas del barrio."},
+  {id:"aecc", name:"Asociación Española Contra el Cáncer", desc:"Participamos en sus campañas de apoyo y recaudación."}
+];
+const ALBUMES = ["Festas Recatelo","Actividades","Otros"];
+const ESTADOS = {presentada:["Presentada","p-blue"], tramite:["En trámite","p-amber"], resuelta:["Resuelta","p-green"], rechazada:["Sin respuesta / rechazada","p-red"]};
+const ADD_LABEL = {avisos:"aviso", reuniones:"resumen de reunión", quejas:"queja o proyecto", colectivos:"noticia de colectivo", fotos:"foto", carteles:"cartel", cursos:"curso"};
+
+const BTIPOS = ["Queja","Sugerencia","Otro"];
+const DEFAULT_LOGO = "c37727719b16fb206a49359b064fca6d";
+const LOT = {precio:20, donativo:3, sorteo:"Sorteo Extraordinario de Navidad 2026"};
+const S = {lot:null, lotAll:[], lotBlocked:false, insc:null, inscAll:[], inscBlocked:false, estatutos:null, ficha:null, fichasAll:[], fichaBlocked:false, logo:DEFAULT_LOGO, consent:null, consentAll:[], consentBlocked:false, buzon:null, buzonAll:[], uid:null, user:null, names:{}, buzonBlocked:false, items:[], loaded:false, canEdit:false, db:null, assets:null, noDb:false, tab:"inicio", filter:{reuniones:"todas", quejas:"todas", fotos:"todas"}};
+
+const $ = s => document.querySelector(s);
+function esc(t){return String(t ?? "").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function fmtDate(d){ if(!d) return ""; const x=new Date(d+"T12:00:00"); if(isNaN(x)) return esc(d); return x.toLocaleDateString("es-ES",{weekday:"short",day:"numeric",month:"long",year:"numeric"}); }
+function today(){ const d=new Date(); return d.toISOString().slice(0,10); }
+function bySection(sec){ return S.items.filter(i=>i.section===sec); }
+function imgSrc(id){ return window.blobUrl ? window.blobUrl(id) : "/_blob/"+encodeURIComponent(id); }
+
+/* ---------- navegación ---------- */
+function renderTabs(){
+  $("#tabs").innerHTML = TABS.map(t=>`<button role="tab" data-tab="${t.id}" aria-selected="${S.tab===t.id}">${t.label}</button>`).join("");
+}
+$("#tabs").addEventListener("click", e=>{ const b=e.target.closest("[data-tab]"); if(b) go(b.dataset.tab); });
+function go(tab){
+  S.tab = tab; try{ history.replaceState(null,"","#"+tab) }catch(e){}
+  try{ localStorage.setItem("recatelo-tab",tab) }catch(e){}
+  renderTabs(); render(); window.scrollTo({top:0});
+  const b=$(`[data-tab="${tab}"]`); b && b.scrollIntoView({inline:"center",block:"nearest"});
+}
+
+/* ---------- piezas ---------- */
+function emptyBox(what, how){
+  return `<div class="empty"><strong>${what}</strong>${S.canEdit ? how : "La directiva lo publicará aquí en cuanto esté disponible."}</div>`;
+}
+function adminRow(it){
+  if(!S.canEdit) return "";
+  return `<div class="row-actions"><button class="btn ghost small" data-edit="${esc(it.id)}">Editar</button><button class="btn ghost small" data-del="${esc(it.id)}">Borrar</button></div>`;
+}
+function attach(it){ return it.photo ? `<img class="att" src="${imgSrc(it.photo)}" alt="${esc(it.title)}" loading="lazy" onerror="this.remove()">` : ""; }
+
+function avisoCard(it){
+  const tipo = it.kind==="reunion" ? `<span class="pill p-amber">Reunión de socios</span>` : `<span class="pill p-blue">Aviso</span>`;
+  return `<article class="card"><div class="meta">${tipo}${it.date?`<span>${fmtDate(it.date)}${it.time?" · "+esc(it.time):""}</span>`:""}</div>
+    <h3>${esc(it.title)}</h3>${it.place?`<div class="meta">📍 ${esc(it.place)}</div>`:""}
+    ${it.body?`<p class="body">${esc(it.body)}</p>`:""}${attach(it)}${adminRow(it)}</article>`;
+}
+function reunionCard(it){
+  return `<article class="card"><div class="meta"><span class="pill p-green">${esc(it.entity||"Reunión")}</span><span>${fmtDate(it.date)}</span></div>
+    <h3>${esc(it.title)}</h3>${it.body?`<p class="body">${esc(it.body)}</p>`:""}${attach(it)}${adminRow(it)}</article>`;
+}
+function quejaCard(it){
+  const st = ESTADOS[it.status] || ESTADOS.presentada;
+  const k = it.kind==="proyecto" ? `<span class="pill p-green">Proyecto</span>` : `<span class="pill p-red">Queja</span>`;
+  return `<article class="card"><div class="meta">${k}<span class="pill ${st[1]}">${st[0]}</span>${it.entity?`<span>Ante: ${esc(it.entity)}</span>`:""}<span>${fmtDate(it.date)}</span></div>
+    <h3>${esc(it.title)}</h3>${it.body?`<p class="body">${esc(it.body)}</p>`:""}${attach(it)}${adminRow(it)}</article>`;
+}
+function photoCard(it){
+  return `<figure class="photo" style="margin:0">${it.photo?`<img src="${imgSrc(it.photo)}" alt="${esc(it.title)}" loading="lazy">`:`<div class="ph">Sin imagen</div>`}
+    <figcaption class="cap"><strong>${esc(it.title)}</strong><span class="meta">${esc(it.album||"")}${it.date?" · "+fmtDate(it.date):""}</span>${adminRow(it)}</figcaption></figure>`;
+}
+function filterBar(key, opts){
+  return `<div class="filters" data-filter="${key}">${["todas",...opts].map(o=>`<button data-f="${esc(o)}" aria-pressed="${S.filter[key]===o}">${o==="todas"?"Todas":esc(o)}</button>`).join("")}</div>`;
+}
+function sortDesc(a){ return a.slice().sort((x,y)=>(y.date||"").localeCompare(x.date||"")); }
+
+/* ---------- vistas ---------- */
+const VIEWS = {
+  inicio(){
+    const t = today();
+    const prox = bySection("avisos").filter(a=>a.date && a.date>=t).sort((a,b)=>a.date.localeCompare(b.date))[0];
+    const ult = sortDesc(S.items.filter(i=>i.section!=="fotos"&&i.section!=="carteles"&&i.section!=="cursos")).slice(0,3);
+    return `<section class="hero">
+        ${S.logo?`<img class="hero-logo" src="${imgSrc(S.logo)}" alt="Logo de la Asociación de Vecinos Parque de Rosalía de Castro-Recatelo">`:""}
+        ${S.canEdit&&S.assets?`<div><label class="btn ghost small" style="display:inline-block;cursor:pointer">${S.logo?"Cambiar logo":"Subir el logo de la asociación"}<input type="file" id="logo-in" accept="image/png,image/jpeg,image/webp,image/svg+xml" hidden></label> <span class="meta" id="logo-msg"></span></div>`:""}
+        <span class="eyebrow">Parque de Rosalía de Castro · Recatelo · Lugo</span>
+        <h2>Entre todos, por nuestro barrio</h2>
+        <p>Esta asociación la empezamos entre muchos vecinos de Lugo que vivimos en la zona o que, sin vivir aquí, la disfrutamos cada día. Nació con una idea sencilla: apoyarnos unos a otros ante los problemas e iniciativas que surjan en nuestro entorno, y hacerles frente entre todos.</p>
+        <p>Queremos defender la singularidad cultural de Recatelo y del Parque de Rosalía, y sacar adelante todo lo que lo cuide y le dé vida. Por eso nos sentamos con el Concello, con los grupos políticos, con la Subdelegación del Gobierno y con las policías. Toda institución que se interese por el barrio es bienvenida, siempre que no lo use para sus fines políticos.</p>
+        <p>En septiembre de 2023 recuperamos las antiguas fiestas del barrio en el Templete del Parque, y desde entonces las Festas de Recatelo son nuestra excusa para saludarnos y charlar entre vecinos. Y a lo largo del año echamos una mano a la Protectora de Animales, Asociación Capaces, Michos y la Asociación Española Contra el Cáncer.</p>
+        ${S.uid && !S.canEdit && !(S.consent&&S.consent.acepta) ? `<div class="notice">Antes de empezar, revisa y acepta la <a href="#privacidad" data-go="privacidad">protección de datos</a>.</div>` : ""}
+        ${S.uid && !S.canEdit && !S.ficha ? `<div class="notice">¿Eres socio/a? <a href="#misdatos" data-go="misdatos">Déjanos tus datos y tu prioridad para el barrio</a>.</div>` : ""}
+        <p>Esta app es de todos los socios: aquí estarán los avisos, las reuniones, los cursos, el buzón y las fotos de lo que vamos haciendo. Y como siempre, quedamos a vuestra disposición para cualquier sugerencia, duda o apunte.</p>
+        <p class="firma">Junta Directiva</p></section>
+      <section class="stack">
+      ${prox ? `<div class="next"><span class="eyebrow">Próxima cita</span><h3>${esc(prox.title)}</h3><div class="meta">${fmtDate(prox.date)}${prox.time?" · "+esc(prox.time):""}${prox.place?" · "+esc(prox.place):""}</div></div>`
+             : `<div class="next"><span class="eyebrow">Próxima cita</span><span>No hay ninguna reunión ni aviso con fecha próxima.</span></div>`}
+      </section>
+      <section class="cuota"><span>Cuota de socio</span><div class="big">30 € <span>al año</span></div><p>Con tu cuota sostienes las actividades, las Festas de Recatelo y el apoyo a los colectivos que apadrinamos.</p><div><button class="btn" style="background:var(--surface);color:var(--green)" data-go="cuota">Cómo pagar</button></div></section>
+      <section class="stack"><h2>Lo último</h2>${ult.length ? ult.map(it=>({avisos:avisoCard,reuniones:reunionCard,quejas:quejaCard,colectivos:colNews})[it.section](it)).join("") : emptyBox("Todavía no hay publicaciones.","Pulsa “+ Añadir” en cualquier sección para publicar la primera.")}</section>
+      <section class="festas"><span class="pill p-amber" style="justify-self:start">Sábado 11 de septiembre de 2027</span><h3>Festas de Recatelo 2027</h3><p class="body" style="color:var(--muted)">Las fiestas anuales del barrio. Reservad la fecha: el programa irá apareciendo en Avisos y las fotos en Fotos.</p></section>`;
+  },
+  avisos(){
+    const t=today(); const all=bySection("avisos");
+    const prox=all.filter(a=>!a.date||a.date>=t).sort((a,b)=>(a.date||"9").localeCompare(b.date||"9"));
+    const pas=sortDesc(all.filter(a=>a.date&&a.date<t));
+    return `<div><h2>Avisos y reuniones de socios</h2><p class="lead">Convocatorias de asambleas y avisos importantes para el barrio.</p></div>
+      <section class="stack"><h3>Próximos</h3>${prox.length?prox.map(avisoCard).join(""):emptyBox("No hay avisos próximos.","Añade una convocatoria con fecha, hora y lugar.")}</section>
+      ${pas.length?`<section class="stack"><h3>Anteriores</h3>${pas.map(avisoCard).join("")}</section>`:""}`;
+  },
+  reuniones(){
+    let list=sortDesc(bySection("reuniones")); const f=S.filter.reuniones;
+    if(f!=="todas") list=list.filter(i=>i.entity===f);
+    return `<div><h2>Reuniones con instituciones</h2><p class="lead">Resúmenes de lo tratado con la Alcaldía, los grupos políticos, la Subdelegación del Gobierno y las policías Local, Autonómica y Nacional.</p></div>
+      ${filterBar("reuniones",ENTIDADES.filter(e=>e!=="Otra"))}
+      <section class="stack">${list.length?list.map(reunionCard).join(""):emptyBox(f==="todas"?"Todavía no hay resúmenes.":"No hay resúmenes con "+esc(f)+".","Añade el resumen indicando con quién fue la reunión.")}</section>`;
+  },
+  quejas(){
+    let list=sortDesc(bySection("quejas")); const f=S.filter.quejas;
+    const map={"Quejas":"queja","Proyectos":"proyecto"};
+    if(f!=="todas") list=list.filter(i=>(i.kind||"queja")===map[f]);
+    return `<div><h2>Quejas y proyectos</h2><p class="lead">Todo lo que la asociación ha planteado a las instituciones y en qué punto está cada cosa.</p></div>
+      ${filterBar("quejas",["Quejas","Proyectos"])}
+      <section class="stack">${list.length?list.map(quejaCard).join(""):emptyBox("No hay nada registrado todavía.","Añade cada queja o proyecto con la institución y su estado.")}</section>`;
+  },
+  colectivos(){
+    const news=sortDesc(bySection("colectivos"));
+    return `<div><h2>Colectivos que apadrinamos</h2><p class="lead">Entidades sociales a las que la asociación da su apoyo.</p></div>
+      <section class="grid2">${COLECTIVOS.map(c=>`<article class="card colectivo"><div class="ico" aria-hidden="true">${colIcon(c.id)}</div><div><h3>${c.name}</h3><p class="body" style="color:var(--muted);margin-top:4px">${c.desc}</p></div></article>`).join("")}</section>
+      <section class="stack"><h3>Noticias de los colectivos</h3>${news.length?news.map(colNews).join(""):emptyBox("Sin noticias por ahora.","Añade campañas, recogidas o actos de estos colectivos.")}</section>`;
+  },
+  fotos(){
+    let list=sortDesc(bySection("fotos")); const f=S.filter.fotos;
+    if(f!=="todas") list=list.filter(i=>i.album===f);
+    return `<div><h2>Fotos</h2><p class="lead">Festas de Recatelo de cada septiembre y demás actividades del barrio.</p></div>
+      ${filterBar("fotos",ALBUMES)}
+      ${list.length?`<section class="photos">${list.map(photoCard).join("")}</section>`:emptyBox("Aún no hay fotos.","Sube fotos desde “+ Añadir” y elige el álbum.")}`;
+  },
+  buzon(){
+    const intro = `<div><h2>Buzón de quejas y sugerencias</h2><p class="lead">Cuéntale a la directiva lo que te preocupa del barrio o lo que mejorarías. Solo la directiva lee los mensajes.</p></div>`;
+    if(S.canEdit) return intro + buzonAdmin();
+    let form;
+    if(S.noDb || !S.uid) form = `<div class="notice">Para escribir en el buzón tienes que abrir la app con tu cuenta.</div>`;
+    else if(S.buzonBlocked) form = `<div class="notice">Tu acceso solo permite leer. Pide a la directiva permiso de “Colaborador” para poder enviar mensajes.</div>`;
+    else form = `<form class="card" id="bz-form" novalidate><h3>Nuevo mensaje</h3>
+      <div class="two">${field("bz-tipo","Tipo",sel("bz-tipo",BTIPOS,"Queja"))}${field("bz-contacto","Tu nombre o teléfono (opcional)",`<input id="bz-contacto" autocomplete="name">`)}</div>
+      ${field("bz-texto","Mensaje",`<textarea id="bz-texto" placeholder="Por ejemplo: la farola de la calle … lleva una semana apagada."></textarea>`)}
+      <p class="err" id="bz-err" hidden></p><div class="row-actions"><button class="btn" id="bz-send">Enviar a la directiva</button></div></form>`;
+    const mine = (S.buzon?.msgs||[]).slice().reverse();
+    return intro + form + `<section class="stack"><h3>Mis mensajes</h3>${mine.length?mine.map(m=>bzCard(m,false)).join(""):`<div class="empty"><strong>Aún no has enviado ningún mensaje.</strong>Cuando la directiva te responda, verás la respuesta aquí.</div>`}</section>`;
+  },
+  misdatos(){
+    const f = S.ficha || {};
+    const intro = `<div><h2>Mis datos de socio</h2><p class="lead">Déjanos tus datos para que la directiva pueda contactarte, y cuéntanos qué es lo primero que mejorarías en el barrio. Solo la directiva los ve.</p></div>`;
+    let form;
+    if(S.noDb || !S.uid) form = `<div class="notice">Abre la app con tu cuenta para rellenar tus datos.</div>`;
+    else if(S.fichaBlocked) form = `<div class="notice">Tu acceso solo permite leer. Pide a la directiva permiso de “Colaborador” para guardar tus datos.</div>`;
+    else form = `<form class="card" id="fi-form" novalidate>
+      ${S.ficha?`<div class="notice">Datos guardados el ${new Date(f.at).toLocaleDateString("es-ES",{day:"numeric",month:"long",year:"numeric"})}. Puedes corregirlos cuando quieras.</div>`:""}
+      ${field("fi-nombre","Nombre y apellidos",`<input id="fi-nombre" autocomplete="name" value="${esc(f.nombre||"")}">`)}
+      ${field("fi-dir","Dirección",`<input id="fi-dir" autocomplete="street-address" placeholder="Calle, número, piso" value="${esc(f.direccion||"")}">`)}
+      ${field("fi-email","Correo electrónico",`<input id="fi-email" type="email" autocomplete="email" value="${esc(f.email||"")}">`)}
+      ${field("fi-prio","Tu prioridad para mejorar el barrio",`<textarea id="fi-prio" maxlength="300" style="min-height:90px" placeholder="En una frase: ¿qué es lo primero que mejorarías en la zona?">${esc(f.prioridad||"")}</textarea>`)}
+      <label class="check"><input type="checkbox" id="fi-ok" ${S.ficha?"checked":""}> <span>Acepto que la asociación guarde estos datos según la <a href="#privacidad" data-go="privacidad">información de protección de datos</a>.</span></label>
+      <p class="err" id="fi-err" hidden></p>
+      <div class="row-actions">${S.ficha?`<button type="button" class="btn ghost" id="fi-borrar">Borrar mis datos</button>`:""}<button class="btn" id="fi-save">Guardar mis datos</button></div></form>`;
+    let admin="";
+    if(S.canEdit){
+      const rows=S.fichasAll.slice().sort((a,b)=>(a.nombre||"").localeCompare(b.nombre||"","es"));
+      admin=`<section class="stack"><h3>Socios registrados (solo directiva): ${rows.length}</h3>${rows.length?`<div class="card" style="overflow-x:auto"><table class="tbl"><thead><tr><th>Nombre</th><th>Dirección</th><th>Correo</th><th>Fecha</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${esc(r.nombre)}</td><td>${esc(r.direccion)}</td><td>${esc(r.email)}</td><td>${r.at?new Date(r.at).toLocaleDateString("es-ES"):""}</td></tr>`).join("")}</tbody></table></div>
+        <h3>Prioridades de los socios</h3>${rows.filter(r=>r.prioridad).map(r=>`<article class="card"><p class="body">“${esc(r.prioridad)}”</p><div class="meta">${esc(r.nombre)}</div></article>`).join("")||`<div class="empty">Nadie ha escrito su prioridad todavía.</div>`}`
+        :`<div class="empty"><strong>Aún no hay socios registrados.</strong>Comparte el enlace de esta sección para que rellenen sus datos.</div>`}</section>`;
+    }
+    return intro + form + admin;
+  },
+  privacidad(){
+    const c = S.consent;
+    let box;
+    if(S.noDb || !S.uid) box = `<div class="notice">Abre la app con tu cuenta para poder dar tu consentimiento.</div>`;
+    else if(S.consentBlocked) box = `<div class="notice">Tu acceso solo permite leer. Pide a la directiva permiso de “Colaborador” para registrar tu consentimiento.</div>`;
+    else box = `<form class="card" id="cs-form" novalidate><h3>Mi consentimiento</h3>
+      ${c&&c.acepta?`<div class="notice">Consentimiento registrado el ${new Date(c.at).toLocaleDateString("es-ES",{day:"numeric",month:"long",year:"numeric"})}. Puedes cambiarlo cuando quieras.</div>`:""}
+      <label class="check"><input type="checkbox" id="cs-acepta" ${c&&c.acepta?"checked":""}> <span>He leído la información sobre protección de datos y acepto que la asociación trate mis datos como socio/a.</span></label>
+      <label class="check"><input type="checkbox" id="cs-fotos" ${c&&c.fotos?"checked":""}> <span>Acepto que puedan publicarse en esta app fotos de actividades en las que aparezca (opcional).</span></label>
+      <label class="check"><input type="checkbox" id="cs-com" ${c&&c.comunicaciones?"checked":""}> <span>Quiero recibir avisos de la asociación por teléfono, WhatsApp o correo (opcional).</span></label>
+      <p class="err" id="cs-err" hidden></p>
+      <div class="row-actions">${c&&c.acepta?`<button type="button" class="btn ghost" id="cs-retirar">Retirar mi consentimiento</button>`:""}<button class="btn" id="cs-save">Guardar</button></div></form>`;
+    let admin = "";
+    if(S.canEdit){
+      const rows = S.consentAll.slice().sort((a,b)=>(b.at||"").localeCompare(a.at||""));
+      admin = `<section class="stack"><h3>Registro de consentimientos (solo directiva)</h3>${rows.length?`<div class="card" style="overflow-x:auto"><table class="tbl"><thead><tr><th>Socio/a</th><th>Fecha</th><th>Datos</th><th>Fotos</th><th>Avisos</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${esc(S.names[r.uid]||"Socio/a")}</td><td>${r.at?new Date(r.at).toLocaleDateString("es-ES"):""}</td><td>${r.acepta?"Sí":"No"}</td><td>${r.fotos?"Sí":"No"}</td><td>${r.comunicaciones?"Sí":"No"}</td></tr>`).join("")}</tbody></table></div>`:`<div class="empty"><strong>Nadie ha registrado su consentimiento todavía.</strong>Aparecerán aquí con fecha y opciones elegidas.</div>`}</section>`;
+    }
+    return `<div><h2>Protección de datos</h2><p class="lead">Información básica según el Reglamento General de Protección de Datos (RGPD) y la Ley Orgánica 3/2018 (LOPDGDD).</p></div>
+      <section class="card legal">
+        <p><strong>Responsable:</strong> Asociación de Vecinos del Parque de Rosalía de Castro-Recatelo. CIF: G72769482. Correo de contacto: vecinosparquerecatelo@gmail.com. Domicilio: Rúa Pascual Veiga 6, 27002 Lugo.</p>
+        <p><strong>Finalidad:</strong> gestionar tu condición de socio/a, el cobro de la cuota anual, enviarte avisos de la asociación, atender los mensajes del buzón y, si lo autorizas, publicar fotos de las actividades.</p>
+        <p><strong>Legitimación:</strong> tu consentimiento y la relación como socio/a de la asociación.</p>
+        <p><strong>Destinatarios:</strong> solo la directiva de la asociación. No cedemos tus datos a terceros salvo obligación legal.</p>
+        <p><strong>Conservación:</strong> mientras seas socio/a y, después, el tiempo que exija la ley.</p>
+        <p><strong>Tus derechos:</strong> puedes acceder, rectificar, suprimir, oponerte, limitar el tratamiento y pedir la portabilidad de tus datos escribiendo a vecinosparquerecatelo@gmail.com. También puedes reclamar ante la Agencia Española de Protección de Datos (aepd.es).</p>
+        <p><strong>Retirar el consentimiento:</strong> puedes hacerlo en cualquier momento desde esta misma pantalla.</p>
+      </section>${box}${admin}`;
+  },
+  carteles(){
+    const list = sortDesc(bySection("carteles"));
+    const years = {}; for(const it of list){ const y=(it.date||"").slice(0,4)||"Sin fecha"; (years[y]=years[y]||[]).push(it); }
+    const keys = Object.keys(years).sort((a,b)=>b.localeCompare(a));
+    return `<div><h2>Carteles de nuestras actividades</h2><p class="lead">Todos los carteles de lo que hemos organizado desde 2022: fiestas, charlas, recogidas, excursiones y más.</p></div>
+      ${list.length ? keys.map(y=>`<section class="stack"><h3>${esc(y)} <span class="meta" style="display:inline">· ${years[y].length} cartel${years[y].length===1?"":"es"}</span></h3><div class="photos posters">${years[y].map(cartelCard).join("")}</div></section>`).join("")
+        : emptyBox("Aún no hay carteles.","Pulsa “+ Añadir cartel” y sube cada cartel con la fecha de la actividad; se ordenan solos por año.")}`;
+  },
+  cursos(){
+    const t=today(); const all=bySection("cursos");
+    const prox=all.filter(c=>!c.date||c.date>=t).sort((a,b)=>(a.date||"9").localeCompare(b.date||"9"));
+    const pas=sortDesc(all.filter(c=>c.date&&c.date<t));
+    let note="";
+    if(!S.canEdit){
+      if(S.noDb||!S.uid) note=`<div class="notice">Abre la app con tu cuenta para poder apuntarte.</div>`;
+      else if(S.inscBlocked) note=`<div class="notice">Tu acceso solo permite leer. Pide a la directiva permiso de “Colaborador” para apuntarte a los cursos.</div>`;
+    }
+    return `<div><h2>Cursos</h2><p class="lead">Cursos y talleres para los socios. Mira el día y de qué trata cada uno, y apúntate con un toque.</p></div>${note}
+      <section class="stack"><h3>Próximos cursos</h3>${prox.length?prox.map(cursoCard).join(""):emptyBox("No hay cursos programados ahora mismo.","Añade un curso con su fecha, horario, lugar y explicación.")}</section>
+      ${pas.length?`<section class="stack"><h3>Cursos anteriores</h3>${pas.map(c=>cursoCard(c,true)).join("")}</section>`:""}`;
+  },
+  loteria(){
+    const total = LOT.precio+LOT.donativo;
+    const l = S.lot;
+    const intro = `<div><h2>Lotería de Navidad</h2><p class="lead">Como otros años, la asociación vende lotería del ${LOT.sorteo} para apoyar a la Protectora de Animales.</p></div>
+      <section class="cuota"><span>Precio por décimo</span><div class="big">${total} € <span>por décimo</span></div><p>${LOT.precio} € del décimo + ${LOT.donativo} € de donativo para la Protectora de Animales.</p></section>
+      <div class="next"><span class="eyebrow">Plazo para apuntarse</span><span>El plazo para reservar décimos se cierra la <strong>tercera semana de noviembre</strong>. ¡No lo dejes para el final!</span></div>`;
+    let form;
+    if(S.noDb||!S.uid) form=`<div class="notice">Abre la app con tu cuenta para reservar tus décimos.</div>`;
+    else if(S.lotBlocked) form=`<div class="notice">Tu acceso solo permite leer. Pide a la directiva permiso de “Colaborador” para reservar décimos.</div>`;
+    else form=`<form class="card" id="lt-form" novalidate><h3>${l?"Tu reserva":"Reservar décimos"}</h3>
+      ${l?`<div class="notice">Tienes reservados ${esc(l.decimos)} décimo${l.decimos==1?"":"s"} (${l.decimos*total} €). Puedes cambiar la reserva cuando quieras.</div>`:""}
+      ${field("lt-nombre","Nombre y apellidos",`<input id="lt-nombre" autocomplete="name" value="${esc((l&&l.nombre)||(S.ficha&&S.ficha.nombre)||"")}">`)}
+      <div class="two">${field("lt-dni","DNI",`<input id="lt-dni" autocapitalize="characters" value="${esc((l&&l.dni)||"")}" placeholder="12345678Z">`)}${field("lt-n","Número de décimos",`<input id="lt-n" type="number" min="1" max="50" inputmode="numeric" value="${esc((l&&l.decimos)||1)}">`)}</div>
+      <p class="meta" id="lt-total">Total: ${((l&&l.decimos)||1)*total} €</p>
+      <label class="check"><input type="checkbox" id="lt-ok" ${l?"checked":""}> <span>Acepto que la asociación guarde estos datos para gestionar mi reserva, según la <a href="#privacidad" data-go="privacidad">protección de datos</a>.</span></label>
+      <p class="err" id="lt-err" hidden></p>
+      <div class="row-actions">${l?`<button type="button" class="btn ghost" id="lt-borrar">Anular mi reserva</button>`:""}<button class="btn" id="lt-save">${l?"Guardar cambios":"Reservar"}</button></div></form>`;
+    let admin="";
+    if(S.canEdit){
+      const rows=S.lotAll.filter(r=>r.decimos>0).sort((a,b)=>(a.nombre||"").localeCompare(b.nombre||"","es"));
+      const nd=rows.reduce((a,r)=>a+(+r.decimos||0),0);
+      admin=`<section class="stack"><h3>Reservas (solo directiva)</h3><div class="notice">${rows.length} persona${rows.length===1?"":"s"} · ${nd} décimos · ${nd*total} € en total, de los que ${nd*LOT.donativo} € son para la Protectora.</div>
+        ${rows.length?`<div class="card" style="overflow-x:auto"><table class="tbl"><thead><tr><th>Nombre</th><th>DNI</th><th>Décimos</th><th>Importe</th><th>Fecha</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${esc(r.nombre)}</td><td>${esc(r.dni)}</td><td>${esc(r.decimos)}</td><td>${r.decimos*total} €</td><td>${r.at?new Date(r.at).toLocaleDateString("es-ES"):""}</td></tr>`).join("")}</tbody></table></div>`:`<div class="empty"><strong>Todavía no hay reservas.</strong>Aparecerán aquí con nombre, DNI y número de décimos.</div>`}</section>`;
+    }
+    return intro+form+admin;
+  },
+  estatutos(){
+    const tpl=document.getElementById("tpl-estatutos");
+    return `<div><h2>Estatutos Asociación</h2></div>
+      <nav class="filters est-index" aria-label="Títulos">${[...tpl.content.querySelectorAll("h3")].map((h,i)=>`<button data-est="${i}">${esc(estLabel(h.textContent))}</button>`).join("")}</nav>
+      <article class="card legaltext" id="est-text">${tpl.innerHTML}</article>`;
+  },
+  cuota(){
+    return `<div><h2>Cuota de socio</h2><p class="lead">Hacerte socio o renovar es sencillo.</p></div>
+      <section class="cuota"><span>Cuota anual</span><div class="big">30 € <span>al año</span></div><p>Una sola cuota por año natural.</p></section>
+      <section class="card"><h3>Cómo pagar</h3>
+        <p class="body"><strong>Transferencia o ingreso bancario</strong>\nCaixa Rural Galega\nTitular: Asociación de Vecinos Parque de Rosalía de Castro-Recatelo\nIBAN: <span class="iban" id="iban">ES15 3070 0001 2563 4625 3229</span>\nConcepto: tu nombre y DNI</p>
+        <div><button class="btn ghost small" id="copy-iban" type="button">Copiar IBAN</button> <span class="meta" id="copy-msg"></span></div></section>
+      <section class="card"><h3>Para qué sirve tu cuota</h3><p class="body">Las Festas de Recatelo, las actividades del barrio, el apoyo a la Protectora de Animales, Asociación Capaces, Michos y la AECC, y las gestiones ante las instituciones.</p></section>`;
+  }
+};
+const BEST = {nueva:["Nuevo","p-red"], leida:["Leído","p-amber"], respondida:["Respondido","p-green"]};
+function bzCard(m, admin, uid){
+  const st = BEST[m.estado]||BEST.nueva;
+  const who = admin ? `<span>De: ${esc(S.names[uid]||"Socio")}${m.contacto?" · "+esc(m.contacto):""}</span>` : "";
+  const when = m.at ? new Date(m.at).toLocaleDateString("es-ES",{day:"numeric",month:"long",year:"numeric"}) : "";
+  let foot = m.respuesta ? `<div class="notice"><strong>Respuesta de la directiva:</strong> <span class="body">${esc(m.respuesta)}</span></div>` : "";
+  if(admin) foot += `<div class="row-actions">${m.estado==="nueva"||!m.estado?`<button class="btn ghost small" data-bz-read="${esc(uid)}|${esc(m.id)}">Marcar leído</button>`:""}<button class="btn ghost small" data-bz-reply="${esc(uid)}|${esc(m.id)}">${m.respuesta?"Cambiar respuesta":"Responder"}</button></div>`;
+  return `<article class="card"><div class="meta"><span class="pill ${m.tipo==="Sugerencia"?"p-blue":"p-red"}">${esc(m.tipo||"Mensaje")}</span><span class="pill ${st[1]}">${st[0]}</span><span>${when}</span>${who}</div><p class="body">${esc(m.texto)}</p>${foot}</article>`;
+}
+function buzonAdmin(){
+  const all=[]; for(const d of S.buzonAll) for(const m of (d.msgs||[])) all.push([d.uid,m]);
+  all.sort((a,b)=>(b[1].at||"").localeCompare(a[1].at||""));
+  const nuevos = all.filter(([,m])=>!m.estado||m.estado==="nueva").length;
+  return `<div class="notice">Vista de la directiva: ${all.length} mensaje${all.length===1?"":"s"}, ${nuevos} sin leer.</div>
+    <section class="stack">${all.length?all.map(([u,m])=>bzCard(m,true,u)).join(""):`<div class="empty"><strong>El buzón está vacío.</strong>Los mensajes que envíen los socios aparecerán aquí.</div>`}</section>`;
+}
+function cartelCard(it){
+  const pdf = it.photoType==="application/pdf";
+  const src = it.photo ? imgSrc(it.photo) : "";
+  const media = !it.photo ? `<div class="ph">Sin cartel</div>` : pdf ? `<a class="ph" href="${src}" target="_blank" rel="noopener">Abrir cartel (PDF)</a>` : `<a href="${src}" target="_blank" rel="noopener"><img src="${src}" alt="Cartel: ${esc(it.title)}" loading="lazy"></a>`;
+  return `<figure class="photo" style="margin:0">${media}<figcaption class="cap"><strong>${esc(it.title)}</strong><span class="meta">${it.date?fmtDate(it.date):""}</span>${adminRow(it)}</figcaption></figure>`;
+}
+function inscritosDe(id){ return S.inscAll.filter(d=>d.cursos&&d.cursos[id]).map(d=>{ const f=S.fichasAll.find(x=>x.uid===d.uid); return (f&&f.nombre)||S.names[d.uid]||"Socio/a"; }); }
+function cursoCard(it, past){
+  const yo = !!(S.insc&&S.insc.cursos&&S.insc.cursos[it.id]);
+  let action="";
+  if(!past && !S.canEdit && S.uid && !S.inscBlocked) action = yo
+    ? `<div class="row-actions"><span class="pill p-green" style="align-self:center">Estás apuntado/a</span><button class="btn ghost small" data-baja="${esc(it.id)}">Borrarme</button></div>`
+    : `<div class="row-actions"><button class="btn" data-alta="${esc(it.id)}">Apuntarme</button></div>`;
+  let admin="";
+  if(S.canEdit){ const n=inscritosDe(it.id); admin=`<details class="insc"><summary>${n.length} apuntado${n.length===1?"":"s"}${it.plazas?" de "+esc(it.plazas)+" plazas":""}</summary>${n.length?`<ol>${n.map(x=>`<li>${esc(x)}</li>`).join("")}</ol>`:`<p class="meta">Nadie se ha apuntado todavía.</p>`}</details>`; }
+  return `<article class="card"><div class="meta"><span class="pill p-blue">Curso</span>${it.date?`<span>${past?"":"Empieza el "}${fmtDate(it.date)}</span>`:`<span class="pill p-amber">${esc(it.cuando||"Fecha por determinar")}</span>`}${it.plazas&&!S.canEdit?`<span>${esc(it.plazas)} plazas</span>`:""}</div>
+    <h3>${esc(it.title)}</h3>${it.time||it.place?`<div class="meta">${it.time?"🕒 "+esc(it.time):""}${it.time&&it.place?" · ":""}${it.place?"📍 "+esc(it.place):""}</div>`:""}
+    ${it.body?`<p class="body">${esc(it.body)}</p>`:""}${attach(it)}${action}${admin}${adminRow(it)}</article>`;
+}
+function estLabel(t){ const parts=t.split(/[.:]\s*/); let l=(parts.length>1?parts.slice(1).join(" "):t).trim().replace(/\.$/,"")||t; l=l.toLowerCase(); return l.charAt(0).toUpperCase()+l.slice(1); }
+function colNews(it){
+  return `<article class="card"><div class="meta"><span class="pill p-amber">${esc(it.entity||"Colectivo")}</span><span>${fmtDate(it.date)}</span></div><h3>${esc(it.title)}</h3>${it.body?`<p class="body">${esc(it.body)}</p>`:""}${attach(it)}${it.link==="loteria"?`<div><button class="btn" data-go="loteria">Reservar décimos</button></div>`:""}${adminRow(it)}</article>`;
+}
+function colIcon(id){
+  const p={protectora:'<path d="M7 14c-1.5 0-2.5-1.2-2.5-2.6S5.6 9 7 9s2.5 1 2.5 2.4S8.5 14 7 14zm10 0c-1.5 0-2.5-1.2-2.5-2.6S15.6 9 17 9s2.5 1 2.5 2.4S18.5 14 17 14zM9.5 8C8.2 8 7.5 6.8 7.5 5.5S8.3 3 9.5 3s2 1.2 2 2.5S10.8 8 9.5 8zm5 0c-1.2 0-2-1.2-2-2.5s.8-2.5 2-2.5 2 1.2 2 2.5S15.8 8 14.5 8zM12 12c3 0 5.5 3.5 5.5 6 0 1.6-1.3 2.5-2.8 2.5-1.2 0-1.8-.6-2.7-.6s-1.5.6-2.7.6c-1.5 0-2.8-.9-2.8-2.5 0-2.5 2.5-6 5.5-6z"/>',
+    capaces:'<circle cx="12" cy="5" r="2.5"/><path d="M5 9.5h14v2.2h-5v9.8h-2.3v-5h-1.4v5H8v-9.8H5z"/>',
+    michos:'<path d="M5 3l3 5h8l3-5v9c0 4.4-3.1 8-7 8s-7-3.6-7-8zm4.5 9.5a1.2 1.2 0 100-2.4 1.2 1.2 0 000 2.4zm5 0a1.2 1.2 0 100-2.4 1.2 1.2 0 000 2.4zM12 16l-1.3-1.2h2.6z"/>',
+    aecc:'<path d="M12 21s-7.5-4.6-7.5-10.2C4.5 7.6 6.8 5.5 9.4 5.5c1.1 0 2 .4 2.6 1.1.6-.7 1.5-1.1 2.6-1.1 2.6 0 4.9 2.1 4.9 5.3C19.5 16.4 12 21 12 21z"/>'};
+  return `<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">${p[id]||""}</svg>`;
+}
+
+function render(){
+  let html = "";
+  if(S.noDb) html += `<div class="notice">Abre esta app con tu cuenta de Claude para ver las publicaciones de la asociación.</div>`;
+  else if(!S.loaded) html += `<div class="notice">Cargando publicaciones…</div>`;
+  const gate = S.uid && !S.canEdit && S.consentLoaded && !(S.consent&&S.consent.acepta) && !S.consentBlocked;
+  $("#tabs").hidden = !!gate;
+  if(gate) html += `<div class="next"><span class="eyebrow">Bienvenida/o a la app de socios</span><h3>Antes de empezar, firma la protección de datos</h3><span>Lee la información y marca la primera casilla. Solo tendrás que hacerlo una vez.</span></div>` + VIEWS.privacidad();
+  else html += VIEWS[S.tab]();
+  const keep = {}; for(const id of ["bz-texto","bz-contacto","bz-tipo","fi-nombre","fi-dir","fi-email","fi-prio","lt-nombre","lt-dni","lt-n"]){ const el=document.getElementById(id); if(el) keep[id]=el.value; }
+  $("#main").innerHTML = html;
+  for(const id in keep){ const el=document.getElementById(id); if(el) el.value=keep[id]; }
+  $("#fab").hidden = !(S.canEdit && ADD_LABEL[S.tab]) || !!gate;
+  if(!$("#fab").hidden) $("#fab").textContent = "+ Añadir " + ADD_LABEL[S.tab];
+}
+
+$("#main").addEventListener("click", e=>{
+  const g=e.target.closest("[data-go]"); if(g) return go(g.dataset.go);
+  const fb=e.target.closest("[data-f]"); if(fb){ S.filter[fb.parentElement.dataset.filter]=fb.dataset.f; return render(); }
+  const ed=e.target.closest("[data-edit]"); if(ed){ const it=S.items.find(i=>i.id===ed.dataset.edit); if(it) openForm(it.section,it); return; }
+  const dl=e.target.closest("[data-del]"); if(dl){ askDelete(dl.dataset.del); }
+  const br=e.target.closest("[data-bz-read]"); if(br){ const [u,id]=br.dataset.bzRead.split("|"); bzPatch(u,id,{estado:"leida"}); }
+  const bp=e.target.closest("[data-bz-reply]"); if(bp){ const [u,id]=bp.dataset.bzReply.split("|"); bzReplyForm(u,id); }
+});
+$("#fab").addEventListener("click", ()=>openForm(S.tab));
+function paintLogo(){ const b=$("#brand-logo"); if(!b) return; if(S.logo){ b.innerHTML=`<img src="${imgSrc(S.logo)}" alt="">`; } }
+$("#main").addEventListener("change", async e=>{
+  if(e.target.id!=="logo-in") return;
+  const f=e.target.files[0]; if(!f) return; const msg=$("#logo-msg"); msg.textContent="Subiendo…";
+  try{
+    const up=await S.assets.upload(f);
+    const ref=S.db.doc("config/ajustes"); const old=S.logo;
+    const snap=await ref.get(); if(snap.exists) await ref.update({logo:up.id}); else await ref.set({logo:up.id});
+    if(old && old!==up.id){ try{ await S.assets.delete(old) }catch(x){} }
+  }catch(x){ msg.textContent = x&&x.code==="too_large" ? "El logo pesa demasiado." : x&&x.code==="unsupported_type" ? "Usa PNG, JPG, WEBP o SVG." : "No se ha podido subir. Vuelve a intentarlo."; }
+});
+$("#main").addEventListener("submit", async e=>{
+  if(e.target.id!=="fi-form") return; e.preventDefault();
+  const err=$("#fi-err"); err.hidden=true; const v=id=>$("#"+id).value.trim();
+  const d={uid:S.uid, nombre:v("fi-nombre"), direccion:v("fi-dir"), email:v("fi-email"), prioridad:v("fi-prio"), at:new Date().toISOString()};
+  const fail=t=>{err.textContent=t; err.hidden=false;};
+  if(!d.nombre) return fail("Escribe tu nombre y apellidos.");
+  if(!d.direccion) return fail("Escribe tu dirección.");
+  if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(d.email)) return fail("Revisa el correo electrónico, parece incompleto.");
+  if(!$("#fi-ok").checked) return fail("Para guardar tus datos tienes que aceptar la protección de datos.");
+  const btn=$("#fi-save"); btn.disabled=true; btn.textContent="Guardando…";
+  try{ await S.db.doc("socios/"+S.uid).set(d); S.ficha=d; render(); }
+  catch(x){ if(x&&x.code==="invalid_argument"){ S.fichaBlocked=true; render(); return; } fail("No se han podido guardar. Vuelve a intentarlo."); btn.disabled=false; btn.textContent="Guardar mis datos"; }
+});
+$("#main").addEventListener("click", async e=>{
+  if(e.target.id!=="fi-borrar") return;
+  if(e.target.dataset.sure!=="1"){ e.target.dataset.sure="1"; e.target.textContent="Pulsa otra vez para borrar"; return; }
+  try{ await S.db.doc("socios/"+S.uid).delete(); S.ficha=null; render(); }catch(x){}
+});
+async function startFicha(){
+  if(!S.db || !S.user) return;
+  if(S.uid) S.db.doc("socios/"+S.uid).onSnapshot(snap=>{ S.ficha=snap.exists?snap.data():null; render(); },()=>{});
+  if(S.canEdit) S.db.collection("socios").onSnapshot(snap=>{ S.fichasAll=snap.docs.map(d=>({uid:d.id,...d.data()})); render(); },()=>{});
+}
+$("#main").addEventListener("change", async e=>{
+  if(e.target.id!=="est-in") return;
+  const f=e.target.files[0]; if(!f) return; const msg=$("#est-msg"); msg.textContent="Subiendo…";
+  try{
+    const upl=await S.assets.upload(f, {type:"application/pdf"});
+    const ref=S.db.doc("config/ajustes"); const old=S.estatutos&&S.estatutos.id;
+    const val={id:upl.id, name:"Estatutos vigentes", updated:today()};
+    const snap=await ref.get(); if(snap.exists) await ref.update({estatutos:val}); else await ref.set({logo:S.logo, estatutos:val});
+    if(old && old!==upl.id){ try{ await S.assets.delete(old) }catch(x){} }
+  }catch(x){ msg.textContent = x&&x.code==="unsupported_type" ? "Sube el documento en PDF." : "No se ha podido subir. Vuelve a intentarlo."; }
+});
+async function setInsc(id, on){
+  const cursos={...((S.insc&&S.insc.cursos)||{})};
+  if(on) cursos[id]=new Date().toISOString(); else delete cursos[id];
+  try{ await S.db.doc("inscripciones/"+S.uid).set({uid:S.uid, cursos}); S.insc={uid:S.uid,cursos}; render(); }
+  catch(x){ if(x&&x.code==="invalid_argument"){ S.inscBlocked=true; render(); } }
+}
+$("#main").addEventListener("click", e=>{
+  const a=e.target.closest("[data-alta]"); if(a) return setInsc(a.dataset.alta,true);
+  const b=e.target.closest("[data-baja]"); if(b) return setInsc(b.dataset.baja,false);
+});
+async function startInsc(){
+  if(!S.db||!S.user) return;
+  if(S.uid) S.db.doc("inscripciones/"+S.uid).onSnapshot(snap=>{ S.insc=snap.exists?snap.data():null; render(); },()=>{});
+  if(S.canEdit) S.db.collection("inscripciones").onSnapshot(async snap=>{
+    S.inscAll=snap.docs.map(d=>({uid:d.id,...d.data()}));
+    try{ const ps=await S.user.profiles(S.inscAll.map(d=>d.uid)); for(const u in ps) S.names[u]=ps[u].name||""; }catch(e){}
+    render();
+  },()=>{});
+}
+$("#main").addEventListener("click", async e=>{
+  if(e.target.id!=="copy-iban") return;
+  const msg=$("#copy-msg");
+  try{ await navigator.clipboard.writeText("ES1530700001256346253229"); msg.textContent="Copiado"; }
+  catch(x){ const r=document.createRange(); r.selectNodeContents($("#iban")); const sl=getSelection(); sl.removeAllRanges(); sl.addRange(r); msg.textContent="Selecciona y copia el número"; }
+});
+$("#main").addEventListener("click", e=>{
+  const b=e.target.closest("[data-est]"); if(!b) return;
+  const h=document.querySelectorAll("#est-text h3")[+b.dataset.est]; if(h) h.scrollIntoView({behavior:"smooth",block:"start"});
+});
+function dniOk(d){ const m=/^([XYZ]?)(\d{7,8})([A-Z])$/.exec(d); if(!m) return false; const n=+((({X:"0",Y:"1",Z:"2"})[m[1]]||"")+m[2]); return "TRWAGMYFPDXBNJZSQVHLCKE"[n%23]===m[3]; }
+$("#main").addEventListener("input", e=>{ if(e.target.id==="lt-n"){ const n=Math.max(0,parseInt(e.target.value)||0); $("#lt-total").textContent="Total: "+n*(LOT.precio+LOT.donativo)+" €"; } });
+$("#main").addEventListener("submit", async e=>{
+  if(e.target.id!=="lt-form") return; e.preventDefault();
+  const err=$("#lt-err"); err.hidden=true; const fail=t=>{err.textContent=t; err.hidden=false;};
+  const nombre=$("#lt-nombre").value.trim(); const dni=$("#lt-dni").value.trim().toUpperCase().replace(/[\s-]/g,""); const decimos=parseInt($("#lt-n").value);
+  if(!nombre) return fail("Escribe tu nombre y apellidos.");
+  if(!dniOk(dni)) return fail("Revisa el DNI: deben ser 8 números y la letra, por ejemplo 12345678Z.");
+  if(!(decimos>=1 && decimos<=50)) return fail("Indica cuántos décimos quieres (entre 1 y 50).");
+  if(!$("#lt-ok").checked) return fail("Para reservar tienes que aceptar la protección de datos.");
+  const d={uid:S.uid, nombre, dni, decimos, at:new Date().toISOString()};
+  try{ await S.db.doc("loteria/"+S.uid).set(d); S.lot=d; render(); }
+  catch(x){ if(x&&x.code==="invalid_argument"){ S.lotBlocked=true; render(); return; } fail("No se ha podido guardar. Vuelve a intentarlo."); }
+});
+$("#main").addEventListener("click", async e=>{
+  if(e.target.id!=="lt-borrar") return;
+  if(e.target.dataset.sure!=="1"){ e.target.dataset.sure="1"; e.target.textContent="Pulsa otra vez para anular"; return; }
+  try{ await S.db.doc("loteria/"+S.uid).delete(); S.lot=null; render(); }catch(x){}
+});
+async function startLot(){
+  if(!S.db||!S.user) return;
+  if(S.uid) S.db.doc("loteria/"+S.uid).onSnapshot(snap=>{ S.lot=snap.exists?snap.data():null; render(); },()=>{});
+  if(S.canEdit) S.db.collection("loteria").onSnapshot(snap=>{ S.lotAll=snap.docs.map(d=>({uid:d.id,...d.data()})); render(); },()=>{});
+}
+$("#ft-priv").addEventListener("click", e=>{ e.preventDefault(); go("privacidad"); });
+async function saveConsent(acepta){
+  const err=$("#cs-err"); if(err) err.hidden=true;
+  const d={uid:S.uid, acepta, fotos: acepta && $("#cs-fotos").checked, comunicaciones: acepta && $("#cs-com").checked, version:RGPD_VERSION, at:new Date().toISOString()};
+  const hist=[...((S.consent&&S.consent.historial)||[]), {acepta:d.acepta,fotos:d.fotos,comunicaciones:d.comunicaciones,at:d.at}].slice(-50);
+  d.historial=hist;
+  try{ await S.db.doc("consentimientos/"+S.uid).set(d); S.consent=d; render(); }
+  catch(x){ if(x&&x.code==="invalid_argument"){ S.consentBlocked=true; render(); return; } if(err){ err.textContent="No se ha podido guardar. Vuelve a intentarlo."; err.hidden=false; } }
+}
+$("#main").addEventListener("submit", e=>{
+  if(e.target.id!=="cs-form") return; e.preventDefault();
+  if(!$("#cs-acepta").checked){ const err=$("#cs-err"); err.textContent="Para registrar tu consentimiento marca la primera casilla. Si no quieres darlo, no hace falta guardar nada."; err.hidden=false; return; }
+  saveConsent(true);
+});
+$("#main").addEventListener("click", e=>{ if(e.target.id==="cs-retirar") saveConsent(false); });
+async function startConsent(){
+  if(!S.db || !S.user) return;
+  if(S.uid) S.db.doc("consentimientos/"+S.uid).onSnapshot(snap=>{ S.consent=snap.exists?snap.data():null; S.consentLoaded=true; render(); },()=>{});
+  if(S.canEdit) S.db.collection("consentimientos").onSnapshot(async snap=>{
+    S.consentAll=snap.docs.map(d=>({uid:d.id,...d.data()}));
+    try{ const ps=await S.user.profiles(S.consentAll.map(d=>d.uid)); for(const u in ps) S.names[u]=ps[u].name||""; }catch(e){}
+    render();
+  },()=>{});
+}
+$("#main").addEventListener("submit", async e=>{
+  if(e.target.id!=="bz-form") return; e.preventDefault();
+  const err=$("#bz-err"); err.hidden=true;
+  const texto=$("#bz-texto").value.trim(); if(!texto){ err.textContent="Escribe tu mensaje."; err.hidden=false; return; }
+  const btn=$("#bz-send"); btn.disabled=true; btn.textContent="Enviando…";
+  const msg={id:Date.now().toString(36)+Math.random().toString(36).slice(2,6), tipo:$("#bz-tipo").value, contacto:$("#bz-contacto").value.trim(), texto, at:new Date().toISOString(), estado:"nueva"};
+  const msgs=[...(S.buzon?.msgs||[]), msg];
+  try{ await S.db.doc("buzon/"+S.uid).set({uid:S.uid, msgs, lastAt:msg.at}); S.buzon={msgs}; render(); const n=document.createElement("div"); n.className="notice"; n.textContent="Mensaje enviado. Gracias."; $("#bz-form")?.prepend(n); }
+  catch(x){ if(x&&x.code==="invalid_argument"){ S.buzonBlocked=true; render(); return; } err.textContent="No se ha podido enviar. Vuelve a intentarlo."; err.hidden=false; btn.disabled=false; btn.textContent="Enviar a la directiva"; }
+});
+async function bzPatch(uid,id,patch){
+  const d=S.buzonAll.find(x=>x.uid===uid); if(!d) return;
+  const msgs=(d.msgs||[]).map(m=>m.id===id?{...m,...patch}:m);
+  try{ await S.db.doc("buzon/"+uid).update({msgs}); }catch(e){}
+}
+function bzReplyForm(uid,id){
+  const d=S.buzonAll.find(x=>x.uid===uid); const m=d&&(d.msgs||[]).find(x=>x.id===id); if(!m) return;
+  $("#sheet-root").innerHTML=`<div class="sheet-bg" id="sheet-bg"><form class="sheet" id="rf" novalidate><h2>Responder</h2><p class="body" style="color:var(--muted)">${esc(m.texto)}</p>
+    ${field("rf-text","Respuesta (la verá solo este socio)",`<textarea id="rf-text">${esc(m.respuesta||"")}</textarea>`)}
+    <div class="row-actions"><button type="button" class="btn ghost" id="rf-no">Cancelar</button><button class="btn">Guardar respuesta</button></div></form></div>`;
+  $("#rf-no").onclick=closeSheet;
+  $("#rf").addEventListener("submit",async e=>{ e.preventDefault(); const t=$("#rf-text").value.trim(); await bzPatch(uid,id,{respuesta:t, estado:t?"respondida":"leida"}); closeSheet(); });
+}
+async function startBuzon(){
+  if(!S.db || !S.user) return;
+  if(S.canEdit){
+    S.db.collection("buzon").onSnapshot(async snap=>{
+      S.buzonAll=snap.docs.map(d=>({uid:d.id,...d.data()}));
+      try{ const ps=await S.user.profiles(S.buzonAll.map(d=>d.uid)); for(const u in ps) S.names[u]=ps[u].name||""; }catch(e){}
+      render();
+    },()=>{});
+  } else if(S.uid){
+    S.db.doc("buzon/"+S.uid).onSnapshot(snap=>{ S.buzon=snap.exists?snap.data():null; render(); },()=>{});
+  }
+}
+
+/* ---------- formulario de la directiva ---------- */
+function field(id,label,inner){ return `<label for="${id}">${label}${inner}</label>`; }
+function sel(id,opts,val){ return `<select id="${id}">${opts.map(o=>{const [v,l]=Array.isArray(o)?o:[o,o];return `<option value="${esc(v)}" ${v===val?"selected":""}>${esc(l)}</option>`}).join("")}</select>`; }
+function closeSheet(){ $("#sheet-root").innerHTML=""; }
+
+function openForm(section, it){
+  const v = it || {date: today()};
+  let extra = "";
+  if(section==="cursos") extra = `<div class="two">${field("f-time","Horario",`<input id="f-time" value="${esc(v.time||"")}" placeholder="Martes y jueves, 18:00–19:30">`)}${field("f-place","Lugar",`<input id="f-place" value="${esc(v.place||"")}">`)}</div>`
+     + field("f-plazas","Plazas (déjalo vacío si no hay límite)",`<input id="f-plazas" type="number" min="1" inputmode="numeric" value="${esc(v.plazas||"")}">`);
+  if(section==="avisos") extra = field("f-kind","Tipo",sel("f-kind",[["reunion","Reunión de socios"],["aviso","Aviso general"]],v.kind||"reunion"))
+     + `<div class="two">${field("f-time","Hora",`<input id="f-time" type="time" value="${esc(v.time||"")}">`)}${field("f-place","Lugar",`<input id="f-place" value="${esc(v.place||"")}" placeholder="Local social, plaza…">`)}</div>`;
+  if(section==="reuniones") extra = field("f-entity","Reunión con",sel("f-entity",ENTIDADES,v.entity||"Alcaldía"));
+  if(section==="quejas") extra = `<div class="two">${field("f-kind","Tipo",sel("f-kind",[["queja","Queja"],["proyecto","Proyecto"]],v.kind||"queja"))}${field("f-status","Estado",sel("f-status",Object.entries(ESTADOS).map(([k,x])=>[k,x[0]]),v.status||"presentada"))}</div>`
+     + field("f-entity","Institución",sel("f-entity",ENTIDADES,v.entity||"Alcaldía"));
+  if(section==="colectivos") extra = field("f-entity","Colectivo",sel("f-entity",COLECTIVOS.map(c=>c.name),v.entity||COLECTIVOS[0].name));
+  if(section==="fotos") extra = field("f-album","Álbum",sel("f-album",ALBUMES,v.album||"Festas Recatelo"));
+  const isCartel = section==="carteles";
+  const isFoto = section==="fotos" || isCartel;
+  const canPhoto = !!S.assets;
+  $("#sheet-root").innerHTML = `<div class="sheet-bg" id="sheet-bg"><form class="sheet" id="f" novalidate>
+    <h2>${it?"Editar":"Añadir"} ${ADD_LABEL[section]}</h2>
+    ${field("f-title", isCartel?"Nombre de la actividad":isFoto?"Pie de foto":"Título", `<input id="f-title" required value="${esc(v.title||"")}">`)}
+    ${field("f-date","Fecha",`<input id="f-date" type="date" value="${esc(v.date||"")}">`)}
+    ${extra}
+    ${isFoto?"":field("f-body", section==="reuniones"?"Resumen":section==="cursos"?"Explicación del curso":"Texto", `<textarea id="f-body">${esc(v.body||"")}</textarea>`)}
+    ${canPhoto?field("f-photo", isCartel?"Cartel (imagen o PDF)":isFoto?"Foto":"Foto (opcional)", `<input id="f-photo" type="file" accept="image/png,image/jpeg,image/webp,image/gif${isCartel?",application/pdf":""}">`) + (v.photo?`<span class="meta">Ya tiene una foto; elige otra solo si quieres cambiarla.</span>`:"")
+              :(isFoto?`<p class="err">Solo quien tenga permiso de edición puede subir fotos.</p>`:"")}
+    <p class="err" id="f-err" hidden></p>
+    <div class="row-actions"><button type="button" class="btn ghost" id="f-cancel">Cancelar</button><button class="btn" id="f-save">${it?"Guardar cambios":"Publicar"}</button></div>
+  </form></div>`;
+  $("#f-cancel").onclick = closeSheet;
+  $("#sheet-bg").addEventListener("click", e=>{ if(e.target.id==="sheet-bg") closeSheet(); });
+  $("#f-title").focus();
+  $("#f").addEventListener("submit", async e=>{
+    e.preventDefault();
+    const err=$("#f-err"); err.hidden=true;
+    const val=id=>{const el=$("#"+id);return el?el.value.trim():undefined};
+    const data = {section, title:val("f-title"), date:val("f-date")||"", updatedAt:new Date().toISOString()};
+    for(const [k,id] of [["body","f-body"],["kind","f-kind"],["time","f-time"],["place","f-place"],["entity","f-entity"],["status","f-status"],["album","f-album"],["plazas","f-plazas"]]){ const x=val(id); if(x!==undefined) data[k]=x; }
+    if(!data.title){ err.textContent="Escribe un título."; err.hidden=false; return; }
+    const file = $("#f-photo") && $("#f-photo").files[0];
+    if(isFoto && !file && !v.photo){ err.textContent=isCartel?"Elige el cartel para subir.":"Elige una foto para subir."; err.hidden=false; return; }
+    const btn=$("#f-save"); btn.disabled=true; btn.textContent="Guardando…";
+    try{
+      if(file){
+        if(file.size>20*1024*1024) throw {code:"too_large"};
+        const up = await S.assets.upload(file);
+        data.photo = up.id; data.photoType = up.contentType || file.type;
+      } else if(v.photo){ data.photo = v.photo; if(v.photoType) data.photoType = v.photoType; }
+      if(it && it.cuando && !data.date) data.cuando = it.cuando;
+      const ref = it ? S.db.collection("items").doc(it.id) : S.db.collection("items").doc();
+      if(!it) data.createdAt = data.updatedAt;
+      else data.createdAt = v.createdAt || data.updatedAt;
+      await ref.set(data);
+      closeSheet();
+    }catch(x){
+      const msg = {too_large:"La foto pesa más de 20 MB. Prueba con una más pequeña.", unsupported_type:"Ese formato de imagen no se admite. Usa JPG, PNG o WEBP.", invalid_argument:"No tienes permiso para publicar. Pide a la directiva acceso de edición.", quota_exceeded:"Se ha llenado el espacio de la app. Borra publicaciones antiguas.", quota_or_state:"Se ha llenado el espacio para fotos. Borra fotos antiguas.", rate_limited:"Demasiados intentos seguidos. Espera un momento y vuelve a probar."}[x&&x.code] || "No se ha podido guardar. Vuelve a intentarlo.";
+      err.textContent=msg; err.hidden=false; btn.disabled=false; btn.textContent=it?"Guardar cambios":"Publicar";
+    }
+  });
+}
+
+function askDelete(id){
+  const it=S.items.find(i=>i.id===id); if(!it) return;
+  $("#sheet-root").innerHTML = `<div class="sheet-bg" id="sheet-bg"><div class="sheet" role="dialog" aria-label="Borrar publicación">
+    <h2>¿Borrar “${esc(it.title)}”?</h2><p class="body">Desaparecerá de la app para todos los socios. No se puede deshacer.</p>
+    <p class="err" id="d-err" hidden></p>
+    <div class="row-actions"><button class="btn ghost" id="d-no">Cancelar</button><button class="btn danger" id="d-yes">Borrar</button></div></div></div>`;
+  $("#d-no").onclick=closeSheet;
+  $("#d-yes").onclick=async()=>{
+    try{
+      await S.db.collection("items").doc(id).delete();
+      if(it.photo && S.assets){ try{ await S.assets.delete(it.photo) }catch(e){} }
+      closeSheet();
+    }catch(e){ const er=$("#d-err"); er.textContent="No se ha podido borrar. Vuelve a intentarlo."; er.hidden=false; }
+  };
+}
+
+/* ---------- arranque ---------- */
+(function init(){
+  const h=(location.hash||"").slice(1); let saved=null; try{saved=localStorage.getItem("recatelo-tab")}catch(e){}
+  S.tab = TABS.some(t=>t.id===h) ? h : (TABS.some(t=>t.id===saved)?saved:"inicio");
+  renderTabs(); render(); paintLogo();
+  if(!window.claude || !window.claude.use){ S.noDb=true; render(); return; }
+  const userP = claude.use("user").then(async u=>{ S.user=u; if(u){ try{ S.canEdit = !!(await u.canEdit()); }catch(e){} try{ S.uid = await u.id(); }catch(e){} render(); } });
+  claude.use("assets").then(a=>{ S.assets=a; });
+  claude.use("db").then(db=>{
+    if(!db){ S.noDb=true; render(); return; }
+    S.db=db;
+    db.collection("items").onSnapshot(snap=>{
+      S.items = snap.docs.map(d=>({id:d.id, ...d.data()}));
+      S.loaded = true; render();
+    }, ()=>{ S.loaded=true; render(); });
+    db.doc("config/ajustes").onSnapshot(snap=>{ S.logo = snap.exists ? (snap.data().logo||DEFAULT_LOGO) : DEFAULT_LOGO; S.estatutos = snap.exists ? (snap.data().estatutos||null) : null; paintLogo(); render(); },()=>{});
+    userP.then(startBuzon); userP.then(startLot); userP.then(startInsc); userP.then(startFicha); userP.then(startConsent);
+  });
+})();
+</script>
+
+</body>
+</html>
