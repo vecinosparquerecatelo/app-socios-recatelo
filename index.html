@@ -452,7 +452,6 @@ function renderTabs(){
 $("#tabs").addEventListener("click", e=>{ const b=e.target.closest("[data-tab]"); if(b) go(b.dataset.tab); });
 function go(tab){
   S.tab = tab; try{ history.replaceState(null,"","#"+tab) }catch(e){}
-  try{ localStorage.setItem("recatelo-tab",tab) }catch(e){}
   renderTabs(); render(); window.scrollTo({top:0});
   const b=$('#tabs [aria-selected="true"]'); b && b.scrollIntoView({inline:"center",block:"nearest"});
 }
@@ -1062,8 +1061,10 @@ function askDelete(id){
 
 /* ---------- arranque ---------- */
 (function init(){
-  const h=(location.hash||"").slice(1); let saved=null; try{saved=localStorage.getItem("recatelo-tab")}catch(e){}
-  S.tab = TABS.some(t=>t.id===h) ? h : (TABS.some(t=>t.id===saved)?saved:"inicio");
+  // Siempre se abre en Inicio; solo una notificación (?n=1#pestaña) abre otra pestaña
+  const h=(location.hash||"").slice(1), desdeAviso=/[?&]n=1/.test(location.search);
+  S.tab = desdeAviso && TABS.some(t=>t.id===h) ? h : "inicio";
+  try{ history.replaceState(null,"",location.pathname+"#"+S.tab) }catch(e){}
   renderTabs(); render(); paintLogo();
   if(!window.claude || !window.claude.use){ S.noDb=true; render(); return; }
   const userP = claude.use("user").then(async u=>{ S.user=u; if(u){ try{ S.canEdit = !!(await u.canEdit()); }catch(e){} try{ S.uid = await u.id(); }catch(e){} render(); } });
