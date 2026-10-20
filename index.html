@@ -123,7 +123,7 @@ textarea{min-height:120px;resize:vertical}
 .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 @media (max-width:420px){.two{grid-template-columns:1fr}}
 .err{color:var(--red);font-size:.9rem;margin:0}
-footer{color:var(--muted);font-size:.85rem;text-align:center;padding-bottom:20px}
+footer{color:var(--muted);font-size:.85rem;text-align:center;padding-bottom:calc(48px + env(safe-area-inset-bottom,0px))}
 body.con-fab footer{padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))}
 @media (prefers-reduced-motion:no-preference){.card,.photo{animation:in .25s ease both}@keyframes in{from{transform:translateY(4px)}to{transform:none}}}
 </style>
