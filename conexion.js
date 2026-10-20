@@ -182,7 +182,7 @@
           er.hidden = false; btn.disabled = false; btn.textContent = "Entrar"; return;
         }
         await enter();
-      }catch(x){ er.textContent = "No se ha podido entrar. Comprueba la conexión y vuelve a intentarlo."; er.hidden = false; btn.disabled = false; btn.textContent = "Entrar"; }
+      }catch(x){ const det = String((x && (x.message || x.code)) || "").slice(0, 160); er.textContent = "No se ha podido entrar. Comprueba la conexión y vuelve a intentarlo." + (det ? " (Detalle: " + det + ")" : ""); er.hidden = false; btn.disabled = false; btn.textContent = "Entrar"; }
     });
     el.querySelector("#acc-dir").addEventListener("submit", async e => {
       e.preventDefault();
