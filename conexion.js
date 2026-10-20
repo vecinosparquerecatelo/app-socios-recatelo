@@ -216,7 +216,7 @@
     const t = document.createElement("div"); t.id = "tools"; t.style.cssText = "display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:10px";
     t.innerHTML = `${standalone ? "" : `<button class="btn ghost small" id="btn-instalar" ${installEvt || ios ? "" : "hidden"}>Instalar la app en el móvil</button>`}
       <button class="btn ghost small" id="btn-avisos" hidden>Activar notificaciones</button>
-      ${state.directiva ? `<button class="btn ghost small" id="btn-codigo">Códigos de socios</button>` : ""}
+      ${state.directiva ? `<button class="btn ghost small" id="btn-codigo">Códigos de socios</button><button class="btn ghost small" id="btn-clave">Cambiar contraseña</button>` : ""}
       <button class="btn ghost small" id="btn-salir">Cerrar sesión</button>`;
     f.appendChild(t);
     pintarAvisos();
@@ -228,6 +228,27 @@
       if(e.target.id === "btn-salir"){ await sb.auth.signOut(); location.reload(); }
       if(e.target.id === "btn-codigo") codigos();
       if(e.target.id === "btn-avisos") cambiarAvisos(e.target);
+      if(e.target.id === "btn-clave") cambiarClave();
+    });
+  }
+
+  function cambiarClave(){
+    sheet(`<h2>Cambiar la contraseña de la directiva</h2><p class="body">La nueva contraseña sirve para todos los que entran con el correo de la directiva. Avisad a quien la use.</p>
+      <label class="field"><span>Contraseña actual</span><input id="cl-0" type="password" autocomplete="current-password"></label>
+      <label class="field"><span>Nueva contraseña (mínimo 8 caracteres)</span><input id="cl-1" type="password" autocomplete="new-password"></label>
+      <label class="field"><span>Repítela</span><input id="cl-2" type="password" autocomplete="new-password"></label>
+      <p class="err" id="cl-err" hidden></p><div class="row-actions"><button class="btn" id="cl-ok">Guardar contraseña</button></div>`, r => {
+      r.querySelector("#cl-ok").onclick = async () => {
+        const a = r.querySelector("#cl-1").value, b = r.querySelector("#cl-2").value, er = r.querySelector("#cl-err");
+        er.hidden = true;
+        if(a.length < 8){ er.textContent = "Tiene que tener al menos 8 caracteres."; er.hidden = false; return; }
+        if(a !== b){ er.textContent = "Las dos contraseñas no coinciden."; er.hidden = false; return; }
+        const { error: mal } = await sb.auth.signInWithPassword({ email: state.email, password: r.querySelector("#cl-0").value });
+        if(mal){ er.textContent = "La contraseña actual no es correcta."; er.hidden = false; return; }
+        const { error } = await sb.auth.updateUser({ password: a });
+        if(error){ er.textContent = "No se ha podido cambiar. (Detalle: " + error.message + ")"; er.hidden = false; return; }
+        sheet(`<h2>Contraseña cambiada</h2><p class="body">A partir de ahora, la directiva entra con la contraseña nueva.</p>`);
+      };
     });
   }
 
