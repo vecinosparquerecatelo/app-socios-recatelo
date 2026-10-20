@@ -406,20 +406,18 @@ footer{color:var(--muted);font-size:.85rem;text-align:center;padding-bottom:20px
 <script src="vendor/supabase.js"></script>
 <script src="conexion.js"></script>
 <script>
-const TABS = [
-  {id:"inicio", label:"Inicio"},
-  {id:"misdatos", label:"Mis datos"},
-  {id:"avisos", label:"Avisos"},
-  {id:"cursos", label:"Cursos"},
-  {id:"reuniones", label:"Reuniones"},
-  {id:"proyectos", label:"Proyectos"},
-  {id:"sugerencias", label:"Sugerencias"},
-  {id:"colectivos", label:"Colectivos"},
-  {id:"fotos", label:"Fotos"},
-  {id:"carteles", label:"Carteles"},
-  {id:"estatutos", label:"Estatutos Asociación"},
-  {id:"privacidad", label:"Protección de datos"}
+const GROUPS = [
+  {label:"Inicio", subs:[["inicio","Inicio"]]},
+  {label:"Avisos y cursos", subs:[["avisos","Avisos"],["cursos","Cursos"]]},
+  {label:"Mercadiño", subs:[["mercadillo","Mercadiño"]]},
+  {label:"Sugerencias", subs:[["sugerencias","Sugerencias"]]},
+  {label:"La asociación", subs:[["reuniones","Reuniones"],["proyectos","Proyectos"],["colectivos","Colectivos"],["estatutos","Estatutos"]]},
+  {label:"Fotos y carteles", subs:[["fotos","Fotos"],["carteles","Carteles"]]},
+  {label:"Mi cuenta", subs:[["misdatos","Mis datos"],["privacidad","Protección de datos"]]}
 ];
+const TABS = GROUPS.flatMap(g=>g.subs.map(([id,label])=>({id,label})));
+const groupOf = tab => GROUPS.find(g=>g.subs.some(([id])=>id===tab)) || GROUPS[0];
+const MTIPOS = ["Alquilo","Vendo","Dono","Compro","Trueque"];
 const RGPD_VERSION = "2026-10";
 const ENTIDADES = ["Alcaldía","BNG","PSOE","Subdelegación del Gobierno","Policía Local","Policía Autonómica","Policía Nacional","Otra"];
 const COLECTIVOS = [
@@ -435,7 +433,7 @@ const ADD_LABEL = {avisos:"aviso", reuniones:"resumen de reunión", proyectos:"p
 const BTIPOS = ["Queja","Sugerencia","Otro"];
 const DEFAULT_LOGO = "c37727719b16fb206a49359b064fca6d";
 const LOT = {precio:20, donativo:3, sorteo:"Sorteo Extraordinario de Navidad 2026"};
-const S = {lot:null, lotAll:[], lotBlocked:false, insc:null, inscAll:[], inscBlocked:false, estatutos:null, ficha:null, fichasAll:[], fichaBlocked:false, logo:DEFAULT_LOGO, consent:null, consentAll:[], consentBlocked:false, buzon:null, buzonAll:[], uid:null, user:null, names:{}, buzonBlocked:false, items:[], loaded:false, canEdit:false, db:null, assets:null, noDb:false, tab:"inicio", filter:{reuniones:"todas", quejas:"todas", fotos:"todas"}};
+const S = {lot:null, lotAll:[], lotBlocked:false, insc:null, inscAll:[], inscBlocked:false, estatutos:null, ficha:null, fichasAll:[], fichaBlocked:false, logo:DEFAULT_LOGO, consent:null, consentAll:[], consentBlocked:false, buzon:null, buzonAll:[], mercAll:[], uid:null, user:null, names:{}, buzonBlocked:false, items:[], loaded:false, canEdit:false, db:null, assets:null, noDb:false, tab:"inicio", filter:{reuniones:"todas", quejas:"todas", fotos:"todas"}};
 
 const $ = s => document.querySelector(s);
 function esc(t){return String(t ?? "").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
@@ -446,14 +444,15 @@ function imgSrc(id){ return window.blobUrl ? window.blobUrl(id) : "/_blob/"+enco
 
 /* ---------- navegación ---------- */
 function renderTabs(){
-  $("#tabs").innerHTML = TABS.map(t=>`<button role="tab" data-tab="${t.id}" aria-selected="${S.tab===t.id}">${t.label}</button>`).join("");
+  const cur = groupOf(S.tab);
+  $("#tabs").innerHTML = GROUPS.map(g=>`<button role="tab" data-tab="${g===cur?S.tab:g.subs[0][0]}" aria-selected="${g===cur}">${g.label}</button>`).join("");
 }
 $("#tabs").addEventListener("click", e=>{ const b=e.target.closest("[data-tab]"); if(b) go(b.dataset.tab); });
 function go(tab){
   S.tab = tab; try{ history.replaceState(null,"","#"+tab) }catch(e){}
   try{ localStorage.setItem("recatelo-tab",tab) }catch(e){}
   renderTabs(); render(); window.scrollTo({top:0});
-  const b=$(`[data-tab="${tab}"]`); b && b.scrollIntoView({inline:"center",block:"nearest"});
+  const b=$('#tabs [aria-selected="true"]'); b && b.scrollIntoView({inline:"center",block:"nearest"});
 }
 
 /* ---------- piezas ---------- */
@@ -537,6 +536,26 @@ const VIEWS = {
     const list=sortDesc(S.items.filter(i=>i.section==="proyectos"||(i.section==="quejas"&&i.kind==="proyecto")));
     return `<div><h2>Proyectos</h2><p class="lead">Los proyectos que la asociación impulsa para el barrio y en qué punto está cada uno.</p></div>
       <section class="stack">${list.length?list.map(quejaCard).join(""):emptyBox("No hay proyectos todavía.","Añade cada proyecto con la institución y su estado.")}</section>`;
+  },
+  mercadillo(){
+    if(!S.filter.mercadillo) S.filter.mercadillo="todas";
+    const f=S.filter.mercadillo;
+    let list=[]; for(const d of S.mercAll) for(const a of (d.anuncios||[])) list.push({...a, uid:d.uid});
+    list.sort((x,y)=>(y.at||"").localeCompare(x.at||""));
+    if(f!=="todas") list=list.filter(a=>a.tipo===f);
+    const card = a => `<article class="card"><div class="meta"><span class="pill ${a.tipo==="Dono"?"p-green":a.tipo==="Compro"?"p-amber":a.tipo==="Trueque"?"p-blue":a.tipo==="Alquilo"?"p-green":"p-red"}">${esc(a.tipo)}</span>${a.precio?`<span><strong>${esc(a.precio)}</strong></span>`:""}<span>${a.at?new Date(a.at).toLocaleDateString("es-ES",{day:"numeric",month:"long"}):""}</span></div>
+      <h3>${esc(a.titulo)}</h3>${a.texto?`<p class="body">${esc(a.texto)}</p>`:""}<p class="body"><strong>Contacto:</strong> ${esc(a.contacto)}${a.nombre?" · "+esc(a.nombre):""}</p>
+      ${(a.uid===S.uid||S.canEdit)?`<div class="row-actions"><button class="btn ghost small" data-merc-del="${esc(a.uid)}|${esc(a.id)}">Quitar anuncio</button></div>`:""}</article>`;
+    let form="";
+    if(S.uid && !S.noDb) form = `<details class="card"><summary><strong>Poner un anuncio</strong></summary><form id="mc-form" novalidate style="display:grid;gap:12px;margin-top:12px">
+      <div class="two">${field("mc-tipo","Qué quieres hacer",sel("mc-tipo",MTIPOS,"Alquilo"))}${field("mc-precio","Precio (opcional)",`<input id="mc-precio" placeholder="Por ejemplo: 20 € o 50 €/mes">`)}</div>
+      ${field("mc-titulo","Título",`<input id="mc-titulo" placeholder="Por ejemplo: bicicleta de niño">`)}
+      ${field("mc-texto","Descripción (opcional)",`<textarea id="mc-texto"></textarea>`)}
+      <div class="two">${field("mc-contacto","Teléfono o correo para contactar",`<input id="mc-contacto" autocomplete="tel">`)}${field("mc-nombre","Tu nombre (opcional)",`<input id="mc-nombre" autocomplete="name">`)}</div>
+      <p class="err" id="mc-err" hidden></p><div class="row-actions"><button class="btn" id="mc-send">Publicar anuncio</button></div></form></details>`;
+    return `<div><h2>Mercadiño</h2><p class="lead">Alquila, vende, dona, compra o haz trueque entre vecinos. Solo los socios ven los anuncios.</p></div>
+      ${form}${filterBar("mercadillo",MTIPOS)}
+      <section class="stack">${list.length?list.map(card).join(""):emptyBox("No hay anuncios todavía.","Pon el primero con “Poner un anuncio”.")}</section>`;
   },
   sugerencias(){
     const list=sortDesc(S.items.filter(i=>i.section==="sugerencias"||(i.section==="quejas"&&i.kind!=="proyecto")));
@@ -738,8 +757,12 @@ function render(){
   const gate = S.uid && !S.canEdit && S.consentLoaded && !(S.consent&&S.consent.acepta) && !S.consentBlocked;
   $("#tabs").hidden = !!gate;
   if(gate) html += `<div class="next"><span class="eyebrow">Bienvenida/o a la app de socios</span><h3>Antes de empezar, firma la protección de datos</h3><span>Lee la información y marca la primera casilla. Solo tendrás que hacerlo una vez.</span></div>` + VIEWS.privacidad();
-  else html += VIEWS[S.tab]();
-  const keep = {}; for(const id of ["bz-texto","bz-contacto","bz-tipo","fi-nombre","fi-dir","fi-email","fi-prio","lt-nombre","lt-dni","lt-n"]){ const el=document.getElementById(id); if(el) keep[id]=el.value; }
+  else {
+    const g = groupOf(S.tab);
+    if(g.subs.length>1) html += `<div class="filters" role="tablist" aria-label="${esc(g.label)}">${g.subs.map(([id,l])=>`<button data-go="${id}" aria-pressed="${S.tab===id}">${l}</button>`).join("")}</div>`;
+    html += VIEWS[S.tab]();
+  }
+  const keep = {}; for(const id of ["mc-tipo","mc-precio","mc-titulo","mc-texto","mc-contacto","mc-nombre","bz-texto","bz-contacto","bz-tipo","fi-nombre","fi-dir","fi-email","fi-prio","lt-nombre","lt-dni","lt-n"]){ const el=document.getElementById(id); if(el) keep[id]=el.value; }
   $("#main").innerHTML = html;
   for(const id in keep){ const el=document.getElementById(id); if(el) el.value=keep[id]; }
   $("#fab").hidden = !(S.canEdit && ADD_LABEL[S.tab]) || !!gate;
@@ -755,6 +778,24 @@ $("#main").addEventListener("click", e=>{
   const bp=e.target.closest("[data-bz-reply]"); if(bp){ const [u,id]=bp.dataset.bzReply.split("|"); bzReplyForm(u,id); }
 });
 $("#fab").addEventListener("click", ()=>openForm(S.tab));
+$("#main").addEventListener("submit", async e=>{
+  if(e.target.id!=="mc-form") return; e.preventDefault();
+  const v=id=>($("#"+id).value||"").trim(); const er=$("#mc-err"); er.hidden=true;
+  const a={id:Date.now().toString(36)+Math.random().toString(36).slice(2,6), tipo:v("mc-tipo"), titulo:v("mc-titulo").slice(0,120), texto:v("mc-texto").slice(0,1500), precio:v("mc-precio").slice(0,40), contacto:v("mc-contacto").slice(0,120), nombre:v("mc-nombre").slice(0,80), at:new Date().toISOString()};
+  if(!a.titulo){ er.textContent="Escribe un título."; er.hidden=false; return; }
+  if(!a.contacto){ er.textContent="Pon un teléfono o correo para que te contacten."; er.hidden=false; return; }
+  const btn=$("#mc-send"); btn.disabled=true; btn.textContent="Publicando…";
+  const mine=(S.mercAll.find(d=>d.uid===S.uid)||{}).anuncios||[];
+  try{ await S.db.doc("mercadillo/"+S.uid).set({anuncios:[...mine,a].slice(-20)}); S.filter.mercadillo="todas"; render(); }
+  catch(x){ er.textContent="No se ha podido publicar. Vuelve a intentarlo."; er.hidden=false; btn.disabled=false; btn.textContent="Publicar anuncio"; }
+});
+$("#main").addEventListener("click", async e=>{
+  const b=e.target.closest("[data-merc-del]"); if(!b) return;
+  const [u,id]=b.dataset.mercDel.split("|");
+  if(!confirm("¿Quitar este anuncio?")) return;
+  const d=S.mercAll.find(x=>x.uid===u); if(!d) return;
+  try{ await S.db.doc("mercadillo/"+u).set({anuncios:(d.anuncios||[]).filter(a=>a.id!==id)}); }catch(x){ alert("No se ha podido quitar. Vuelve a intentarlo."); }
+});
 function paintLogo(){ const b=$("#brand-logo"); if(!b) return; if(S.logo){ b.innerHTML=`<img src="${imgSrc(S.logo)}" alt="">`; } }
 $("#main").addEventListener("change", async e=>{
   if(e.target.id!=="logo-in") return;
@@ -1017,6 +1058,7 @@ function askDelete(id){
       S.loaded = true; render();
     }, ()=>{ S.loaded=true; render(); });
     db.doc("config/ajustes").onSnapshot(snap=>{ S.logo = snap.exists ? (snap.data().logo||DEFAULT_LOGO) : DEFAULT_LOGO; S.estatutos = snap.exists ? (snap.data().estatutos||null) : null; paintLogo(); render(); },()=>{});
+    db.collection("mercadillo").onSnapshot(snap=>{ S.mercAll=snap.docs.map(d=>({uid:d.id,...d.data()})); render(); },()=>{});
     userP.then(startBuzon); userP.then(startLot); userP.then(startInsc); userP.then(startFicha); userP.then(startConsent);
   });
 })();
