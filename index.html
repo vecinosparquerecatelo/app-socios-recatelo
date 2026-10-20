@@ -1004,11 +1004,11 @@ function openForm(section, it){
   const canPhoto = !!S.assets;
   $("#sheet-root").innerHTML = `<div class="sheet-bg" id="sheet-bg"><form class="sheet" id="f" novalidate>
     <h2>${it?"Editar":"Añadir"} ${ADD_LABEL[section]}</h2>
-    ${field("f-title", isCartel?"Nombre de la actividad":isFoto?"Pie de foto":"Título", `<input id="f-title" required value="${esc(v.title||"")}">`)}
+    ${field("f-title", isCartel?"Nombre de la actividad":isFoto?(section==="fotos"&&!it?"Pie de foto (opcional)":"Pie de foto"):"Título", `<input id="f-title" ${section==="fotos"?"":"required"} value="${esc(v.title||"")}">`)}
     ${field("f-date","Fecha",`<input id="f-date" type="date" value="${esc(v.date||"")}">`)}
     ${extra}
     ${isFoto?"":field("f-body", section==="reuniones"?"Resumen":section==="cursos"?"Explicación del curso":"Texto", `<textarea id="f-body">${esc(v.body||"")}</textarea>`)}
-    ${canPhoto?field("f-photo", isCartel?"Cartel (imagen o PDF)":isFoto?"Foto":"Foto (opcional)", `<input id="f-photo" type="file" accept="image/png,image/jpeg,image/webp,image/gif${isCartel?",application/pdf":""}">`) + (v.photo?`<span class="meta">Ya tiene una foto; elige otra solo si quieres cambiarla.</span>`:"")
+    ${canPhoto?field("f-photo", isCartel?"Cartel (imagen o PDF)":isFoto?(section==="fotos"&&!it?"Fotos (puedes elegir varias a la vez)":"Foto"):"Foto (opcional)", `<input id="f-photo" type="file" accept="image/png,image/jpeg,image/webp,image/gif${isCartel?",application/pdf":""}"${section==="fotos"&&!it?" multiple":""}>`) + (v.photo?`<span class="meta">Ya tiene una foto; elige otra solo si quieres cambiarla.</span>`:"")
               :(isFoto?`<p class="err">Solo quien tenga permiso de edición puede subir fotos.</p>`:"")}
     ${canPhoto&&!isFoto?field("f-doc","Documento en PDF (opcional)",`<input id="f-doc" type="file" accept="application/pdf">`) + (v.doc?`<span class="meta">Ya tiene un documento${v.docName?" ("+esc(v.docName)+")":""}; elige otro solo si quieres cambiarlo.</span>`:""):""}
     <p class="err" id="f-err" hidden></p>
@@ -1023,8 +1023,27 @@ function openForm(section, it){
     const val=id=>{const el=$("#"+id);return el?el.value.trim():undefined};
     const data = {section, title:val("f-title"), date:val("f-date")||"", updatedAt:new Date().toISOString()};
     for(const [k,id] of [["body","f-body"],["kind","f-kind"],["time","f-time"],["place","f-place"],["entity","f-entity"],["status","f-status"],["album","f-album"],["plazas","f-plazas"]]){ const x=val(id); if(x!==undefined) data[k]=x; }
+    if(!data.title && section==="fotos") data.title = data.album || "Foto";
     if(!data.title){ err.textContent="Escribe un título."; err.hidden=false; return; }
-    const file = $("#f-photo") && $("#f-photo").files[0];
+    const files = $("#f-photo") ? [...$("#f-photo").files] : [];
+    if(section==="fotos" && !it && files.length>1){
+      const btn=$("#f-save"); btn.disabled=true;
+      let hechas=0, fallos=0;
+      for(const fl of files){
+        btn.textContent=`Subiendo ${hechas+fallos+1} de ${files.length}…`;
+        try{
+          if(fl.size>20*1024*1024) throw {code:"too_large"};
+          const up = await S.assets.upload(fl);
+          const t = new Date().toISOString();
+          await S.db.collection("items").doc().set({...data, photo:up.id, photoType:up.contentType||fl.type, createdAt:t, updatedAt:t});
+          hechas++;
+        }catch(x){ fallos++; }
+      }
+      if(!fallos) return closeSheet();
+      err.textContent=`Se han subido ${hechas} de ${files.length} fotos. ${fallos} no se ${fallos===1?"ha":"han"} podido subir (puede que pesen más de 20 MB). Vuelve a intentarlo con esas.`; err.hidden=false;
+      btn.disabled=false; btn.textContent="Publicar"; return;
+    }
+    const file = files[0];
     if(isFoto && !file && !v.photo){ err.textContent=isCartel?"Elige el cartel para subir.":"Elige una foto para subir."; err.hidden=false; return; }
     const btn=$("#f-save"); btn.disabled=true; btn.textContent="Guardando…";
     try{
