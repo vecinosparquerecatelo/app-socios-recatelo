@@ -74,6 +74,12 @@ h3{font-family:var(--display);font-weight:600;font-size:1.12rem;margin:0;text-wr
 .colectivo{display:grid;grid-template-columns:44px 1fr;gap:12px;align-items:start}
 .colectivo .ico{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;background:var(--amber-soft);color:var(--amber)}
 .photos{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.carpetas{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.carpeta{all:unset;cursor:pointer;display:grid;gap:6px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:8px;box-sizing:border-box}
+.carpeta:focus-visible{outline:3px solid var(--green);outline-offset:2px}
+.carpeta .cov{aspect-ratio:4/3;border-radius:calc(var(--r) - 4px);background:var(--bg);display:grid;place-items:center;overflow:hidden;font-size:2.2rem}
+.carpeta .cov img{width:100%;height:100%;object-fit:cover}
+.carpeta strong{font-size:.95rem;line-height:1.25}
 .photo{background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden;display:grid;min-width:0}
 .photo img,.photo .ph{width:100%;aspect-ratio:4/3;object-fit:cover;display:block;max-width:100%;background:var(--green-soft)}
 .posters .photo img,.posters .photo .ph{aspect-ratio:3/4;object-fit:contain;background:var(--bg)}
@@ -428,7 +434,7 @@ const COLECTIVOS = [
   {id:"michos", name:"Michos", desc:"Ayudamos al cuidado de las colonias felinas del barrio."},
   {id:"aecc", name:"Asociación Española Contra el Cáncer", desc:"Participamos en sus campañas de apoyo y recaudación."}
 ];
-const ALBUMES = ["Festas Recatelo","Actividades","Otros"];
+const ALBUMES = ["Festas Recatelo 2023","Festas Recatelo 2024","Festas Recatelo 2025","Festas Recatelo 2026","Día das Letras Galegas 2025","Festa do Día das Letras Galegas 2026","Mercadillo de Navidad 2024","Samaín 2024","Samaín 2025","Cantos de taberna","Otros"];
 const ESTADOS = {presentada:["Presentada","p-blue"], tramite:["En trámite","p-amber"], resuelta:["Resuelta","p-green"], rechazada:["Sin respuesta / rechazada","p-red"]};
 const ADD_LABEL = {inicio:"aviso", avisos:"aviso", reuniones:"resumen de reunión", proyectos:"proyecto", sugerencias:"sugerencia", colectivos:"noticia de colectivo", fotos:"foto", carteles:"cartel", cursos:"curso"};
 
@@ -586,11 +592,18 @@ const VIEWS = {
       <section class="stack"><h3>Noticias de los colectivos</h3>${news.length?news.map(colNews).join(""):emptyBox("Sin noticias por ahora.","Añade campañas, recogidas o actos de estos colectivos.")}</section>`;
   },
   fotos(){
-    let list=sortDesc(bySection("fotos")); const f=S.filter.fotos;
-    if(f!=="todas") list=list.filter(i=>i.album===f);
-    return `<div><h2>Fotos</h2><p class="lead">Festas de Recatelo de cada septiembre y demás actividades del barrio.</p></div>
-      ${filterBar("fotos",ALBUMES)}
-      ${list.length?`<section class="photos">${list.map(photoCard).join("")}</section>`:emptyBox("Aún no hay fotos.","Sube fotos desde “+ Añadir” y elige el álbum.")}`;
+    const all=sortDesc(bySection("fotos")); const f=S.filter.fotos;
+    const albs=[...ALBUMES.filter(a=>a!=="Otros"), ...new Set(all.map(i=>i.album||"Otros").filter(a=>!ALBUMES.includes(a))), "Otros"];
+    if(f==="todas"){
+      const card=a=>{ const ps=all.filter(i=>(i.album||"Otros")===a); if(a==="Otros"&&!ps.length) return ""; const c=ps.find(i=>i.photo&&!/pdf/.test(i.photoType||""));
+        return `<button class="carpeta" data-f="${esc(a)}"><span class="cov">${c?`<img src="${imgSrc(c.photo)}" alt="" loading="lazy">`:"📁"}</span><strong>${esc(a)}</strong><span class="meta">${ps.length} foto${ps.length===1?"":"s"}</span></button>`; };
+      return `<div><h2>Fotos</h2><p class="lead">Las fotos de las Festas de Recatelo y de las demás actividades del barrio, por carpetas.</p></div>
+        <section class="carpetas" data-filter="fotos">${albs.map(card).join("")}</section>`;
+    }
+    const list=all.filter(i=>(i.album||"Otros")===f);
+    return `<div class="filters" data-filter="fotos"><button data-f="todas">← Todas las carpetas</button></div>
+      <div><h2>${esc(f)}</h2><p class="lead">${list.length} foto${list.length===1?"":"s"}</p></div>
+      ${list.length?`<section class="photos">${list.map(photoCard).join("")}</section>`:emptyBox("Esta carpeta todavía está vacía.",S.canEdit?"Pulsa “+ Añadir foto” para subir la primera.":"Pronto subiremos las fotos.")}`;
   },
   buzon(sinIntro){
     const intro = sinIntro ? "" : `<div><h2>Buzón de quejas y sugerencias</h2><p class="lead">Cuéntale a la directiva lo que te preocupa del barrio o lo que mejorarías. Solo la directiva lee los mensajes.</p></div>`;
@@ -989,7 +1002,7 @@ function openForm(section, it){
   if(section==="proyectos"||section==="sugerencias"||section==="quejas") extra = `<div class="two">${field("f-status","Estado",sel("f-status",Object.entries(ESTADOS).map(([k,x])=>[k,x[0]]),v.status||"presentada"))}</div>`
      + field("f-entity","Institución",sel("f-entity",ENTIDADES,v.entity||"Alcaldía"));
   if(section==="colectivos") extra = field("f-entity","Colectivo",sel("f-entity",COLECTIVOS.map(c=>c.name),v.entity||COLECTIVOS[0].name));
-  if(section==="fotos") extra = field("f-album","Álbum",sel("f-album",ALBUMES,v.album||"Festas Recatelo"));
+  if(section==="fotos") extra = field("f-album","Álbum",sel("f-album",[...new Set([...ALBUMES, ...(v.album?[v.album]:[])])],v.album||(S.filter.fotos&&S.filter.fotos!=="todas"?S.filter.fotos:ALBUMES[0])));
   const isCartel = section==="carteles";
   const isFoto = section==="fotos" || isCartel;
   const canPhoto = !!S.assets;
