@@ -145,8 +145,9 @@
       <h1>App de socios</h1>
       <div class="tabs2"><button type="button" data-m="socio" aria-pressed="true">Soy socio/a</button><button type="button" data-m="dir" aria-pressed="false">Soy de la directiva</button></div>
       <form class="card" id="acc-socio" novalidate>
-        <label for="acc-codigo">Código de socio<input id="acc-codigo" autocomplete="off" autocapitalize="characters" placeholder="El que te ha dado la directiva"></label>
-        <p class="acc-small">Solo tendrás que ponerlo la primera vez en este móvil.</p>
+        <label for="acc-codigo">Tu código personal<input id="acc-codigo" autocomplete="off" autocapitalize="characters" placeholder="El que te ha mandado la directiva"></label>
+        <p class="acc-small">Cada socio tiene su propio código. Solo hay que ponerlo una vez y no sirve para otras personas.</p>
+        ${/iphone|ipad|ipod/i.test(navigator.userAgent) && !navigator.standalone ? `<div class="notice">En iPhone, instala primero la app: pulsa Compartir y “Añadir a pantalla de inicio”. Después ábrela desde el icono y escribe ahí tu código.</div>` : ""}
         <p class="err" id="acc-err1" hidden></p>
         <button class="btn">Entrar</button>
       </form>
@@ -176,7 +177,10 @@
         if(!session){ const r = await sb.auth.signInAnonymously(); if(r.error) throw r.error; }
         const { data: ok, error } = await sb.rpc("canjear_codigo", { codigo: code });
         if(error) throw error;
-        if(!ok){ er.textContent = "Ese código no es correcto. Pídeselo a la directiva."; er.hidden = false; btn.disabled = false; btn.textContent = "Entrar"; return; }
+        if(ok !== "ok" && ok !== true){
+          er.textContent = ok === "usado" ? "Ese código ya se ha usado en otro móvil. Pide uno nuevo a la directiva." : "Ese código no es correcto o ya no está activo. Pídeselo a la directiva.";
+          er.hidden = false; btn.disabled = false; btn.textContent = "Entrar"; return;
+        }
         await enter();
       }catch(x){ er.textContent = "No se ha podido entrar. Comprueba la conexión y vuelve a intentarlo."; er.hidden = false; btn.disabled = false; btn.textContent = "Entrar"; }
     });
@@ -210,7 +214,7 @@
     const ios = /iphone|ipad|ipod/i.test(navigator.userAgent);
     const t = document.createElement("div"); t.id = "tools"; t.style.cssText = "display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:10px";
     t.innerHTML = `${standalone ? "" : `<button class="btn ghost small" id="btn-instalar" ${installEvt || ios ? "" : "hidden"}>Instalar la app en el móvil</button>`}
-      ${state.directiva ? `<button class="btn ghost small" id="btn-codigo">Código de socio</button>` : ""}
+      ${state.directiva ? `<button class="btn ghost small" id="btn-codigo">Códigos de socios</button>` : ""}
       <button class="btn ghost small" id="btn-salir">Cerrar sesión</button>`;
     f.appendChild(t);
     t.addEventListener("click", async e => {
@@ -219,20 +223,36 @@
         else sheet(`<h2>Instalar en iPhone</h2><p class="body">1. Abre esta página en Safari.\n2. Pulsa el botón Compartir (el cuadrado con la flecha).\n3. Elige “Añadir a pantalla de inicio”.</p>`);
       }
       if(e.target.id === "btn-salir"){ await sb.auth.signOut(); location.reload(); }
-      if(e.target.id === "btn-codigo"){
-        const { data: code } = await sb.rpc("ver_codigo");
-        sheet(`<h2>Código de socio</h2><p class="body">Los socios entran con este código la primera vez. Si lo cambias, quienes ya entraron siguen dentro; los nuevos necesitarán el código nuevo.</p>
-          <div class="notice">Código actual: <strong>${String(code || "").replace(/[<>&]/g,"")}</strong></div>
-          <label for="nuevo-cod">Código nuevo<input id="nuevo-cod" autocomplete="off"></label><p class="err" id="cod-err" hidden></p>
-          <div class="row-actions"><button class="btn" id="cod-ok">Cambiar código</button></div>`, root => {
-          root.querySelector("#cod-ok").onclick = async () => {
-            const v = root.querySelector("#nuevo-cod").value.trim(); const er = root.querySelector("#cod-err");
-            const { data: ok } = await sb.rpc("cambiar_codigo", { nuevo: v });
-            if(!ok){ er.textContent = "El código debe tener al menos 4 caracteres."; er.hidden = false; return; }
-            document.getElementById("sheet-root").innerHTML = "";
-          };
-        });
-      }
+      if(e.target.id === "btn-codigo") codigos();
+    });
+  }
+  const escH = v => String(v == null ? "" : v).replace(/[&<>"]/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;" })[c]);
+  const appUrl = () => location.origin + location.pathname.replace(/index\.html$/, "");
+  const mensaje = (nombre, codigo) => `Hola, ${nombre}. Este es tu acceso personal a la app de socios de la Asociación de Vecinos Parque de Rosalía de Castro-Recatelo.\n\n1. Abre: ${appUrl()}\n2. Pulsa "Soy socio/a" y escribe tu código: ${codigo}\n\nEl código es solo para ti y no sirve para otras personas.`;
+  async function codigos(aviso){
+    const { data: lista } = await sb.rpc("listar_codigos");
+    const filas = (lista || []).map(k => `<li style="display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;justify-content:space-between;border-top:1px solid var(--line);padding:8px 0">
+        <span><strong>${escH(k.nombre)}</strong><br><span class="acc-small">${escH(k.codigo)} · ${!k.activo ? "sin acceso" : k.usos ? "en uso (" + k.usos + " de " + k.max_usos + " móviles)" : "sin usar todavía"}</span></span>
+        ${k.activo ? `<span style="display:flex;gap:6px"><button class="btn ghost small" data-wa="${escH(k.codigo)}" data-n="${escH(k.nombre)}">WhatsApp</button><button class="btn ghost small" data-quitar="${escH(k.codigo)}" data-n="${escH(k.nombre)}">Quitar acceso</button></span>` : ""}
+      </li>`).join("");
+    sheet(`<h2>Códigos de socios</h2>
+      <p class="body">Cada socio recibe su propio código. Funciona en un máximo de 2 móviles o navegadores de esa persona; si alguien lo reenvía, no le servirá a nadie más. Si un socio cambia de móvil, quítale el acceso y créale uno nuevo.</p>
+      ${aviso || ""}
+      <label for="cod-nombre">Nombre del socio<input id="cod-nombre" autocomplete="off"></label><p class="err" id="cod-err" hidden></p>
+      <div class="row-actions"><button class="btn" id="cod-crear">Crear código</button></div>
+      <ul style="list-style:none;margin:0;padding:0">${filas || `<li class="acc-small">Todavía no hay códigos.</li>`}</ul>`, root => {
+      root.querySelector("#cod-crear").onclick = async () => {
+        const n = root.querySelector("#cod-nombre").value.trim(); const er = root.querySelector("#cod-err");
+        if(n.length < 2){ er.textContent = "Escribe el nombre del socio."; er.hidden = false; return; }
+        const { data: c } = await sb.rpc("crear_codigo", { nombre: n });
+        if(!c){ er.textContent = "No se ha podido crear. Inténtalo de nuevo."; er.hidden = false; return; }
+        codigos(`<div class="notice">Código de <strong>${escH(n)}</strong>: <strong>${escH(c)}</strong><br><a class="btn small" style="margin-top:8px" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent(mensaje(n, c))}">Enviar por WhatsApp</a></div>`);
+      };
+      root.querySelectorAll("[data-wa]").forEach(b => b.onclick = () => window.open("https://wa.me/?text=" + encodeURIComponent(mensaje(b.dataset.n, b.dataset.wa)), "_blank", "noopener"));
+      root.querySelectorAll("[data-quitar]").forEach(b => b.onclick = async () => {
+        if(!confirm(`¿Quitar el acceso a ${b.dataset.n}? Dejará de poder entrar en la app.`)) return;
+        await sb.rpc("quitar_codigo", { codigo: b.dataset.quitar }); codigos();
+      });
     });
   }
   function sheet(html, after){
