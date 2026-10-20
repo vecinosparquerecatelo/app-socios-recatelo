@@ -74,6 +74,7 @@ h3{font-family:var(--display);font-weight:600;font-size:1.12rem;margin:0;text-wr
 .colectivo{display:grid;grid-template-columns:44px 1fr;gap:12px;align-items:start}
 .colectivo .ico{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;background:var(--amber-soft);color:var(--amber)}
 .photos{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.datos{display:grid;gap:2px 12px;margin:0}.datos dt{color:var(--muted);font-size:.85rem;margin-top:8px}.datos dd{margin:0;font-weight:600;overflow-wrap:anywhere}
 .carpetas{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
 .carpeta{all:unset;cursor:pointer;display:grid;gap:6px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:8px;box-sizing:border-box}
 .carpeta:focus-visible{outline:3px solid var(--green);outline-offset:2px}
@@ -620,19 +621,23 @@ const VIEWS = {
     let form;
     if(S.noDb || !S.uid) form = `<div class="notice">Abre la app con tu cuenta para rellenar tus datos.</div>`;
     else if(S.fichaBlocked) form = `<div class="notice">Tu acceso solo permite leer. Pide a la directiva permiso de “Colaborador” para guardar tus datos.</div>`;
+    else if(S.ficha && !S.fichaEdit) form = `<section class="card"><h3>Tus datos</h3>
+      <div class="notice">Guardados el ${new Date(f.at).toLocaleDateString("es-ES",{day:"numeric",month:"long",year:"numeric"})}. Si algo está mal, pulsa “Editar mis datos” y corrígelo.</div>
+      <dl class="datos"><dt>Nombre y apellidos</dt><dd>${esc(f.nombre||"—")}</dd><dt>Dirección</dt><dd>${esc(f.direccion||"—")}</dd><dt>Correo electrónico</dt><dd>${esc(f.email||"—")}</dd><dt>Tu prioridad para el barrio</dt><dd>${esc(f.prioridad||"—")}</dd></dl>
+      <div class="row-actions"><button type="button" class="btn ghost" id="fi-borrar">Borrar mis datos</button><button type="button" class="btn" id="fi-editar">Editar mis datos</button></div></section>`;
     else form = `<form class="card" id="fi-form" novalidate>
-      ${S.ficha?`<div class="notice">Datos guardados el ${new Date(f.at).toLocaleDateString("es-ES",{day:"numeric",month:"long",year:"numeric"})}. Puedes corregirlos cuando quieras.</div>`:""}
+      ${S.ficha?`<h3>Editar mis datos</h3>`:""}
       ${field("fi-nombre","Nombre y apellidos",`<input id="fi-nombre" autocomplete="name" value="${esc(f.nombre||"")}">`)}
       ${field("fi-dir","Dirección",`<input id="fi-dir" autocomplete="street-address" placeholder="Calle, número, piso" value="${esc(f.direccion||"")}">`)}
       ${field("fi-email","Correo electrónico",`<input id="fi-email" type="email" autocomplete="email" value="${esc(f.email||"")}">`)}
       ${field("fi-prio","Tu prioridad para mejorar el barrio",`<textarea id="fi-prio" maxlength="300" style="min-height:90px" placeholder="En una frase: ¿qué es lo primero que mejorarías en la zona?">${esc(f.prioridad||"")}</textarea>`)}
       <label class="check"><input type="checkbox" id="fi-ok" ${S.ficha?"checked":""}> <span>Acepto que la asociación guarde estos datos según la <a href="#privacidad" data-go="privacidad">información de protección de datos</a>.</span></label>
       <p class="err" id="fi-err" hidden></p>
-      <div class="row-actions">${S.ficha?`<button type="button" class="btn ghost" id="fi-borrar">Borrar mis datos</button>`:""}<button class="btn" id="fi-save">Guardar mis datos</button></div></form>`;
+      <div class="row-actions">${S.ficha?`<button type="button" class="btn ghost" id="fi-cancelar">Cancelar</button>`:""}<button class="btn" id="fi-save">${S.ficha?"Guardar cambios":"Guardar mis datos"}</button></div></form>`;
     let admin="";
     if(S.canEdit){
       const rows=S.fichasAll.slice().sort((a,b)=>(a.nombre||"").localeCompare(b.nombre||"","es"));
-      admin=`<section class="stack"><h3>Socios registrados (solo directiva): ${rows.length}</h3>${rows.length?`<div class="card" style="overflow-x:auto"><table class="tbl"><thead><tr><th>Nombre</th><th>Dirección</th><th>Correo</th><th>Fecha</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${esc(r.nombre)}</td><td>${esc(r.direccion)}</td><td>${esc(r.email)}</td><td>${r.at?new Date(r.at).toLocaleDateString("es-ES"):""}</td></tr>`).join("")}</tbody></table></div>
+      admin=`<section class="stack"><h3>Socios registrados (solo directiva): ${rows.length}</h3>${rows.length?`<div class="card" style="overflow-x:auto"><table class="tbl"><thead><tr><th>Nombre</th><th>Dirección</th><th>Correo</th><th>Fecha</th><th></th></tr></thead><tbody>${rows.map(r=>`<tr><td>${esc(r.nombre)}</td><td>${esc(r.direccion)}</td><td>${esc(r.email)}</td><td>${r.at?new Date(r.at).toLocaleDateString("es-ES"):""}</td><td><button type="button" class="btn ghost small" data-ficha-del="${esc(r.uid)}">Borrar</button></td></tr>`).join("")}</tbody></table></div>
         <h3>Prioridades de los socios</h3>${rows.filter(r=>r.prioridad).map(r=>`<article class="card"><p class="body">“${esc(r.prioridad)}”</p><div class="meta">${esc(r.nombre)}</div></article>`).join("")||`<div class="empty">Nadie ha escrito su prioridad todavía.</div>`}`
         :`<div class="empty"><strong>Aún no hay socios registrados.</strong>Comparte el enlace de esta sección para que rellenen sus datos.</div>`}</section>`;
     }
@@ -845,7 +850,7 @@ $("#main").addEventListener("submit", async e=>{
   if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(d.email)) return fail("Revisa el correo electrónico, parece incompleto.");
   if(!$("#fi-ok").checked) return fail("Para guardar tus datos tienes que aceptar la protección de datos.");
   const btn=$("#fi-save"); btn.disabled=true; btn.textContent="Guardando…";
-  try{ await S.db.doc("socios/"+S.uid).set(d); S.ficha=d; render(); }
+  try{ await S.db.doc("socios/"+S.uid).set(d); S.ficha=d; S.fichaEdit=false; render(); }
   catch(x){ if(x&&x.code==="invalid_argument"){ S.fichaBlocked=true; render(); return; } fail("No se han podido guardar. Vuelve a intentarlo."); btn.disabled=false; btn.textContent="Guardar mis datos"; }
 });
 $("#main").addEventListener("click", async e=>{
@@ -895,6 +900,12 @@ $("#main").addEventListener("click", async e=>{
   catch(x){ const r=document.createRange(); r.selectNodeContents($("#iban")); const sl=getSelection(); sl.removeAllRanges(); sl.addRange(r); msg.textContent="Selecciona y copia el número"; }
 });
 $("#main").addEventListener("click", e=>{
+  if(e.target.id==="fi-editar"){ S.fichaEdit=true; render(); $("#fi-nombre")?.focus(); return; }
+  if(e.target.id==="fi-cancelar"){ S.fichaEdit=false; render(); return; }
+  const fd=e.target.closest("[data-ficha-del]");
+  if(fd && S.canEdit){ const r=S.fichasAll.find(x=>x.uid===fd.dataset.fichaDel);
+    if(!r || !confirm(`¿Borrar la ficha de ${r.nombre||"este socio"}${r.email?" ("+r.email+")":""}? No se puede deshacer.`)) return;
+    fd.disabled=true; S.db.doc("socios/"+r.uid).delete().catch(()=>{ fd.disabled=false; alert("No se ha podido borrar. Vuelve a intentarlo."); }); return; }
   const b=e.target.closest("[data-est]"); if(!b) return;
   const h=document.querySelectorAll("#est-text h3")[+b.dataset.est]; if(h) h.scrollIntoView({behavior:"smooth",block:"start"});
 });
