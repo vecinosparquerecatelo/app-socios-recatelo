@@ -106,6 +106,7 @@ footer a{color:inherit}
 .next .eyebrow{font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;font-weight:700;color:var(--amber)}
 .festas{border-radius:var(--r);padding:16px;background:var(--surface);border:1px solid var(--line);display:grid;gap:4px}
 .row-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+a.btn{text-decoration:none;display:inline-block}
 .btn{border:0;border-radius:10px;padding:10px 16px;font:inherit;font-weight:700;cursor:pointer;background:var(--green);color:var(--surface)}
 .btn.ghost{background:transparent;color:var(--muted);border:1px solid var(--line)}
 .btn.danger{background:var(--red);color:var(--surface)}
@@ -541,6 +542,14 @@ const VIEWS = {
       <section class="stack">${list.length?list.map(quejaCard).join(""):emptyBox("No hay proyectos todavía.","Añade cada proyecto con la institución y su estado.")}</section>`;
   },
   mercadillo(){
+    const mercContacto = a => {
+      const c=(a.contacto||"").trim(), msg=`Hola${a.nombre?" "+a.nombre:""}, soy socio/a de la Asociación de Vecinos Parque de Rosalía-Recatelo. Me interesa tu anuncio del Mercadiño: «${a.titulo}».`;
+      const b=[];
+      if(c.includes("@")) b.push(`<a class="btn small" href="mailto:${encodeURIComponent(c)}?subject=${encodeURIComponent("Mercadiño: "+a.titulo)}&body=${encodeURIComponent(msg)}">Me interesa: escribir correo</a>`);
+      else { let d=c.replace(/\D/g,""); if(d.length===9) d="34"+d; else if(d.startsWith("0034")) d=d.slice(2);
+        if(d.length>=11){ b.push(`<a class="btn small" target="_blank" rel="noopener" href="https://wa.me/${d}?text=${encodeURIComponent(msg)}">Me interesa: WhatsApp</a>`); b.push(`<a class="btn ghost small" href="tel:+${d}">Llamar</a>`); } }
+      return b.length?`<div class="row-actions" style="justify-content:flex-start">${b.join("")}</div>`:"";
+    };
     if(!S.filter.mercadillo) S.filter.mercadillo="todas";
     const f=S.filter.mercadillo;
     let list=[]; for(const d of S.mercAll) for(const a of (d.anuncios||[])) list.push({...a, uid:d.uid});
@@ -548,6 +557,7 @@ const VIEWS = {
     if(f!=="todas") list=list.filter(a=>a.tipo===f);
     const card = a => `<article class="card"><div class="meta"><span class="pill ${a.tipo==="Dono"?"p-green":a.tipo==="Compro"?"p-amber":a.tipo==="Trueque"?"p-blue":a.tipo==="Alquilo"?"p-green":"p-red"}">${esc(a.tipo)}</span>${a.precio?`<span><strong>${esc(a.precio)}</strong></span>`:""}<span>${a.at?new Date(a.at).toLocaleDateString("es-ES",{day:"numeric",month:"long"}):""}</span></div>
       <h3>${esc(a.titulo)}</h3>${a.texto?`<p class="body">${esc(a.texto)}</p>`:""}<p class="body"><strong>Contacto:</strong> ${esc(a.contacto)}${a.nombre?" · "+esc(a.nombre):""}</p>
+      ${a.uid!==S.uid?mercContacto(a):""}
       ${(a.uid===S.uid||S.canEdit)?`<div class="row-actions"><button class="btn ghost small" data-merc-del="${esc(a.uid)}|${esc(a.id)}">Quitar anuncio</button></div>`:""}</article>`;
     let form="";
     if(S.uid && !S.noDb) form = `<details class="card"><summary><strong>Poner un anuncio</strong></summary><form id="mc-form" novalidate style="display:grid;gap:12px;margin-top:12px">
@@ -556,7 +566,7 @@ const VIEWS = {
       ${field("mc-texto","Descripción (opcional)",`<textarea id="mc-texto"></textarea>`)}
       <div class="two">${field("mc-contacto","Teléfono o correo para contactar",`<input id="mc-contacto" autocomplete="tel">`)}${field("mc-nombre","Tu nombre (opcional)",`<input id="mc-nombre" autocomplete="name">`)}</div>
       <p class="err" id="mc-err" hidden></p><div class="row-actions"><button class="btn" id="mc-send">Publicar anuncio</button></div></form></details>`;
-    return `<div><h2>Mercadiño</h2><p class="lead">Alquila, vende, dona, compra o haz trueque entre vecinos. Solo los socios ven los anuncios.</p></div>
+    return `<div><h2>Mercadiño</h2><p class="lead">Alquila, vende, dona, compra o haz trueque entre vecinos. Solo los socios ven los anuncios. Si te interesa uno, pulsa “Me interesa” y le escribes directamente a quien lo publicó.</p></div>
       ${form}${filterBar("mercadillo",MTIPOS)}
       <section class="stack">${list.length?list.map(card).join(""):emptyBox("No hay anuncios todavía.","Pon el primero con “Poner un anuncio”.")}</section>`;
   },
