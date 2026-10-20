@@ -55,6 +55,7 @@
         const { error } = await sb.from("docs").upsert({ coll, id, data, updated_at: new Date().toISOString() });
         if(error) throw err("invalid_argument", error.message);
         notify(coll);
+        if(coll === "items" || coll === "mercadillo") sb.functions.invoke("avisar", { body: { coll, id } }).catch(() => {});
       },
       async update(patch){
         const cur = await fetchDoc(coll, id);
@@ -214,9 +215,11 @@
     const ios = /iphone|ipad|ipod/i.test(navigator.userAgent);
     const t = document.createElement("div"); t.id = "tools"; t.style.cssText = "display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:10px";
     t.innerHTML = `${standalone ? "" : `<button class="btn ghost small" id="btn-instalar" ${installEvt || ios ? "" : "hidden"}>Instalar la app en el móvil</button>`}
+      <button class="btn ghost small" id="btn-avisos" hidden>Activar notificaciones</button>
       ${state.directiva ? `<button class="btn ghost small" id="btn-codigo">Códigos de socios</button>` : ""}
       <button class="btn ghost small" id="btn-salir">Cerrar sesión</button>`;
     f.appendChild(t);
+    pintarAvisos();
     t.addEventListener("click", async e => {
       if(e.target.id === "btn-instalar"){
         if(installEvt){ installEvt.prompt(); installEvt = null; e.target.hidden = true; }
@@ -224,7 +227,48 @@
       }
       if(e.target.id === "btn-salir"){ await sb.auth.signOut(); location.reload(); }
       if(e.target.id === "btn-codigo") codigos();
+      if(e.target.id === "btn-avisos") cambiarAvisos(e.target);
     });
+  }
+
+  /* ---------- notificaciones al móvil ---------- */
+  const pushOk = () => "serviceWorker" in navigator && "PushManager" in window && "Notification" in window;
+  async function suscripcion(){ const reg = await navigator.serviceWorker.ready; return reg.pushManager.getSubscription(); }
+  async function pintarAvisos(){
+    const b = document.getElementById("btn-avisos"); if(!b) return;
+    const ios = /iphone|ipad|ipod/i.test(navigator.userAgent), standalone = matchMedia("(display-mode: standalone)").matches || navigator.standalone;
+    if(!pushOk() && !(ios && !standalone)) return;
+    b.hidden = false;
+    const s = pushOk() ? await suscripcion().catch(() => null) : null;
+    b.textContent = s && Notification.permission === "granted" ? "🔔 Notificaciones activadas" : "Activar notificaciones";
+  }
+  function claveBytes(b64){ const s = atob((b64 + "=".repeat((4 - b64.length % 4) % 4)).replace(/-/g, "+").replace(/_/g, "/")); return Uint8Array.from(s, c => c.charCodeAt(0)); }
+  async function cambiarAvisos(b){
+    const ios = /iphone|ipad|ipod/i.test(navigator.userAgent), standalone = matchMedia("(display-mode: standalone)").matches || navigator.standalone;
+    if(!pushOk() || (ios && !standalone)) return sheet(`<h2>Notificaciones en iPhone</h2><p class="body">En iPhone, las notificaciones solo funcionan con la app instalada.\n1. Abre esta página en Safari.\n2. Pulsa Compartir (el cuadrado con la flecha) y elige “Añadir a pantalla de inicio”.\n3. Abre la app desde el icono nuevo y pulsa “Activar notificaciones”.</p>`);
+    const actual = await suscripcion().catch(() => null);
+    if(actual && Notification.permission === "granted"){
+      return sheet(`<h2>Notificaciones activadas</h2><p class="body">Te avisaremos en este móvil cuando la directiva publique algo o haya un anuncio nuevo en el Mercadiño.</p><div class="row-actions"><button class="btn ghost" id="av-off">Desactivar en este móvil</button></div>`, r => {
+        r.querySelector("#av-off").onclick = async () => { await sb.rpc("quitar_movil", { endpoint: actual.endpoint }).catch(() => {}); await actual.unsubscribe().catch(() => {}); r.innerHTML = ""; pintarAvisos(); };
+      });
+    }
+    b.disabled = true; const txt = b.textContent; b.textContent = "Activando…";
+    try{
+      const perm = await Notification.requestPermission();
+      if(perm !== "granted") throw new Error("permiso");
+      const { data, error } = await sb.functions.invoke("avisar", { body: { accion: "clave" } });
+      if(error || !data || !data.clave) throw new Error("clave");
+      const reg = await navigator.serviceWorker.ready;
+      const s = actual || await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: claveBytes(data.clave) });
+      const { data: ok } = await sb.rpc("guardar_movil", { sub: s.toJSON() });
+      if(!ok) throw new Error("guardar");
+      sheet(`<h2>¡Listo!</h2><p class="body">Te avisaremos en este móvil cuando la directiva publique algo o haya un anuncio nuevo en el Mercadiño.</p>`);
+    }catch(x){
+      sheet(x.message === "permiso"
+        ? `<h2>Notificaciones bloqueadas</h2><p class="body">El móvil no ha dado permiso. Para activarlas, entra en los ajustes del navegador o del móvil, busca esta app y permite las notificaciones. Después vuelve a pulsar el botón.</p>`
+        : `<h2>No se han podido activar</h2><p class="body">Comprueba la conexión y vuelve a intentarlo dentro de un rato.</p>`);
+    }
+    b.disabled = false; b.textContent = txt; pintarAvisos();
   }
   const escH = v => String(v == null ? "" : v).replace(/[&<>"]/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;" })[c]);
   const appUrl = () => location.origin + location.pathname.replace(/index\.html$/, "");
