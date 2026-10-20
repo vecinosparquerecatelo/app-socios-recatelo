@@ -417,8 +417,6 @@ const TABS = [
   {id:"colectivos", label:"Colectivos"},
   {id:"fotos", label:"Fotos"},
   {id:"carteles", label:"Carteles"},
-  {id:"buzon", label:"Buzón"},
-  {id:"cuota", label:"Cuota"},
   {id:"estatutos", label:"Estatutos Asociación"},
   {id:"privacidad", label:"Protección de datos"}
 ];
@@ -516,7 +514,7 @@ const VIEWS = {
       ${prox ? `<div class="next"><span class="eyebrow">Próxima cita</span><h3>${esc(prox.title)}</h3><div class="meta">${fmtDate(prox.date)}${prox.time?" · "+esc(prox.time):""}${prox.place?" · "+esc(prox.place):""}</div></div>`
              : `<div class="next"><span class="eyebrow">Próxima cita</span><span>No hay ninguna reunión ni aviso con fecha próxima.</span></div>`}
       </section>
-      <section class="cuota"><span>Cuota de socio</span><div class="big">30 € <span>al año</span></div><p>Con tu cuota sostienes las actividades, las Festas de Recatelo y el apoyo a los colectivos que apadrinamos.</p><div><button class="btn" style="background:var(--surface);color:var(--green)" data-go="cuota">Cómo pagar</button></div></section>
+      <section class="cuota"><span>Cuota de socio</span><div class="big">30 € <span>al año</span></div><p>Con tu cuota sostienes las actividades, las Festas de Recatelo y el apoyo a los colectivos que apadrinamos.</p><p><strong>Cómo pagar:</strong> transferencia o ingreso en Caixa Rural Galega. IBAN: <span class="iban" id="iban">ES15 3070 0001 2563 4625 3229</span>. Concepto: tu nombre y DNI.</p><div><button class="btn" style="background:var(--surface);color:var(--green)" id="copy-iban" type="button">Copiar IBAN</button> <span id="copy-msg"></span></div></section>
       <section class="stack"><h2>Lo último</h2>${ult.length ? ult.map(it=>({avisos:avisoCard,reuniones:reunionCard,quejas:quejaCard,proyectos:quejaCard,sugerencias:quejaCard,colectivos:colNews})[it.section](it)).join("") : emptyBox("Todavía no hay publicaciones.","Pulsa “+ Añadir” en cualquier sección para publicar la primera.")}</section>
       <section class="festas"><span class="pill p-amber" style="justify-self:start">Sábado 11 de septiembre de 2027</span><h3>Festas de Recatelo 2027</h3><p class="body" style="color:var(--muted)">Las fiestas anuales del barrio. Reservad la fecha: el programa irá apareciendo en Avisos y las fotos en Fotos.</p></section>`;
   },
@@ -542,9 +540,9 @@ const VIEWS = {
   },
   sugerencias(){
     const list=sortDesc(S.items.filter(i=>i.section==="sugerencias"||(i.section==="quejas"&&i.kind!=="proyecto")));
-    return `<div><h2>Sugerencias</h2><p class="lead">Las sugerencias y propuestas que la asociación ha trasladado a las instituciones, y en qué punto está cada una.</p></div>
-      <div class="notice">¿Tienes tú una sugerencia para el barrio? Mándala a la directiva por el Buzón. <button class="btn small" data-go="buzon">Ir al Buzón</button></div>
-      <section class="stack">${list.length?list.map(quejaCard).join(""):emptyBox("No hay sugerencias todavía.","Añade cada sugerencia con la institución y su estado.")}</section>`;
+    return `<div><h2>Sugerencias</h2><p class="lead">${S.canEdit?"Los mensajes que envían los socios y las propuestas que la asociación ha trasladado a las instituciones.":"Envía tu queja o sugerencia a la directiva y consulta las propuestas que la asociación ha trasladado a las instituciones."}</p></div>
+      <section class="stack"><h3>${S.canEdit?"Mensajes de los socios":"Envía la tuya a la directiva"}</h3>${S.canEdit?"":`<p class="lead" style="margin:0">Solo la directiva lee los mensajes.</p>`}${VIEWS.buzon(true)}</section>
+      <section class="stack"><h3>Propuestas de la asociación</h3>${list.length?list.map(quejaCard).join(""):emptyBox("No hay sugerencias todavía.","Añade cada sugerencia con la institución y su estado.")}</section>`;
   },
   colectivos(){
     const news=sortDesc(bySection("colectivos"));
@@ -559,8 +557,8 @@ const VIEWS = {
       ${filterBar("fotos",ALBUMES)}
       ${list.length?`<section class="photos">${list.map(photoCard).join("")}</section>`:emptyBox("Aún no hay fotos.","Sube fotos desde “+ Añadir” y elige el álbum.")}`;
   },
-  buzon(){
-    const intro = `<div><h2>Buzón de quejas y sugerencias</h2><p class="lead">Cuéntale a la directiva lo que te preocupa del barrio o lo que mejorarías. Solo la directiva lee los mensajes.</p></div>`;
+  buzon(sinIntro){
+    const intro = sinIntro ? "" : `<div><h2>Buzón de quejas y sugerencias</h2><p class="lead">Cuéntale a la directiva lo que te preocupa del barrio o lo que mejorarías. Solo la directiva lee los mensajes.</p></div>`;
     if(S.canEdit) return intro + buzonAdmin();
     let form;
     if(S.noDb || !S.uid) form = `<div class="notice">Para escribir en el buzón tienes que abrir la app con tu cuenta.</div>`;
