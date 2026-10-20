@@ -521,10 +521,6 @@ const VIEWS = {
         ${S.uid && !S.canEdit && !S.ficha ? `<div class="notice">¿Eres socio/a? <a href="#misdatos" data-go="misdatos">Déjanos tus datos y tu prioridad para el barrio</a>.</div>` : ""}
         <p>Esta app es de todos los socios: aquí encontrarás los avisos, los cursos, el Mercadiño, las reuniones, las sugerencias y las fotos de lo que vamos haciendo. Y como siempre, quedamos a vuestra disposición para cualquier sugerencia, duda o apunte.</p>
         <p class="firma">Junta Directiva</p></section>
-      <section class="stack">
-      ${prox[0]&&prox[0].date ? `<div class="next"><span class="eyebrow">Próxima cita</span><h3>${esc(prox[0].title)}</h3><div class="meta">${fmtDate(prox[0].date)}${prox[0].time?" · "+esc(prox[0].time):""}${prox[0].place?" · "+esc(prox[0].place):""}</div></div>`
-             : `<div class="next"><span class="eyebrow">Próxima cita</span><span>No hay ninguna reunión ni aviso con fecha próxima.</span></div>`}
-      </section>
       <section class="stack"><h2>Avisos</h2>${prox.length?prox.map(avisoCard).join(""):emptyBox("No hay avisos próximos.",S.canEdit?"Pulsa “+ Añadir aviso” para publicar una convocatoria.":"Cuando la directiva publique uno, aparecerá aquí.")}
       ${pas.length?`<details><summary class="meta" style="cursor:pointer">Avisos anteriores (${pas.length})</summary><div class="stack" style="margin-top:10px">${pas.map(avisoCard).join("")}</div></details>`:""}</section>
       <section class="cuota"><span>Cuota de socio</span><div class="big">30 € <span>al año</span></div><p>Con tu cuota sostienes las actividades, las Festas de Recatelo y el apoyo a los colectivos que apadrinamos.</p><p><strong>Cómo pagar:</strong> transferencia o ingreso en Caixa Rural Galega. IBAN: <span class="iban" id="iban">ES15 3070 0001 2563 4625 3229</span>. Concepto: tu nombre y DNI.</p><div><button class="btn" style="background:var(--surface);color:var(--green)" id="copy-iban" type="button">Copiar IBAN</button> <span id="copy-msg"></span></div></section>
