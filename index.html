@@ -124,6 +124,7 @@ textarea{min-height:120px;resize:vertical}
 @media (max-width:420px){.two{grid-template-columns:1fr}}
 .err{color:var(--red);font-size:.9rem;margin:0}
 footer{color:var(--muted);font-size:.85rem;text-align:center;padding-bottom:20px}
+body.con-fab footer{padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))}
 @media (prefers-reduced-motion:no-preference){.card,.photo{animation:in .25s ease both}@keyframes in{from{transform:translateY(4px)}to{transform:none}}}
 </style>
 
@@ -780,6 +781,7 @@ function render(){
   for(const id in keep){ const el=document.getElementById(id); if(el) el.value=keep[id]; }
   $("#fab").hidden = !(S.canEdit && ADD_LABEL[S.tab]) || !!gate;
   if(!$("#fab").hidden) $("#fab").textContent = "+ Añadir " + ADD_LABEL[S.tab];
+  document.body.classList.toggle("con-fab", !$("#fab").hidden);
 }
 
 $("#main").addEventListener("click", e=>{
