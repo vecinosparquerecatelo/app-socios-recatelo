@@ -678,7 +678,7 @@ const VIEWS = {
       <section class="stack"><h3>Próximos cursos</h3>${prox.length?prox.map(cursoCard).join(""):emptyBox("No hay cursos programados ahora mismo.","Añade un curso con su fecha, horario, lugar y explicación.")}</section>
       ${pas.length?`<section class="stack"><h3>Cursos anteriores</h3>${pas.map(c=>cursoCard(c,true)).join("")}</section>`:""}`;
   },
-  loteria(){
+  loteria(enAviso){
     const total = LOT.precio+LOT.donativo;
     const l = S.lot;
     const intro = `<div><h2>Lotería de Navidad</h2><p class="lead">Como otros años, la asociación vende lotería del ${LOT.sorteo} para apoyar a la Protectora de Animales.</p></div>
@@ -702,7 +702,7 @@ const VIEWS = {
       admin=`<section class="stack"><h3>Reservas (solo directiva)</h3><div class="notice">${rows.length} persona${rows.length===1?"":"s"} · ${nd} décimos · ${nd*total} € en total, de los que ${nd*LOT.donativo} € son para la Protectora.</div>
         ${rows.length?`<div class="card" style="overflow-x:auto"><table class="tbl"><thead><tr><th>Nombre</th><th>DNI</th><th>Décimos</th><th>Importe</th><th>Fecha</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${esc(r.nombre)}</td><td>${esc(r.dni)}</td><td>${esc(r.decimos)}</td><td>${r.decimos*total} €</td><td>${r.at?new Date(r.at).toLocaleDateString("es-ES"):""}</td></tr>`).join("")}</tbody></table></div>`:`<div class="empty"><strong>Todavía no hay reservas.</strong>Aparecerán aquí con nombre, DNI y número de décimos.</div>`}</section>`;
     }
-    return intro+form+admin;
+    return enAviso ? form+admin : intro+form+admin;
   },
   estatutos(){
     const tpl=document.getElementById("tpl-estatutos");
@@ -756,7 +756,9 @@ function cursoCard(it, past){
 }
 function estLabel(t){ const parts=t.split(/[.:]\s*/); let l=(parts.length>1?parts.slice(1).join(" "):t).trim().replace(/\.$/,"")||t; l=l.toLowerCase(); return l.charAt(0).toUpperCase()+l.slice(1); }
 function colNews(it){
-  return `<article class="card"><div class="meta"><span class="pill p-amber">${esc(it.entity||"Colectivo")}</span><span>${fmtDate(it.date)}</span></div><h3>${esc(it.title)}</h3>${it.body?`<p class="body">${esc(it.body)}</p>`:""}${attach(it)}${adminRow(it)}</article>`;
+  const lot = it.link==="loteria";
+  const body = lot ? (it.body||"").replace("en la pestaña Lotería","aquí abajo") : it.body;
+  return `<article class="card"><div class="meta"><span class="pill p-amber">${esc(it.entity||"Colectivo")}</span><span>${fmtDate(it.date)}</span></div><h3>${esc(it.title)}</h3>${body?`<p class="body">${esc(body)}</p>`:""}${attach(it)}${lot?`<div class="stack" style="margin-top:12px">${VIEWS.loteria(true)}</div>`:""}${adminRow(it)}</article>`;
 }
 function colIcon(id){
   const p={protectora:'<path d="M7 14c-1.5 0-2.5-1.2-2.5-2.6S5.6 9 7 9s2.5 1 2.5 2.4S8.5 14 7 14zm10 0c-1.5 0-2.5-1.2-2.5-2.6S15.6 9 17 9s2.5 1 2.5 2.4S18.5 14 17 14zM9.5 8C8.2 8 7.5 6.8 7.5 5.5S8.3 3 9.5 3s2 1.2 2 2.5S10.8 8 9.5 8zm5 0c-1.2 0-2-1.2-2-2.5s.8-2.5 2-2.5 2 1.2 2 2.5S15.8 8 14.5 8zM12 12c3 0 5.5 3.5 5.5 6 0 1.6-1.3 2.5-2.8 2.5-1.2 0-1.8-.6-2.7-.6s-1.5.6-2.7.6c-1.5 0-2.8-.9-2.8-2.5 0-2.5 2.5-6 5.5-6z"/>',
