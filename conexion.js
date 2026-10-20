@@ -55,7 +55,7 @@
         const { error } = await sb.from("docs").upsert({ coll, id, data, updated_at: new Date().toISOString() });
         if(error) throw err("invalid_argument", error.message);
         notify(coll);
-        if(coll === "items" || coll === "mercadillo") sb.functions.invoke("avisar", { body: { coll, id } }).catch(() => {});
+        if(coll === "items" || coll === "mercadillo") sb.functions.invoke("smart-task", { body: { coll, id } }).catch(() => {});
       },
       async update(patch){
         const cur = await fetchDoc(coll, id);
@@ -256,7 +256,7 @@
     try{
       const perm = await Notification.requestPermission();
       if(perm !== "granted") throw new Error("permiso");
-      const { data, error } = await sb.functions.invoke("avisar", { body: { accion: "clave" } });
+      const { data, error } = await sb.functions.invoke("smart-task", { body: { accion: "clave" } });
       if(error || !data || !data.clave) throw new Error("clave");
       const reg = await navigator.serviceWorker.ready;
       const s = actual || await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: claveBytes(data.clave) });
