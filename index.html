@@ -1017,6 +1017,12 @@ function openForm(section, it){
   $("#f-cancel").onclick = closeSheet;
   $("#sheet-bg").addEventListener("click", e=>{ if(e.target.id==="sheet-bg") closeSheet(); });
   $("#f-title").focus();
+  let elegidas = [];
+  if(section==="fotos" && !it){
+    const inp=$("#f-photo"), info=document.createElement("div"); info.className="meta"; info.id="f-elegidas"; inp.after(info);
+    const pinta=()=>{ info.innerHTML = elegidas.length ? `${elegidas.length} foto${elegidas.length===1?"":"s"} elegida${elegidas.length===1?"":"s"}: ${elegidas.map(f=>esc(f.name)).join(", ")}. Puedes volver a pulsar para añadir más. <button type="button" class="btn ghost small" id="f-limpiar">Quitar todas</button>` : ""; const l=$("#f-limpiar"); if(l) l.onclick=()=>{ elegidas=[]; pinta(); }; };
+    inp.addEventListener("change", ()=>{ for(const fl of inp.files) if(!elegidas.some(x=>x.name===fl.name&&x.size===fl.size)) elegidas.push(fl); inp.value=""; pinta(); });
+  }
   $("#f").addEventListener("submit", async e=>{
     e.preventDefault();
     const err=$("#f-err"); err.hidden=true;
@@ -1025,7 +1031,7 @@ function openForm(section, it){
     for(const [k,id] of [["body","f-body"],["kind","f-kind"],["time","f-time"],["place","f-place"],["entity","f-entity"],["status","f-status"],["album","f-album"],["plazas","f-plazas"]]){ const x=val(id); if(x!==undefined) data[k]=x; }
     if(!data.title && section==="fotos") data.title = data.album || "Foto";
     if(!data.title){ err.textContent="Escribe un título."; err.hidden=false; return; }
-    const files = $("#f-photo") ? [...$("#f-photo").files] : [];
+    const files = section==="fotos" && !it ? elegidas.slice() : ($("#f-photo") ? [...$("#f-photo").files] : []);
     if(section==="fotos" && !it && files.length>1){
       const btn=$("#f-save"); btn.disabled=true;
       let hechas=0, fallos=0;
