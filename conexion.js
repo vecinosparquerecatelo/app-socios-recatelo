@@ -169,7 +169,7 @@
     el.querySelector("#acc-socio").addEventListener("submit", async e => {
       e.preventDefault();
       const er = el.querySelector("#acc-err1"); er.hidden = true;
-      const code = el.querySelector("#acc-codigo").value.trim();
+      const code = el.querySelector("#acc-codigo").value.replace(/[^a-z0-9]/gi, "").toUpperCase();
       if(!code){ er.textContent = "Escribe el código de socio."; er.hidden = false; return; }
       const btn = e.target.querySelector("button"); btn.disabled = true; btn.textContent = "Entrando…";
       try{
