@@ -111,6 +111,7 @@ footer a{color:inherit}
 .btn.danger{background:var(--red);color:var(--surface)}
 .btn.small{padding:5px 10px;font-size:.85rem}
 .fab{position:fixed;right:calc(18px + env(safe-area-inset-right,0px));bottom:calc(18px + env(safe-area-inset-bottom,0px));z-index:6;border-radius:999px;padding:14px 20px;box-shadow:0 6px 20px rgba(0,0,0,.25);font-size:1rem}
+.pix{color:transparent;user-select:none;border-radius:3px;background-color:#8c9590;background-image:linear-gradient(45deg,#6f7873 25%,transparent 25%,transparent 75%,#6f7873 75%),linear-gradient(45deg,#6f7873 25%,transparent 25%,transparent 75%,#6f7873 75%);background-size:8px 8px;background-position:0 0,4px 4px}
 .notice{background:var(--blue-soft);color:var(--blue);border-radius:12px;padding:10px 14px;font-size:.92rem}
 .sheet-bg{position:fixed;inset:0;background:rgba(10,15,12,.55);z-index:20;display:flex;align-items:flex-end;justify-content:center}
 .sheet{background:var(--surface);color:var(--ink);width:100%;max-width:620px;max-height:92vh;overflow:auto;border-radius:18px 18px 0 0;padding:20px max(16px,env(safe-area-inset-left,0px)) calc(20px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-right,0px));display:grid;gap:14px}
@@ -291,22 +292,7 @@ footer{color:var(--muted);font-size:.85rem;text-align:center;padding-bottom:20px
 <h3>CAPÍTULO VI. JUNTA DIRECTIVA</h3>
 
 <h4>Artículo 17º.- Composición.</h4>
-<p>La Asociación será gestionada y representada por una Junta Directiva formada por: un Presidente, un Vicepresidente, un Secretario General, un Tesorero y un vocal (en su caso)por cada una de las calles en las que de forma principal desarrolla su actividad y ámbito de actuación la Asociación, es decir:</p>
-<p>Vocal C/ Pascual Veiga:</p>
-<p>Vocal C/Doutor García Portela:</p>
-<p>Vocal C/Vilalba:</p>
-<p>Vocal C/Carril dos Loureiros:</p>
-<p>Vocal C/Recatelo:</p>
-<p>Vocal C/Ribadeo:</p>
-<p>Vocal C/Isaac Diaz Pardo:</p>
-<p>Vocal C/Armando Durán:</p>
-<p>Vocal C/Rodriguez Mourelo:</p>
-<p>Vocal C/Cidade de Viveiro:</p>
-<p>Vocal C/Santiago y zona Puerta de Santiago:</p>
-<p>Vocal C/ Puro Cora :</p>
-<p>Vocal C/Avelino Pousa Antelo:</p>
-<p>Vocal C/Villa de Sarria:</p>
-<p>Vocal C/ Fray Plácido :</p>
+<p>La Asociación será gestionada y representada por una Junta Directiva formada por: un Presidente, un Vicepresidente, un Secretario General, un Tesorero y un vocal (en su caso).</p>
 
 <p>Todos los cargos que componen la Junta Directiva serán <em>gratuitos (salvo que se</em></p>
 
@@ -407,10 +393,10 @@ footer{color:var(--muted);font-size:.85rem;text-align:center;padding-bottom:20px
 <p>En todo cuanto no esté previsto en los presentes Estatutos se aplicará la vigente Ley Orgánica 1/2002, de 22 de marzo, reguladora del Derecho de Asociación, y las Disposiciones Complementarias.</p>
 
 <h3>Dilixencia</h3>
-<p>MARTA FERNANDEZ RODRIGUEZ,titular da Presidencia e JUAN SOMORROSTRO FERNANDEZ,titular da secretaria da Asociación de Veciños do Parque de Rosalía de Castro-Recatelo,fan constar que os presentes estatutos están redactadps coa inclusión das modificacións acordadas na asamblea xeral celebrada en data 17 de setembro de 2024,dacordo cos requisitos establecidos na LO 1/2002 do 22 de marzo,reguladora do dereito de asociación e seguindo o procedemento previsto nos seus estatutos.</p>
+<p><span class="pix" role="img" aria-label="nombre oculto">XXXXX XXXXXXXXX XXXXXXXXX</span>, titular da Presidencia e <span class="pix" role="img" aria-label="nombre oculto">XXXX XXXXXXXXXX XXXXXXXXX</span>, titular da secretaria da Asociación de Veciños do Parque de Rosalía de Castro-Recatelo,fan constar que os presentes estatutos están redactadps coa inclusión das modificacións acordadas na asamblea xeral celebrada en data 17 de setembro de 2024,dacordo cos requisitos establecidos na LO 1/2002 do 22 de marzo,reguladora do dereito de asociación e seguindo o procedemento previsto nos seus estatutos.</p>
 <p>En Lugo a 17 de setembro de 2024</p>
 <p>PRESIDENTA SECRETARIO</p>
-<p>MARTA FERNANDEZ RGUEZ JUAN SOMORROSTRO FDEZ</p>
+<p><span class="pix" role="img" aria-label="nombre oculto">XXXXX XXXXXXXXX XXXXX</span> <span class="pix" role="img" aria-label="nombre oculto">XXXX XXXXXXXXXX XXXX</span></p>
 
 </template>
 <button class="btn fab" id="fab" hidden>+ Añadir</button>
@@ -426,7 +412,8 @@ const TABS = [
   {id:"avisos", label:"Avisos"},
   {id:"cursos", label:"Cursos"},
   {id:"reuniones", label:"Reuniones"},
-  {id:"quejas", label:"Quejas y proyectos"},
+  {id:"proyectos", label:"Proyectos"},
+  {id:"sugerencias", label:"Sugerencias"},
   {id:"colectivos", label:"Colectivos"},
   {id:"fotos", label:"Fotos"},
   {id:"carteles", label:"Carteles"},
@@ -445,7 +432,7 @@ const COLECTIVOS = [
 ];
 const ALBUMES = ["Festas Recatelo","Actividades","Otros"];
 const ESTADOS = {presentada:["Presentada","p-blue"], tramite:["En trámite","p-amber"], resuelta:["Resuelta","p-green"], rechazada:["Sin respuesta / rechazada","p-red"]};
-const ADD_LABEL = {avisos:"aviso", reuniones:"resumen de reunión", quejas:"queja o proyecto", colectivos:"noticia de colectivo", fotos:"foto", carteles:"cartel", cursos:"curso"};
+const ADD_LABEL = {avisos:"aviso", reuniones:"resumen de reunión", proyectos:"proyecto", sugerencias:"sugerencia", colectivos:"noticia de colectivo", fotos:"foto", carteles:"cartel", cursos:"curso"};
 
 const BTIPOS = ["Queja","Sugerencia","Otro"];
 const DEFAULT_LOGO = "c37727719b16fb206a49359b064fca6d";
@@ -493,7 +480,7 @@ function reunionCard(it){
 }
 function quejaCard(it){
   const st = ESTADOS[it.status] || ESTADOS.presentada;
-  const k = it.kind==="proyecto" ? `<span class="pill p-green">Proyecto</span>` : `<span class="pill p-red">Queja</span>`;
+  const k = it.section==="proyectos"||it.kind==="proyecto" ? `<span class="pill p-green">Proyecto</span>` : it.section==="sugerencias" ? `<span class="pill p-amber">Sugerencia</span>` : `<span class="pill p-red">Queja</span>`;
   return `<article class="card"><div class="meta">${k}<span class="pill ${st[1]}">${st[0]}</span>${it.entity?`<span>Ante: ${esc(it.entity)}</span>`:""}<span>${fmtDate(it.date)}</span></div>
     <h3>${esc(it.title)}</h3>${it.body?`<p class="body">${esc(it.body)}</p>`:""}${attach(it)}${adminRow(it)}</article>`;
 }
@@ -529,7 +516,7 @@ const VIEWS = {
              : `<div class="next"><span class="eyebrow">Próxima cita</span><span>No hay ninguna reunión ni aviso con fecha próxima.</span></div>`}
       </section>
       <section class="cuota"><span>Cuota de socio</span><div class="big">30 € <span>al año</span></div><p>Con tu cuota sostienes las actividades, las Festas de Recatelo y el apoyo a los colectivos que apadrinamos.</p><div><button class="btn" style="background:var(--surface);color:var(--green)" data-go="cuota">Cómo pagar</button></div></section>
-      <section class="stack"><h2>Lo último</h2>${ult.length ? ult.map(it=>({avisos:avisoCard,reuniones:reunionCard,quejas:quejaCard,colectivos:colNews})[it.section](it)).join("") : emptyBox("Todavía no hay publicaciones.","Pulsa “+ Añadir” en cualquier sección para publicar la primera.")}</section>
+      <section class="stack"><h2>Lo último</h2>${ult.length ? ult.map(it=>({avisos:avisoCard,reuniones:reunionCard,quejas:quejaCard,proyectos:quejaCard,sugerencias:quejaCard,colectivos:colNews})[it.section](it)).join("") : emptyBox("Todavía no hay publicaciones.","Pulsa “+ Añadir” en cualquier sección para publicar la primera.")}</section>
       <section class="festas"><span class="pill p-amber" style="justify-self:start">Sábado 11 de septiembre de 2027</span><h3>Festas de Recatelo 2027</h3><p class="body" style="color:var(--muted)">Las fiestas anuales del barrio. Reservad la fecha: el programa irá apareciendo en Avisos y las fotos en Fotos.</p></section>`;
   },
   avisos(){
@@ -547,13 +534,16 @@ const VIEWS = {
       ${filterBar("reuniones",ENTIDADES.filter(e=>e!=="Otra"))}
       <section class="stack">${list.length?list.map(reunionCard).join(""):emptyBox(f==="todas"?"Todavía no hay resúmenes.":"No hay resúmenes con "+esc(f)+".","Añade el resumen indicando con quién fue la reunión.")}</section>`;
   },
-  quejas(){
-    let list=sortDesc(bySection("quejas")); const f=S.filter.quejas;
-    const map={"Quejas":"queja","Proyectos":"proyecto"};
-    if(f!=="todas") list=list.filter(i=>(i.kind||"queja")===map[f]);
-    return `<div><h2>Quejas y proyectos</h2><p class="lead">Todo lo que la asociación ha planteado a las instituciones y en qué punto está cada cosa.</p></div>
-      ${filterBar("quejas",["Quejas","Proyectos"])}
-      <section class="stack">${list.length?list.map(quejaCard).join(""):emptyBox("No hay nada registrado todavía.","Añade cada queja o proyecto con la institución y su estado.")}</section>`;
+  proyectos(){
+    const list=sortDesc(S.items.filter(i=>i.section==="proyectos"||(i.section==="quejas"&&i.kind==="proyecto")));
+    return `<div><h2>Proyectos</h2><p class="lead">Los proyectos que la asociación impulsa para el barrio y en qué punto está cada uno.</p></div>
+      <section class="stack">${list.length?list.map(quejaCard).join(""):emptyBox("No hay proyectos todavía.","Añade cada proyecto con la institución y su estado.")}</section>`;
+  },
+  sugerencias(){
+    const list=sortDesc(S.items.filter(i=>i.section==="sugerencias"||(i.section==="quejas"&&i.kind!=="proyecto")));
+    return `<div><h2>Sugerencias</h2><p class="lead">Las sugerencias y propuestas que la asociación ha trasladado a las instituciones, y en qué punto está cada una.</p></div>
+      <div class="notice">¿Tienes tú una sugerencia para el barrio? Mándala a la directiva por el Buzón. <button class="btn small" data-go="buzon">Ir al Buzón</button></div>
+      <section class="stack">${list.length?list.map(quejaCard).join(""):emptyBox("No hay sugerencias todavía.","Añade cada sugerencia con la institución y su estado.")}</section>`;
   },
   colectivos(){
     const news=sortDesc(bySection("colectivos"));
@@ -937,7 +927,7 @@ function openForm(section, it){
   if(section==="avisos") extra = field("f-kind","Tipo",sel("f-kind",[["reunion","Reunión de socios"],["aviso","Aviso general"]],v.kind||"reunion"))
      + `<div class="two">${field("f-time","Hora",`<input id="f-time" type="time" value="${esc(v.time||"")}">`)}${field("f-place","Lugar",`<input id="f-place" value="${esc(v.place||"")}" placeholder="Local social, plaza…">`)}</div>`;
   if(section==="reuniones") extra = field("f-entity","Reunión con",sel("f-entity",ENTIDADES,v.entity||"Alcaldía"));
-  if(section==="quejas") extra = `<div class="two">${field("f-kind","Tipo",sel("f-kind",[["queja","Queja"],["proyecto","Proyecto"]],v.kind||"queja"))}${field("f-status","Estado",sel("f-status",Object.entries(ESTADOS).map(([k,x])=>[k,x[0]]),v.status||"presentada"))}</div>`
+  if(section==="proyectos"||section==="sugerencias"||section==="quejas") extra = `<div class="two">${field("f-status","Estado",sel("f-status",Object.entries(ESTADOS).map(([k,x])=>[k,x[0]]),v.status||"presentada"))}</div>`
      + field("f-entity","Institución",sel("f-entity",ENTIDADES,v.entity||"Alcaldía"));
   if(section==="colectivos") extra = field("f-entity","Colectivo",sel("f-entity",COLECTIVOS.map(c=>c.name),v.entity||COLECTIVOS[0].name));
   if(section==="fotos") extra = field("f-album","Álbum",sel("f-album",ALBUMES,v.album||"Festas Recatelo"));
