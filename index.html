@@ -466,7 +466,8 @@ function adminRow(it){
   if(!S.canEdit) return "";
   return `<div class="row-actions"><button class="btn ghost small" data-edit="${esc(it.id)}">Editar</button><button class="btn ghost small" data-del="${esc(it.id)}">Borrar</button></div>`;
 }
-function attach(it){ return it.photo ? `<img class="att" src="${imgSrc(it.photo)}" alt="${esc(it.title)}" loading="lazy" onerror="this.remove()">` : ""; }
+function attach(it){ return (it.photo ? `<img class="att" src="${imgSrc(it.photo)}" alt="${esc(it.title)}" loading="lazy" onerror="this.remove()">` : "")
+  + (it.doc ? `<div><a class="btn ghost small" href="${imgSrc(it.doc)}" target="_blank" rel="noopener">📄 Abrir documento${it.docName?": "+esc(it.docName):""}</a></div>` : ""); }
 
 function avisoCard(it){
   const tipo = it.kind==="reunion" ? `<span class="pill p-amber">Reunión de socios</span>` : `<span class="pill p-blue">Aviso</span>`;
@@ -942,6 +943,7 @@ function openForm(section, it){
     ${isFoto?"":field("f-body", section==="reuniones"?"Resumen":section==="cursos"?"Explicación del curso":"Texto", `<textarea id="f-body">${esc(v.body||"")}</textarea>`)}
     ${canPhoto?field("f-photo", isCartel?"Cartel (imagen o PDF)":isFoto?"Foto":"Foto (opcional)", `<input id="f-photo" type="file" accept="image/png,image/jpeg,image/webp,image/gif${isCartel?",application/pdf":""}">`) + (v.photo?`<span class="meta">Ya tiene una foto; elige otra solo si quieres cambiarla.</span>`:"")
               :(isFoto?`<p class="err">Solo quien tenga permiso de edición puede subir fotos.</p>`:"")}
+    ${canPhoto&&!isFoto?field("f-doc","Documento en PDF (opcional)",`<input id="f-doc" type="file" accept="application/pdf">`) + (v.doc?`<span class="meta">Ya tiene un documento${v.docName?" ("+esc(v.docName)+")":""}; elige otro solo si quieres cambiarlo.</span>`:""):""}
     <p class="err" id="f-err" hidden></p>
     <div class="row-actions"><button type="button" class="btn ghost" id="f-cancel">Cancelar</button><button class="btn" id="f-save">${it?"Guardar cambios":"Publicar"}</button></div>
   </form></div>`;
@@ -964,6 +966,13 @@ function openForm(section, it){
         const up = await S.assets.upload(file);
         data.photo = up.id; data.photoType = up.contentType || file.type;
       } else if(v.photo){ data.photo = v.photo; if(v.photoType) data.photoType = v.photoType; }
+      const doc = $("#f-doc") && $("#f-doc").files[0];
+      if(doc){
+        if(doc.type && doc.type!=="application/pdf") throw {code:"bad_type"};
+        if(doc.size>20*1024*1024) throw {code:"too_large"};
+        const upd = await S.assets.upload(doc, {type:"application/pdf"});
+        data.doc = upd.id; data.docName = doc.name.slice(0,120);
+      } else if(v.doc){ data.doc = v.doc; if(v.docName) data.docName = v.docName; }
       if(it && it.cuando && !data.date) data.cuando = it.cuando;
       const ref = it ? S.db.collection("items").doc(it.id) : S.db.collection("items").doc();
       if(!it) data.createdAt = data.updatedAt;
@@ -971,7 +980,7 @@ function openForm(section, it){
       await ref.set(data);
       closeSheet();
     }catch(x){
-      const msg = {too_large:"La foto pesa más de 20 MB. Prueba con una más pequeña.", unsupported_type:"Ese formato de imagen no se admite. Usa JPG, PNG o WEBP.", invalid_argument:"No tienes permiso para publicar. Pide a la directiva acceso de edición.", quota_exceeded:"Se ha llenado el espacio de la app. Borra publicaciones antiguas.", quota_or_state:"Se ha llenado el espacio para fotos. Borra fotos antiguas.", rate_limited:"Demasiados intentos seguidos. Espera un momento y vuelve a probar."}[x&&x.code] || "No se ha podido guardar. Vuelve a intentarlo.";
+      const msg = {too_large:"El archivo pesa más de 20 MB. Prueba con uno más pequeño.", bad_type:"El documento tiene que ser un PDF. En Word: Archivo > Guardar como > PDF.", unsupported_type:"Ese formato de imagen no se admite. Usa JPG, PNG o WEBP.", invalid_argument:"No tienes permiso para publicar. Pide a la directiva acceso de edición.", quota_exceeded:"Se ha llenado el espacio de la app. Borra publicaciones antiguas.", quota_or_state:"Se ha llenado el espacio para fotos. Borra fotos antiguas.", rate_limited:"Demasiados intentos seguidos. Espera un momento y vuelve a probar."}[x&&x.code] || "No se ha podido guardar. Vuelve a intentarlo.";
       err.textContent=msg; err.hidden=false; btn.disabled=false; btn.textContent=it?"Guardar cambios":"Publicar";
     }
   });
@@ -988,6 +997,7 @@ function askDelete(id){
     try{
       await S.db.collection("items").doc(id).delete();
       if(it.photo && S.assets){ try{ await S.assets.delete(it.photo) }catch(e){} }
+      if(it.doc && S.assets){ try{ await S.assets.delete(it.doc) }catch(e){} }
       closeSheet();
     }catch(e){ const er=$("#d-err"); er.textContent="No se ha podido borrar. Vuelve a intentarlo."; er.hidden=false; }
   };
