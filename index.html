@@ -1156,7 +1156,7 @@ function openForm(section, it){
       } else if(v.photo){ data.photo = v.photo; if(v.photoType) data.photoType = v.photoType; }
       const doc = $("#f-doc") && $("#f-doc").files[0];
       if(doc){
-        if(doc.type && doc.type!=="application/pdf") throw {code:"bad_type"};
+        if(doc.type && !/pdf|octet-stream/i.test(doc.type) && !/\.pdf$/i.test(doc.name||"")) throw {code:"bad_type"};
         if(doc.size>20*1024*1024) throw {code:"too_large"};
         const upd = await S.assets.upload(doc, {type:"application/pdf"});
         data.doc = upd.id; data.docName = doc.name.slice(0,120);
@@ -1168,7 +1168,7 @@ function openForm(section, it){
       await ref.set(data);
       closeSheet();
     }catch(x){
-      const msg = {too_large:"El archivo pesa más de 20 MB. Prueba con uno más pequeño.", bad_type:"El documento tiene que ser un PDF. En Word: Archivo > Guardar como > PDF.", unsupported_type:"Ese formato de imagen no se admite. Usa JPG, PNG o WEBP.", invalid_argument:"No tienes permiso para publicar. Pide a la directiva acceso de edición.", quota_exceeded:"Se ha llenado el espacio de la app. Borra publicaciones antiguas.", quota_or_state:"Se ha llenado el espacio para fotos. Borra fotos antiguas.", rate_limited:"Demasiados intentos seguidos. Espera un momento y vuelve a probar."}[x&&x.code] || "No se ha podido guardar. Vuelve a intentarlo.";
+      const msg = {too_large:"El archivo pesa más de 20 MB. Prueba con uno más pequeño.", bad_type:"El documento tiene que ser un PDF. En Word: Archivo > Guardar como > PDF.", unsupported_type:"Ese formato de imagen no se admite. Usa JPG, PNG o WEBP.", invalid_argument:"No tienes permiso para publicar. Pide a la directiva acceso de edición.", quota_exceeded:"Se ha llenado el espacio de la app. Borra publicaciones antiguas.", quota_or_state:"Se ha llenado el espacio para fotos. Borra fotos antiguas.", rate_limited:"Demasiados intentos seguidos. Espera un momento y vuelve a probar."}[x&&x.code] || ("No se ha podido guardar. Vuelve a intentarlo." + ((x&&(x.message||x.code))?" (Detalle: "+String(x.message||x.code).slice(0,160)+")":""));
       err.textContent=msg; err.hidden=false; btn.disabled=false; btn.textContent=it?"Guardar cambios":"Publicar";
     }
   });
