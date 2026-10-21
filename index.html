@@ -687,7 +687,7 @@ const VIEWS = {
     let admin = "";
     if(S.canEdit){
       const rows = S.consentAll.slice().sort((a,b)=>(b.at||"").localeCompare(a.at||""));
-      admin = `<section class="stack"><h3>Registro de consentimientos (solo directiva)</h3>${rows.length?`<div class="card" style="overflow-x:auto"><table class="tbl"><thead><tr><th>Socio/a</th><th>Fecha</th><th>Datos</th><th>Fotos</th><th>Avisos</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${esc(S.names[r.uid]||"Socio/a")}</td><td>${r.at?new Date(r.at).toLocaleDateString("es-ES"):""}</td><td>${r.acepta?"Sí":"No"}</td><td>${r.fotos?"Sí":"No"}</td><td>${r.comunicaciones?"Sí":"No"}</td></tr>`).join("")}</tbody></table></div>`:`<div class="empty"><strong>Nadie ha registrado su consentimiento todavía.</strong>Aparecerán aquí con fecha y opciones elegidas.</div>`}</section>`;
+      admin = `<section class="stack"><h3>Registro de consentimientos (solo directiva)</h3>${rows.length?`<div class="card" style="overflow-x:auto"><table class="tbl"><thead><tr><th>Socio/a</th><th>Fecha</th><th>Datos</th><th>Fotos</th><th>Avisos</th><th></th></tr></thead><tbody>${rows.map(r=>`<tr><td>${esc(S.names[r.uid]||"Socio/a")}</td><td>${r.at?new Date(r.at).toLocaleDateString("es-ES"):""}</td><td>${r.acepta?"Sí":"No"}</td><td>${r.fotos?"Sí":"No"}</td><td>${r.comunicaciones?"Sí":"No"}</td><td><button type="button" class="btn ghost small" data-cs-del="${esc(r.uid)}">Borrar</button></td></tr>`).join("")}</tbody></table></div>`:`<div class="empty"><strong>Nadie ha registrado su consentimiento todavía.</strong>Aparecerán aquí con fecha y opciones elegidas.</div>`}</section>`;
     }
     return `<div><h2>Protección de datos</h2><p class="lead">Información básica según el Reglamento General de Protección de Datos (RGPD) y la Ley Orgánica 3/2018 (LOPDGDD).</p></div>
       <section class="card legal">
@@ -967,6 +967,10 @@ $("#main").addEventListener("click", e=>{
   const vb=e.target.closest("[data-ver]"); if(vb){ abrirVisor(+vb.dataset.ver); return; }
   if(e.target.id==="fi-editar"){ S.fichaEdit=true; render(); $("#fi-nombre")?.focus(); return; }
   if(e.target.id==="fi-cancelar"){ S.fichaEdit=false; render(); return; }
+  const cd=e.target.closest("[data-cs-del]");
+  if(cd && S.canEdit){ const r=S.consentAll.find(x=>x.uid===cd.dataset.csDel); if(!r) return;
+    if(!confirm(`¿Borrar el consentimiento de ${S.names[r.uid]||"este socio/a"} del ${r.at?new Date(r.at).toLocaleDateString("es-ES"):"registro"}? Si esa persona sigue usando la app, se le volverá a pedir que lo acepte.`)) return;
+    cd.disabled=true; S.db.doc("consentimientos/"+r.uid).delete().catch(()=>{ cd.disabled=false; alert("No se ha podido borrar. Vuelve a intentarlo."); }); return; }
   const fd=e.target.closest("[data-ficha-del]");
   if(fd && S.canEdit){ const r=S.fichasAll.find(x=>x.uid===fd.dataset.fichaDel);
     if(!r || !confirm(`¿Borrar la ficha de ${r.nombre||"este socio"}${r.email?" ("+r.email+")":""}? No se puede deshacer.`)) return;
