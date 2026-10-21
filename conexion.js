@@ -298,7 +298,7 @@
     const { data: lista } = await sb.rpc("listar_codigos");
     const filas = (lista || []).map(k => `<li style="display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;justify-content:space-between;border-top:1px solid var(--line);padding:8px 0">
         <span><strong>${escH(k.nombre)}</strong><br><span class="acc-small">${escH(k.codigo)} · ${!k.activo ? "sin acceso" : k.usos ? "en uso (" + k.usos + " de " + k.max_usos + " móviles)" : "sin usar todavía"}</span></span>
-        ${k.activo ? `<span style="display:flex;gap:6px"><button class="btn ghost small" data-wa="${escH(k.codigo)}" data-n="${escH(k.nombre)}">WhatsApp</button><button class="btn ghost small" data-quitar="${escH(k.codigo)}" data-n="${escH(k.nombre)}">Quitar acceso</button></span>` : ""}
+        <span style="display:flex;flex-wrap:wrap;gap:6px">${k.activo ? `<button class="btn ghost small" data-wa="${escH(k.codigo)}" data-n="${escH(k.nombre)}">WhatsApp</button><button class="btn ghost small" data-quitar="${escH(k.codigo)}" data-n="${escH(k.nombre)}">Quitar acceso</button>` : ""}<button class="btn ghost small" data-borrar="${escH(k.codigo)}" data-n="${escH(k.nombre)}">Borrar</button></span>
       </li>`).join("");
     sheet(`<h2>Códigos de socios</h2>
       <p class="body">Cada socio recibe su propio código. Funciona en un máximo de 2 móviles o navegadores de esa persona; si alguien lo reenvía, no le servirá a nadie más. Si un socio cambia de móvil, quítale el acceso y créale uno nuevo.</p>
@@ -317,6 +317,12 @@
       root.querySelectorAll("[data-quitar]").forEach(b => b.onclick = async () => {
         if(!confirm(`¿Quitar el acceso a ${b.dataset.n}? Dejará de poder entrar en la app.`)) return;
         await sb.rpc("quitar_codigo", { codigo: b.dataset.quitar }); codigos();
+      });
+      root.querySelectorAll("[data-borrar]").forEach(b => b.onclick = async () => {
+        if(!confirm(`¿Borrar el código ${b.dataset.borrar} de ${b.dataset.n}? Dejará de funcionar y desaparecerá de la lista.`)) return;
+        const { data: ok, error } = await sb.rpc("borrar_codigo", { codigo: b.dataset.borrar });
+        if(error || !ok) return codigos(`<div class="notice">No se ha podido borrar. Si es la primera vez, falta pegar en Supabase el texto supabase-borrar-codigos.sql.</div>`);
+        codigos();
       });
     });
   }
