@@ -102,6 +102,17 @@
     async delete(id){ if(!id || id === DEFAULT_LOGO) return { deleted:false }; await sb.storage.from("archivos").remove([id]); return { deleted:true }; },
     async list(){ return { assets: [], usage: {} }; }
   };
+  // Los socios suben fotos solo a su carpeta socios/<su id>/ (lo controla Supabase)
+  window.subirFotoSocio = async file => {
+    const type = file.type || "image/jpeg";
+    const ext = ({ "image/jpeg":"jpg", "image/png":"png", "image/webp":"webp", "image/gif":"gif" })[type];
+    if(!ext) throw err("unsupported_type", "Solo fotos JPG, PNG, WEBP o GIF");
+    if(file.size > 20 * 1024 * 1024) throw err("too_large", "Archivo demasiado grande");
+    const name = "socios/" + state.uid + "/" + newId() + "." + ext;
+    const { error } = await sb.storage.from("archivos").upload(name, file, { contentType: type, upsert: false });
+    if(error) throw err("upstream_error", error.message);
+    return { id: name, contentType: type };
+  };
 
   const user = {
     isOwner: async () => state.directiva,

@@ -501,7 +501,8 @@ function quejaCard(it){
 }
 function photoCard(it, i){
   return `<figure class="photo" style="margin:0">${it.photo?`<button type="button" class="ver" data-ver="${i}" aria-label="Ver la foto en grande"><img src="${imgSrc(it.photo)}" alt="${esc(it.title)}" loading="lazy"></button>`:`<div class="ph">Sin imagen</div>`}
-    ${S.canEdit?`<figcaption class="cap">${adminRow(it)}</figcaption>`:""}</figure>`;
+    ${it.socio ? ((S.canEdit||it.socio===S.uid)?`<figcaption class="cap"><div class="row-actions"><button class="btn ghost small" data-fs-del="${esc(it.socio)}|${esc(it.fid)}">Quitar</button></div></figcaption>`:"")
+      : S.canEdit?`<figcaption class="cap">${adminRow(it)}</figcaption>`:""}</figure>`;
 }
 function abrirVisor(i){
   const fotos=S.verList||[]; if(!fotos.length) return;
@@ -610,7 +611,9 @@ const VIEWS = {
       <section class="stack"><h3>Noticias de los colectivos</h3>${news.length?news.map(colNews).join(""):emptyBox("Sin noticias por ahora.","Añade campañas, recogidas o actos de estos colectivos.")}</section>`;
   },
   fotos(){
-    const all=sortDesc(bySection("fotos")); const f=S.filter.fotos;
+    const LIBRE="Foto temática libre socios", soc=[];
+    for(const d of S.fotoSoc||[]) for(const x of (d.fotos||[])) soc.push({id:"s:"+d.uid+":"+x.id, section:"fotos", album:LIBRE, photo:x.photo, photoType:x.photoType, title:"Foto de un socio", date:(x.at||"").slice(0,10), socio:d.uid, fid:x.id});
+    const all=sortDesc([...bySection("fotos"), ...soc]); const f=S.filter.fotos;
     const albs=[...ALBUMES.filter(a=>a!=="Otros"), ...new Set(all.map(i=>i.album||"Otros").filter(a=>!ALBUMES.includes(a))), "Otros"];
     if(f==="todas"){
       const card=a=>{ const ps=all.filter(i=>(i.album||"Otros")===a); if(a==="Otros"&&!ps.length) return ""; const c=ps.find(i=>i.photo&&!/pdf/.test(i.photoType||""));
@@ -619,8 +622,14 @@ const VIEWS = {
         <section class="carpetas" data-filter="fotos">${albs.map(card).join("")}</section>`;
     }
     const list=all.filter(i=>(i.album||"Otros")===f); S.verList=list.filter(i=>i.photo);
+    const puedeSubir = f===LIBRE && S.uid && !S.canEdit && !S.noDb && (window.subirFotoSocio || S.assets);
+    const n=(S.fsElegidas||[]).length;
+    const subir = puedeSubir ? `<form class="card" id="fs-form" novalidate><h3>Sube tus fotos</h3><p class="meta">Esta carpeta es de los socios: cualquier tema vale. Solo las ven los socios.</p>
+      <label class="field"><span>Elige una o varias fotos</span><input id="fs-files" type="file" accept="image/png,image/jpeg,image/webp,image/gif" multiple></label>
+      ${n?`<p class="meta">${n} foto${n===1?"":"s"} elegida${n===1?"":"s"}. Puedes volver a pulsar para añadir más. <button type="button" class="btn ghost small" id="fs-limpiar">Quitar todas</button></p>`:""}
+      <p class="err" id="fs-err" hidden></p><div class="row-actions"><button class="btn" id="fs-send">Subir ${n>1?n+" fotos":"foto"}</button></div></form>` : "";
     return `<div class="filters" data-filter="fotos"><button data-f="todas">← Todas las carpetas</button></div>
-      <div><h2>${esc(f)}</h2><p class="lead">${list.length} foto${list.length===1?"":"s"}</p></div>
+      <div><h2>${esc(f)}</h2><p class="lead">${list.length} foto${list.length===1?"":"s"}</p></div>${subir}
       ${list.length?`<section class="photos">${list.map(it=>photoCard(it, S.verList.indexOf(it))).join("")}</section>`:emptyBox("Esta carpeta todavía está vacía.",S.canEdit?"Pulsa “+ Añadir foto” para subir la primera.":"Pronto subiremos las fotos.")}`;
   },
   buzon(sinIntro){
@@ -865,6 +874,36 @@ $("#main").addEventListener("change", async e=>{
     const snap=await ref.get(); if(snap.exists) await ref.update({logo:up.id}); else await ref.set({logo:up.id});
     if(old && old!==up.id){ try{ await S.assets.delete(old) }catch(x){} }
   }catch(x){ msg.textContent = x&&x.code==="too_large" ? "El logo pesa demasiado." : x&&x.code==="unsupported_type" ? "Usa PNG, JPG, WEBP o SVG." : "No se ha podido subir. Vuelve a intentarlo."; }
+});
+$("#main").addEventListener("change", e=>{
+  if(e.target.id!=="fs-files") return;
+  S.fsElegidas=S.fsElegidas||[]; for(const fl of e.target.files) if(!S.fsElegidas.some(x=>x.name===fl.name&&x.size===fl.size)) S.fsElegidas.push(fl);
+  render();
+});
+$("#main").addEventListener("submit", async e=>{
+  if(e.target.id!=="fs-form") return; e.preventDefault();
+  const files=(S.fsElegidas||[]).slice(), err=$("#fs-err"), btn=$("#fs-send");
+  if(!files.length){ err.textContent="Elige al menos una foto."; err.hidden=false; return; }
+  btn.disabled=true; let hechas=0, fallos=0; const nuevas=[];
+  for(const fl of files){
+    btn.textContent=`Subiendo ${hechas+fallos+1} de ${files.length}…`;
+    try{ const up = window.subirFotoSocio ? await window.subirFotoSocio(fl) : await S.assets.upload(fl);
+      nuevas.push({id:Math.random().toString(36).slice(2,10), photo:up.id, photoType:up.contentType||fl.type, at:new Date().toISOString()}); hechas++; }
+    catch(x){ fallos++; }
+  }
+  try{
+    if(nuevas.length){ const mine=((S.fotoSoc||[]).find(d=>d.uid===S.uid)||{}).fotos||[]; await S.db.doc("fotosocios/"+S.uid).set({fotos:[...mine,...nuevas].slice(-60)}); }
+    S.fsElegidas=[]; render();
+    if(fallos){ const er=$("#fs-err"); if(er){ er.textContent=`Se han subido ${hechas} de ${files.length}. ${fallos} no se ${fallos===1?"ha":"han"} podido subir (tienen que ser fotos de menos de 20 MB).`; er.hidden=false; } }
+  }catch(x){ err.textContent="No se han podido guardar. Vuelve a intentarlo."; err.hidden=false; btn.disabled=false; btn.textContent="Subir"; }
+});
+$("#main").addEventListener("click", async e=>{
+  if(e.target.id==="fs-limpiar"){ S.fsElegidas=[]; render(); return; }
+  const b=e.target.closest("[data-fs-del]"); if(!b) return;
+  const [u,id]=b.dataset.fsDel.split("|"); if(!(S.canEdit||u===S.uid)) return;
+  if(!confirm("¿Quitar esta foto de la carpeta?")) return;
+  const d=(S.fotoSoc||[]).find(x=>x.uid===u); if(!d) return;
+  try{ await S.db.doc("fotosocios/"+u).set({fotos:(d.fotos||[]).filter(x=>x.id!==id)}); }catch(x){ alert("No se ha podido quitar. Vuelve a intentarlo."); }
 });
 $("#main").addEventListener("submit", async e=>{
   if(e.target.id!=="fi-form") return; e.preventDefault();
@@ -1152,6 +1191,7 @@ function askDelete(id){
     }, ()=>{ S.loaded=true; render(); });
     db.doc("config/ajustes").onSnapshot(snap=>{ S.logo = snap.exists ? (snap.data().logo||DEFAULT_LOGO) : DEFAULT_LOGO; S.estatutos = snap.exists ? (snap.data().estatutos||null) : null; paintLogo(); render(); },()=>{});
     db.collection("mercadillo").onSnapshot(snap=>{ S.mercAll=snap.docs.map(d=>({uid:d.id,...d.data()})); render(); },()=>{});
+    db.collection("fotosocios").onSnapshot(snap=>{ S.fotoSoc=snap.docs.map(d=>({uid:d.id,...d.data()})); render(); },()=>{});
     userP.then(startBuzon); userP.then(startLot); userP.then(startInsc); userP.then(startFicha); userP.then(startConsent);
   });
 })();
