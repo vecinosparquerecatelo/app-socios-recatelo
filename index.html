@@ -513,12 +513,52 @@ function quejaCard(it){
   return `<article class="card"><div class="meta">${k}<span class="pill ${st[1]}">${st[0]}</span>${it.entity?`<span>Ante: ${esc(it.entity)}</span>`:""}<span>${fmtDate(it.date)}</span></div>
     <h3>${esc(it.title)}</h3>${it.body?`<p class="body">${esc(it.body)}</p>`:""}${attach(it)}${adminRow(it)}</article>`;
 }
+/* Quita las franjas negras (o casi negras) de los bordes de una foto. Devuelve null si no hay nada que quitar. */
+async function sinBordes(blob){
+  if(!blob || !/^image\/(jpe?g|png|webp|heic|heif)/i.test(blob.type||"image/jpeg")) return null;
+  let bm; try{ bm = await createImageBitmap(blob, {imageOrientation:"from-image"}); }catch(_){ try{ bm = await createImageBitmap(blob); }catch(__){ return null; } }
+  const W=bm.width, H=bm.height, k=Math.min(1, 400/Math.max(W,H)), w=Math.max(1,Math.round(W*k)), h=Math.max(1,Math.round(H*k));
+  const c=document.createElement("canvas"); c.width=w; c.height=h; const x=c.getContext("2d",{willReadFrequently:true}); x.drawImage(bm,0,0,w,h);
+  let px; try{ px=x.getImageData(0,0,w,h).data; }catch(_){ return null; }
+  const osc=(i)=>{ const l=0.3*px[i]+0.59*px[i+1]+0.11*px[i+2]; return l<40; };
+  const fila=y=>{ let n=0; for(let i=0;i<w;i++) if(osc((y*w+i)*4)) n++; return n/w>0.96; };
+  const col=xx=>{ let n=0; for(let j=0;j<h;j++) if(osc((j*w+xx)*4)) n++; return n/h>0.96; };
+  let t=0,b=h-1,l=0,r=w-1;
+  while(t<b && fila(t)) t++; while(b>t && fila(b)) b--; while(l<r && col(l)) l++; while(r>l && col(r)) r--;
+  const m=1; t=Math.min(h-1,t+(t?m:0)); b=Math.max(0,b-(b<h-1?m:0)); l=Math.min(w-1,l+(l?m:0)); r=Math.max(0,r-(r<w-1?m:0));
+  const cw=r-l+1, ch=b-t+1;
+  if(cw*ch > w*h*0.97 || cw<w*0.2 || ch<h*0.2) return null;
+  const sx=Math.round(l/k), sy=Math.round(t/k), sw=Math.min(W-sx,Math.round(cw/k)), sh=Math.min(H-sy,Math.round(ch/k));
+  const o=document.createElement("canvas"); o.width=sw; o.height=sh; o.getContext("2d").drawImage(bm,sx,sy,sw,sh,0,0,sw,sh);
+  const out = await new Promise(res=>o.toBlob(res,"image/jpeg",0.9)); bm.close&&bm.close();
+  if(!out) return null;
+  return new File([out], ((blob.name||"foto").replace(/\.[^.]+$/,""))+".jpg", {type:"image/jpeg"});
+}
+async function prepararFoto(fl){ try{ return (await sinBordes(fl)) || fl; }catch(_){ return fl; } }
+async function recortarFotos(ids, btn){
+  const its=ids.map(id=>S.items.find(i=>i.id===id)).filter(i=>i&&i.photo&&!/pdf/i.test(i.photoType||""));
+  let hechas=0, sin=0, fallos=0, txt=btn?btn.textContent:"";
+  for(const it of its){
+    if(btn){ btn.disabled=true; btn.textContent=`Revisando ${hechas+sin+fallos+1} de ${its.length}…`; }
+    try{
+      const r = await fetch(imgSrc(it.photo)); if(!r.ok) throw 0;
+      const bl = await r.blob(); const nueva = await sinBordes(new File([bl],"foto",{type:bl.type||"image/jpeg"}));
+      if(!nueva){ sin++; continue; }
+      const up = await S.assets.upload(nueva);
+      const {id, ...resto} = it;
+      await S.db.collection("items").doc(id).set({...resto, photo:up.id, photoType:"image/jpeg", updatedAt:new Date().toISOString()});
+      hechas++;
+    }catch(_){ fallos++; }
+  }
+  if(btn){ btn.disabled=false; btn.textContent=txt; }
+  alert(its.length ? `Listo: ${hechas} foto${hechas===1?"":"s"} recortada${hechas===1?"":"s"}${sin?`, ${sin} sin bordes negros`:""}${fallos?`, ${fallos} no se ${fallos===1?"ha":"han"} podido arreglar`:""}.` : "No hay fotos que revisar.");
+}
 function pieDe(it){ const t=(it.title||"").trim(); return t && t!=="Foto" && t!==it.album ? t : ""; }
 function photoCard(it, i){
   const pie=pieDe(it), pieH=pie?`<span class="pie">${esc(pie)}</span>`:"";
   return `<figure class="photo" style="margin:0">${it.photo?`<button type="button" class="ver" data-ver="${i}" aria-label="Ver la foto en grande"><img src="${imgSrc(it.photo)}" alt="${esc(pie||it.title||"")}" loading="lazy"></button>`:`<div class="ph">Sin imagen</div>`}
     ${it.socio ? ((S.canEdit||it.socio===S.uid)?`<figcaption class="cap">${pieH}<div class="row-actions"><button class="btn ghost small" data-fs-del="${esc(it.socio)}|${esc(it.fid)}">Quitar</button></div></figcaption>`:(pie?`<figcaption class="cap">${pieH}</figcaption>`:""))
-      : (S.canEdit||pie)?`<figcaption class="cap">${pieH}${S.canEdit?adminRow(it):""}</figcaption>`:""}</figure>`;
+      : (S.canEdit||pie)?`<figcaption class="cap">${pieH}${S.canEdit?adminRow(it)+(it.photo?`<div class="row-actions"><button class="btn ghost small" data-trim="${esc(it.id)}">Quitar bordes negros</button></div>`:""):""}</figcaption>`:""}</figure>`;
 }
 function abrirVisor(i){
   const fotos=S.verList||[]; if(!fotos.length) return;
@@ -638,6 +678,7 @@ const VIEWS = {
         <section class="carpetas" data-filter="fotos">${albs.map(card).join("")}</section>`;
     }
     const list=all.filter(i=>(i.album||"Otros")===f); S.verList=list.filter(i=>i.photo);
+    const trimAll = S.canEdit && list.some(i=>i.photo&&!i.socio) ? `<div class="row-actions"><button class="btn ghost small" data-trim-all="1">Quitar bordes negros de toda la carpeta</button></div>` : "";
     const puedeSubir = SOC_ALBS.includes(f) && S.uid && !S.canEdit && !S.noDb && (window.subirFotoSocio || S.assets);
     const n=(S.fsElegidas||[]).length;
     const subir = puedeSubir ? `<form class="card" id="fs-form" novalidate><h3>Sube tus fotos</h3><p class="meta">${f===LIBRE?"Esta carpeta es de los socios: cualquier tema vale. Solo las ven los socios.":"Enseña lo que hay que arreglar en el barrio: baches, suciedad, farolas, aceras… Las ven la directiva y los socios."}</p>
@@ -647,7 +688,7 @@ const VIEWS = {
       <p class="err" id="fs-err" hidden></p><div class="row-actions"><button class="btn" id="fs-send">Subir ${n>1?n+" fotos":"foto"}</button></div></form>` : "";
     return `<div class="filters" data-filter="fotos"><button data-f="todas">← Todas las carpetas</button></div>
       <div><h2>${esc(f)}</h2><p class="lead">${list.length} foto${list.length===1?"":"s"}</p></div>${subir}
-      ${list.length?`<section class="photos">${list.map(it=>photoCard(it, S.verList.indexOf(it))).join("")}</section>`:emptyBox("Esta carpeta todavía está vacía.",S.canEdit?"Pulsa “+ Añadir foto” para subir la primera.":"Pronto subiremos las fotos.")}`;
+      ${trimAll}${list.length?`<section class="photos">${list.map(it=>photoCard(it, S.verList.indexOf(it))).join("")}</section>`:emptyBox("Esta carpeta todavía está vacía.",S.canEdit?"Pulsa “+ Añadir foto” para subir la primera.":"Pronto subiremos las fotos.")}`;
   },
   buzon(sinIntro){
     const intro = sinIntro ? "" : `<div><h2>Buzón de quejas y sugerencias</h2><p class="lead">Cuéntale a la directiva lo que te preocupa del barrio o lo que mejorarías. Solo la directiva lee los mensajes.</p></div>`;
@@ -859,6 +900,8 @@ $("#main").addEventListener("click", e=>{
   const fb=e.target.closest("[data-f]"); if(fb){ S.filter[fb.parentElement.dataset.filter]=fb.dataset.f; return render(); }
   const ed=e.target.closest("[data-edit]"); if(ed){ const it=S.items.find(i=>i.id===ed.dataset.edit); if(it) openForm(it.section,it); return; }
   const dl=e.target.closest("[data-del]"); if(dl){ askDelete(dl.dataset.del); }
+  const tr=e.target.closest("[data-trim]"); if(tr){ recortarFotos([tr.dataset.trim], tr); return; }
+  const ta=e.target.closest("[data-trim-all]"); if(ta){ const f=S.filter.fotos; recortarFotos(S.items.filter(i=>i.section==="fotos"&&!i.socio&&(i.album||"Otros")===f).map(i=>i.id), ta); return; }
   const br=e.target.closest("[data-bz-read]"); if(br){ const [u,id]=br.dataset.bzRead.split("|"); bzPatch(u,id,{estado:"leida"}); }
   const bp=e.target.closest("[data-bz-reply]"); if(bp){ const [u,id]=bp.dataset.bzReply.split("|"); bzReplyForm(u,id); }
 });
@@ -907,7 +950,7 @@ $("#main").addEventListener("submit", async e=>{
   btn.disabled=true; let hechas=0, fallos=0; const nuevas=[];
   for(const fl of files){
     btn.textContent=`Subiendo ${hechas+fallos+1} de ${files.length}…`;
-    try{ const up = window.subirFotoSocio ? await window.subirFotoSocio(fl) : await S.assets.upload(fl);
+    try{ const pf = await prepararFoto(fl); const up = window.subirFotoSocio ? await window.subirFotoSocio(pf) : await S.assets.upload(pf);
       nuevas.push({id:Math.random().toString(36).slice(2,10), photo:up.id, photoType:up.contentType||fl.type, album:S.filter.fotos, at:new Date().toISOString()}); hechas++; }
     catch(x){ fallos++; }
   }
@@ -1141,7 +1184,7 @@ function openForm(section, it){
         btn.textContent=`Subiendo ${hechas+fallos+1} de ${files.length}…`;
         try{
           if(fl.size>20*1024*1024) throw {code:"too_large"};
-          const up = await S.assets.upload(fl);
+          const up = await S.assets.upload(await prepararFoto(fl));
           const t = new Date().toISOString();
           await S.db.collection("items").doc().set({...data, photo:up.id, photoType:up.contentType||fl.type, createdAt:t, updatedAt:t});
           hechas++;
@@ -1157,7 +1200,7 @@ function openForm(section, it){
     try{
       if(file){
         if(file.size>20*1024*1024) throw {code:"too_large"};
-        const up = await S.assets.upload(file);
+        const up = await S.assets.upload(section==="fotos" ? await prepararFoto(file) : file);
         data.photo = up.id; data.photoType = up.contentType || file.type;
       } else if(v.photo){ data.photo = v.photo; if(v.photoType) data.photoType = v.photoType; }
       const doc = $("#f-doc") && $("#f-doc").files[0];
