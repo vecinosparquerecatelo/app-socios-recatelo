@@ -95,8 +95,18 @@
       const ext = ({ "image/jpeg":"jpg", "image/png":"png", "image/webp":"webp", "image/gif":"gif", "image/svg+xml":"svg", "application/pdf":"pdf" })[type] || "bin";
       if(file.size > 20 * 1024 * 1024) throw err("too_large", "Archivo demasiado grande");
       const name = newId() + newId().slice(0,12) + "." + ext;
-      const { error } = await sb.storage.from("archivos").upload(name, file, { contentType: type, upsert: false });
-      if(error) throw err("upstream_error", error.message);
+      // Se lee el archivo antes de enviarlo: en Android, los elegidos desde Gmail o Drive a veces no se pueden leer
+      let body;
+      try{ body = new Blob([await file.arrayBuffer()], { type }); }
+      catch(x){ throw err("unreadable", "No se puede leer el archivo"); }
+      let res;
+      for(let i = 0; i < 3; i++){
+        try{ res = await sb.storage.from("archivos").upload(name, body, { contentType: type, upsert: true }); }
+        catch(x){ res = { error: x }; }
+        if(!res.error || !/fetch|network|load failed/i.test(String(res.error.message || res.error))) break;
+        await new Promise(r => setTimeout(r, 1500 * (i + 1)));
+      }
+      if(res.error) throw err(/fetch|network|load failed/i.test(String(res.error.message || "")) ? "network" : "upstream_error", res.error.message);
       return { id: name, url: window.blobUrl(name), sizeBytes: file.size, contentType: type };
     },
     async delete(id){ if(!id || id === DEFAULT_LOGO) return { deleted:false }; await sb.storage.from("archivos").remove([id]); return { deleted:true }; },
