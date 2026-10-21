@@ -451,7 +451,7 @@ const TABS = GROUPS.flatMap(g=>g.subs.map(([id,label])=>({id,label})));
 const groupOf = tab => GROUPS.find(g=>g.subs.some(([id])=>id===tab)) || GROUPS[0];
 const MTIPOS = ["Alquilo","Vendo","Dono","Compro","Trueque"];
 const RGPD_VERSION = "2026-10";
-const ENTIDADES = ["Alcaldía","BNG","PSOE","Subdelegación del Gobierno","Policía Local","Policía Autonómica","Policía Nacional","Otra"];
+const ENTIDADES = ["Alcaldía","BNG","PSOE","Subdelegación del Gobierno","Xunta de Galicia","Diputación Provincial de Lugo","Policía Local","Policía Autonómica","Policía Nacional","Otra"];
 const COLECTIVOS = [
   {id:"protectora", name:"Protectora de Animales", desc:"Apoyamos su labor de acogida y adopción de animales abandonados."},
   {id:"capaces", name:"Asociación Capaces", desc:"Colaboramos con la inclusión de personas con discapacidad."},
@@ -617,7 +617,7 @@ const VIEWS = {
   reuniones(){
     let list=sortDesc(bySection("reuniones")); const f=S.filter.reuniones;
     if(f!=="todas") list=list.filter(i=>i.entity===f);
-    return `<div><h2>Reuniones con instituciones</h2><p class="lead">Resúmenes de lo tratado con la Alcaldía, los grupos políticos, la Subdelegación del Gobierno y las policías Local, Autonómica y Nacional.</p></div>
+    return `<div><h2>Reuniones con instituciones</h2><p class="lead">Resúmenes de lo tratado con la Alcaldía, los grupos políticos, la Subdelegación del Gobierno, la Xunta de Galicia, la Diputación Provincial de Lugo y las policías Local, Autonómica y Nacional.</p></div>
       ${filterBar("reuniones",ENTIDADES.filter(e=>e!=="Otra"))}
       <section class="stack">${list.length?list.map(reunionCard).join(""):emptyBox(f==="todas"?"Todavía no hay resúmenes.":"No hay resúmenes con "+esc(f)+".","Añade el resumen indicando con quién fue la reunión.")}</section>`;
   },
@@ -1140,9 +1140,10 @@ function openForm(section, it){
   if(section==="avisos") extra = field("f-kind","Tipo",sel("f-kind",[["reunion","Reunión de socios"],["aviso","Aviso general"]],v.kind||"reunion"))
      + `<div class="two">${field("f-time","Hora",`<input id="f-time" type="time" value="${esc(v.time||"")}">`)}${field("f-place","Lugar",`<input id="f-place" value="${esc(v.place||"")}" placeholder="Local social, plaza…">`)}</div>`;
   const regF = `<div class="two">${field("f-regdate","Registrado en el Concello el (opcional)",`<input id="f-regdate" type="date" value="${esc(v.regDate||"")}">`)}${field("f-regnum","Nº de registro (opcional)",`<input id="f-regnum" value="${esc(v.regNum||"")}" placeholder="REGAGE…">`)}</div>`;
-  if(section==="reuniones") extra = field("f-entity","Reunión con",sel("f-entity",ENTIDADES,v.entity||"Alcaldía")) + regF;
+  const entDef = v.entity || (S.filter[section] && S.filter[section]!=="todas" && ENTIDADES.includes(S.filter[section]) ? S.filter[section] : "Alcaldía");
+  if(section==="reuniones") extra = regF;
   if(section==="proyectos"||section==="sugerencias"||section==="quejas") extra = `<div class="two">${field("f-status","Estado",sel("f-status",Object.entries(ESTADOS).map(([k,x])=>[k,x[0]]),v.status||"presentada"))}</div>`
-     + field("f-entity","Institución",sel("f-entity",ENTIDADES,v.entity||"Alcaldía")) + regF;
+     + field("f-entity","Institución",sel("f-entity",ENTIDADES,entDef)) + regF;
   if(section==="colectivos") extra = field("f-entity","Colectivo",sel("f-entity",COLECTIVOS.map(c=>c.name),v.entity||COLECTIVOS[0].name));
   if(section==="fotos") extra = field("f-album","Álbum",sel("f-album",[...new Set([...ALBUMES, ...(v.album?[v.album]:[])])],v.album||(S.filter.fotos&&S.filter.fotos!=="todas"?S.filter.fotos:ALBUMES[0])));
   const isCartel = section==="carteles";
@@ -1150,6 +1151,7 @@ function openForm(section, it){
   const canPhoto = !!S.assets;
   $("#sheet-root").innerHTML = `<div class="sheet-bg" id="sheet-bg"><form class="sheet" id="f" novalidate>
     <h2>${it?"Editar":"Añadir"} ${ADD_LABEL[section]}</h2>
+    ${section==="reuniones"?field("f-entity","¿Con quién fue la reunión? (elige la pestaña donde se guardará)",sel("f-entity",ENTIDADES,entDef)):""}
     ${field("f-title", isCartel?"Nombre de la actividad":isFoto?(section==="fotos"&&!it?"Pie de foto (opcional)":"Pie de foto"):"Título", `<input id="f-title" ${section==="fotos"?"":"required"} value="${esc(v.title||"")}">`)}
     ${field("f-date","Fecha",`<input id="f-date" type="date" value="${esc(v.date||"")}">`)}
     ${extra}
