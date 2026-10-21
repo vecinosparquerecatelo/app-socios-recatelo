@@ -101,8 +101,9 @@
       catch(x){ throw err("unreadable", "No se puede leer el archivo"); }
       let res;
       for(let i = 0; i < 3; i++){
-        try{ res = await sb.storage.from("archivos").upload(name, body, { contentType: type, upsert: true }); }
+        try{ res = await sb.storage.from("archivos").upload(name, body, { contentType: type, upsert: false }); }
         catch(x){ res = { error: x }; }
+        if(i > 0 && res.error && /exists|duplicate/i.test(String(res.error.message || ""))) res = { error: null };
         if(!res.error || !/fetch|network|load failed/i.test(String(res.error.message || res.error))) break;
         await new Promise(r => setTimeout(r, 1500 * (i + 1)));
       }
