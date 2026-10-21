@@ -157,7 +157,7 @@
       <h1>App de socios</h1>
       <div class="tabs2"><button type="button" data-m="socio" aria-pressed="true">Soy socio/a</button><button type="button" data-m="dir" aria-pressed="false">Soy de la directiva</button></div>
       <form class="card" id="acc-socio" novalidate>
-        <label for="acc-codigo">Tu código personal<input id="acc-codigo" autocomplete="off" autocapitalize="characters" placeholder="El que te ha mandado la directiva"></label>
+        <label for="acc-codigo">Tu código personal<input id="acc-codigo" value="${(()=>{try{return (localStorage.getItem("recatelo-codigo")||"").replace(/[^A-Z0-9]/g,"")}catch(_){return ""}})()}" autocomplete="off" autocapitalize="characters" placeholder="El que te ha mandado la directiva"></label>
         <p class="acc-small">Cada socio tiene su propio código. Solo hay que ponerlo una vez y no sirve para otras personas.</p>
         ${/iphone|ipad|ipod/i.test(navigator.userAgent) && !navigator.standalone ? `<div class="notice">En iPhone, instala primero la app: pulsa Compartir y “Añadir a pantalla de inicio”. Después ábrela desde el icono y escribe ahí tu código.</div>` : ""}
         <p class="err" id="acc-err1" hidden></p>
@@ -193,6 +193,7 @@
           er.textContent = ok === "usado" ? "Ese código ya se ha usado en otro móvil. Pide uno nuevo a la directiva." : "Ese código no es correcto o ya no está activo. Pídeselo a la directiva.";
           er.hidden = false; btn.disabled = false; btn.textContent = "Entrar"; return;
         }
+        try{ localStorage.setItem("recatelo-codigo", code); localStorage.removeItem("recatelo-fuera"); }catch(_){}
         await enter();
       }catch(x){ const det = String((x && (x.message || x.code)) || "").slice(0, 160); er.textContent = "No se ha podido entrar. Comprueba la conexión y vuelve a intentarlo." + (det ? " (Detalle: " + det + ")" : ""); er.hidden = false; btn.disabled = false; btn.textContent = "Entrar"; }
     });
@@ -202,6 +203,7 @@
       const btn = e.target.querySelector("button"); btn.disabled = true; btn.textContent = "Entrando…";
       const { error } = await sb.auth.signInWithPassword({ email: el.querySelector("#acc-email").value.trim(), password: el.querySelector("#acc-pass").value });
       if(error){ er.textContent = "Correo o contraseña incorrectos."; er.hidden = false; btn.disabled = false; btn.textContent = "Entrar como directiva"; return; }
+      try{ localStorage.removeItem("recatelo-fuera"); }catch(_){}
       await enter();
     });
   }
@@ -236,7 +238,12 @@
         if(installEvt){ installEvt.prompt(); installEvt = null; e.target.hidden = true; }
         else sheet(`<h2>Instalar en iPhone</h2><p class="body">1. Abre esta página en Safari.\n2. Pulsa el botón Compartir (el cuadrado con la flecha).\n3. Elige “Añadir a pantalla de inicio”.</p>`);
       }
-      if(e.target.id === "btn-salir"){ await sb.auth.signOut(); location.reload(); }
+      if(e.target.id === "btn-salir"){
+        // Socios: se guarda la sesión y el código para volver a entrar con un toque; la directiva sí cierra del todo
+        if(state.directiva){ try{ localStorage.removeItem("recatelo-fuera"); }catch(_){} await sb.auth.signOut(); }
+        else{ try{ localStorage.setItem("recatelo-fuera", "1"); }catch(_){} }
+        location.reload();
+      }
       if(e.target.id === "btn-codigo") codigos();
       if(e.target.id === "btn-avisos") cambiarAvisos(e.target);
       if(e.target.id === "btn-clave") cambiarClave();
@@ -354,6 +361,6 @@
   if(!configured){
     showLogin("Falta conectar la base de datos (config.js).");
   } else {
-    sb.auth.getSession().then(({ data: { session } }) => session ? enter() : showLogin());
+    sb.auth.getSession().then(({ data: { session } }) => { let fuera = false; try{ fuera = localStorage.getItem("recatelo-fuera") === "1"; }catch(_){} session && !fuera ? enter() : showLogin(); });
   }
 })();
