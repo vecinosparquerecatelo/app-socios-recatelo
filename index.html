@@ -622,7 +622,7 @@ const VIEWS = {
   },
   fotos(){
     const LIBRE="Foto temática libre socios", soc=[];
-    for(const d of S.fotoSoc||[]) for(const x of (d.fotos||[])) soc.push({id:"s:"+d.uid+":"+x.id, section:"fotos", album:LIBRE, photo:x.photo, photoType:x.photoType, title:"Foto de un socio", date:(x.at||"").slice(0,10), socio:d.uid, fid:x.id});
+    for(const d of S.fotoSoc||[]) for(const x of (d.fotos||[])) soc.push({id:"s:"+d.uid+":"+x.id, section:"fotos", album:SOC_ALBS.includes(x.album)?x.album:LIBRE, photo:x.photo, photoType:x.photoType, title:"Foto de un socio", date:(x.at||"").slice(0,10), socio:d.uid, fid:x.id});
     const all=sortDesc([...bySection("fotos"), ...soc]); const f=S.filter.fotos;
     const albs=[...ALBUMES.filter(a=>a!=="Otros"), ...new Set(all.map(i=>i.album||"Otros").filter(a=>!ALBUMES.includes(a))), "Otros"];
     if(f==="todas"){
@@ -632,10 +632,11 @@ const VIEWS = {
         <section class="carpetas" data-filter="fotos">${albs.map(card).join("")}</section>`;
     }
     const list=all.filter(i=>(i.album||"Otros")===f); S.verList=list.filter(i=>i.photo);
-    const puedeSubir = f===LIBRE && S.uid && !S.canEdit && !S.noDb && (window.subirFotoSocio || S.assets);
+    const puedeSubir = SOC_ALBS.includes(f) && S.uid && !S.canEdit && !S.noDb && (window.subirFotoSocio || S.assets);
     const n=(S.fsElegidas||[]).length;
-    const subir = puedeSubir ? `<form class="card" id="fs-form" novalidate><h3>Sube tus fotos</h3><p class="meta">Esta carpeta es de los socios: cualquier tema vale. Solo las ven los socios.</p>
-      <label class="field"><span>Elige una o varias fotos</span><input id="fs-files" type="file" accept="image/png,image/jpeg,image/webp,image/gif" multiple></label>
+    const subir = puedeSubir ? `<form class="card" id="fs-form" novalidate><h3>Sube tus fotos</h3><p class="meta">${f===LIBRE?"Esta carpeta es de los socios: cualquier tema vale. Solo las ven los socios.":"Enseña lo que hay que arreglar en el barrio: baches, suciedad, farolas, aceras… Las ven la directiva y los socios."}</p>
+      <label class="field"><span>Carpeta</span><select id="fs-alb">${SOC_ALBS.map(a=>`<option${a===f?" selected":""}>${esc(a)}</option>`).join("")}</select></label>
+      <label class="field"><span>Elige una o varias fotos</span><input id="fs-files" type="file" accept="image/*,.jpg,.jpeg,.png,.webp,.gif" multiple></label>
       ${n?`<p class="meta">${n} foto${n===1?"":"s"} elegida${n===1?"":"s"}. Puedes volver a pulsar para añadir más. <button type="button" class="btn ghost small" id="fs-limpiar">Quitar todas</button></p>`:""}
       <p class="err" id="fs-err" hidden></p><div class="row-actions"><button class="btn" id="fs-send">Subir ${n>1?n+" fotos":"foto"}</button></div></form>` : "";
     return `<div class="filters" data-filter="fotos"><button data-f="todas">← Todas las carpetas</button></div>
@@ -888,6 +889,7 @@ $("#main").addEventListener("change", async e=>{
 document.addEventListener("contextmenu", e=>{ if(e.target.closest("img,.visor")) e.preventDefault(); });
 document.addEventListener("dragstart", e=>{ if(e.target.tagName==="IMG") e.preventDefault(); });
 $("#main").addEventListener("change", e=>{
+  if(e.target.id==="fs-alb"){ S.filter.fotos=e.target.value; return render(); }
   if(e.target.id!=="fs-files") return;
   S.fsElegidas=S.fsElegidas||[]; for(const fl of e.target.files) if(!S.fsElegidas.some(x=>x.name===fl.name&&x.size===fl.size)) S.fsElegidas.push(fl);
   render();
@@ -900,7 +902,7 @@ $("#main").addEventListener("submit", async e=>{
   for(const fl of files){
     btn.textContent=`Subiendo ${hechas+fallos+1} de ${files.length}…`;
     try{ const up = window.subirFotoSocio ? await window.subirFotoSocio(fl) : await S.assets.upload(fl);
-      nuevas.push({id:Math.random().toString(36).slice(2,10), photo:up.id, photoType:up.contentType||fl.type, at:new Date().toISOString()}); hechas++; }
+      nuevas.push({id:Math.random().toString(36).slice(2,10), photo:up.id, photoType:up.contentType||fl.type, album:S.filter.fotos, at:new Date().toISOString()}); hechas++; }
     catch(x){ fallos++; }
   }
   try{
@@ -1101,7 +1103,7 @@ function openForm(section, it){
     ${field("f-date","Fecha",`<input id="f-date" type="date" value="${esc(v.date||"")}">`)}
     ${extra}
     ${isFoto?"":field("f-body", section==="reuniones"?"Resumen":section==="cursos"?"Explicación del curso":"Texto", `<textarea id="f-body">${esc(v.body||"")}</textarea>`)}
-    ${canPhoto?field("f-photo", isCartel?"Cartel (imagen o PDF)":isFoto?(section==="fotos"&&!it?"Fotos (puedes elegir varias a la vez)":"Foto"):"Foto (opcional)", `<input id="f-photo" type="file" accept="image/png,image/jpeg,image/webp,image/gif${isCartel?",application/pdf":""}"${section==="fotos"&&!it?" multiple":""}>`) + (v.photo?`<span class="meta">Ya tiene una foto; elige otra solo si quieres cambiarla.</span>`:"")
+    ${canPhoto?field("f-photo", isCartel?"Cartel (imagen o PDF)":isFoto?(section==="fotos"&&!it?"Fotos (puedes elegir varias a la vez)":"Foto"):"Foto (opcional)", `<input id="f-photo" type="file" accept="image/*,.jpg,.jpeg,.png,.webp,.gif${isCartel?",application/pdf":""}"${section==="fotos"&&!it?" multiple":""}>`) + (v.photo?`<span class="meta">Ya tiene una foto; elige otra solo si quieres cambiarla.</span>`:"")
               :(isFoto?`<p class="err">Solo quien tenga permiso de edición puede subir fotos.</p>`:"")}
     ${canPhoto&&!isFoto?field("f-doc","Documento en PDF (opcional)",`<input id="f-doc" type="file" accept="application/pdf">`) + (v.doc?`<span class="meta">Ya tiene un documento${v.docName?" ("+esc(v.docName)+")":""}; elige otro solo si quieres cambiarlo.</span>`:""):""}
     <p class="err" id="f-err" hidden></p>
@@ -1110,11 +1112,12 @@ function openForm(section, it){
   $("#f-cancel").onclick = closeSheet;
   $("#sheet-bg").addEventListener("click", e=>{ if(e.target.id==="sheet-bg") closeSheet(); });
   $("#f-title").focus();
-  let elegidas = [];
+  let elegidas = (section==="fotos" && !it && S.compartidas) || []; S.compartidas = null;
   if(section==="fotos" && !it){
     const inp=$("#f-photo"), info=document.createElement("div"); info.className="meta"; info.id="f-elegidas"; inp.after(info);
     const pinta=()=>{ info.innerHTML = elegidas.length ? `${elegidas.length} foto${elegidas.length===1?"":"s"} elegida${elegidas.length===1?"":"s"}: ${elegidas.map(f=>esc(f.name)).join(", ")}. Puedes volver a pulsar para añadir más. <button type="button" class="btn ghost small" id="f-limpiar">Quitar todas</button>` : ""; const l=$("#f-limpiar"); if(l) l.onclick=()=>{ elegidas=[]; pinta(); }; };
     inp.addEventListener("change", ()=>{ for(const fl of inp.files) if(!elegidas.some(x=>x.name===fl.name&&x.size===fl.size)) elegidas.push(fl); inp.value=""; pinta(); });
+    pinta();
   }
   $("#f").addEventListener("submit", async e=>{
     e.preventDefault();
@@ -1188,10 +1191,29 @@ function askDelete(id){
   };
 }
 
+// Carpetas donde también pueden subir fotos los socios
+const SOC_ALBS=["Foto temática libre socios","Fotos denuncia"];
+
+/* ---------- fotos compartidas desde WhatsApp o la galería (botón Compartir del móvil) ---------- */
+async function recibirCompartidas(){
+  const files=[];
+  try{
+    const c=await caches.open("recatelo-compartido");
+    for(const k of await c.keys()){ const r=await c.match(k); if(r){ const b=await r.blob(); files.push(new File([b], decodeURIComponent(r.headers.get("x-nombre")||"foto.jpg"), {type:b.type||"image/jpeg"})); } await c.delete(k); }
+  }catch(e){}
+  if(!files.length || !S.uid) return;
+  if(S.canEdit){
+    S.assets = S.assets || await claude.use("assets");
+    go("fotos"); S.compartidas=files; openForm("fotos");
+  }else{
+    S.filter.fotos="Foto temática libre socios"; S.fsElegidas=files; go("fotos");
+  }
+}
+
 /* ---------- arranque ---------- */
 (function init(){
   // Siempre se abre en Inicio; solo una notificación (?n=1#pestaña) abre otra pestaña
-  const h=(location.hash||"").slice(1), desdeAviso=/[?&]n=1/.test(location.search);
+  const h=(location.hash||"").slice(1), desdeAviso=/[?&]n=1/.test(location.search), compartidas=/[?&]compartir=1/.test(location.search);
   S.tab = desdeAviso && TABS.some(t=>t.id===h) ? h : "inicio";
   try{ history.replaceState(null,"",location.pathname+"#"+S.tab) }catch(e){}
   renderTabs(); render(); paintLogo();
@@ -1208,6 +1230,7 @@ function askDelete(id){
     db.doc("config/ajustes").onSnapshot(snap=>{ S.logo = snap.exists ? (snap.data().logo||DEFAULT_LOGO) : DEFAULT_LOGO; S.estatutos = snap.exists ? (snap.data().estatutos||null) : null; paintLogo(); render(); },()=>{});
     db.collection("mercadillo").onSnapshot(snap=>{ S.mercAll=snap.docs.map(d=>({uid:d.id,...d.data()})); render(); },()=>{});
     db.collection("fotosocios").onSnapshot(snap=>{ S.fotoSoc=snap.docs.map(d=>({uid:d.id,...d.data()})); render(); },()=>{});
+    if(compartidas && window.caches) userP.then(recibirCompartidas);
     userP.then(startBuzon); userP.then(startLot); userP.then(startInsc); userP.then(startFicha); userP.then(startConsent);
   });
 })();
