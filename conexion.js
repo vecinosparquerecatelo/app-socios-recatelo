@@ -345,7 +345,12 @@
     if(after) after(r);
   }
 
-  if("serviceWorker" in navigator) window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
+  if("serviceWorker" in navigator){
+    window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").then(r => r.update()).catch(() => {}));
+    // Cuando llega una versión nueva de la app, se recarga sola una vez
+    const habia = !!navigator.serviceWorker.controller; let recargada = false;
+    navigator.serviceWorker.addEventListener("controllerchange", () => { if(habia && !recargada){ recargada = true; location.reload(); } });
+  }
   if(!configured){
     showLogin("Falta conectar la base de datos (config.js).");
   } else {
