@@ -75,6 +75,7 @@ h3{font-family:var(--display);font-weight:600;font-size:1.12rem;margin:0;text-wr
 .colectivo .ico{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;background:var(--amber-soft);color:var(--amber)}
 .photos{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
 .datos{display:grid;gap:2px 12px;margin:0}.datos dt{color:var(--muted);font-size:.85rem;margin-top:8px}.datos dd{margin:0;font-weight:600;overflow-wrap:anywhere}
+.hechos{margin:0;padding-left:1.2em;display:grid;gap:8px}
 .carpetas{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
 .carpeta{all:unset;cursor:pointer;display:grid;gap:6px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:8px;box-sizing:border-box}
 .carpeta:focus-visible{outline:3px solid var(--green);outline-offset:2px}
@@ -710,7 +711,12 @@ const VIEWS = {
     }
     return `<div><h2>Cursos</h2><p class="lead">Cursos y talleres para los socios. Mira el día y de qué trata cada uno, y apúntate con un toque.</p></div>${note}
       <section class="stack"><h3>Próximos cursos</h3>${prox.length?prox.map(cursoCard).join(""):emptyBox("No hay cursos programados ahora mismo.","Añade un curso con su fecha, horario, lugar y explicación.")}</section>
-      ${pas.length?`<section class="stack"><h3>Cursos anteriores</h3>${pas.map(c=>cursoCard(c,true)).join("")}</section>`:""}`;
+      ${pas.length?`<section class="stack"><h3>Cursos anteriores</h3>${pas.map(c=>cursoCard(c,true)).join("")}</section>`:""}
+      <section class="stack"><h3>Cursos que ya hemos hecho</h3><div class="card"><ul class="hechos">
+        <li><strong>Primeros auxilios</strong>, con Cruz Roja <span class="meta">· diciembre de 2025</span></li>
+        <li><strong>Cestería</strong>, con el Concello de Lugo <span class="meta">· noviembre de 2025</span></li>
+        <li><strong>Informática</strong> <span class="meta">· noviembre de 2025</span></li>
+      </ul></div></section>`;
   },
   loteria(enAviso){
     const total = LOT.precio+LOT.donativo;
