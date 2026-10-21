@@ -503,15 +503,16 @@ function avisoCard(it){
     <h3>${esc(it.title)}</h3>${it.place?`<div class="meta">📍 ${esc(it.place)}</div>`:""}
     ${it.body?`<p class="body">${esc(it.body)}</p>`:""}${attach(it)}${adminRow(it)}</article>`;
 }
+function regLine(it){ return it.regDate ? `<div class="meta">📮 Registrado en el Concello el ${fmtDate(it.regDate)}${it.regNum?` (nº ${esc(it.regNum)})`:""}</div>` : ""; }
 function reunionCard(it){
   return `<article class="card"><div class="meta"><span class="pill p-green">${esc(it.entity||"Reunión")}</span><span>${fmtDate(it.date)}</span></div>
-    <h3>${esc(it.title)}</h3>${it.body?`<p class="body">${esc(it.body)}</p>`:""}${attach(it)}${adminRow(it)}</article>`;
+    <h3>${esc(it.title)}</h3>${regLine(it)}${it.body?`<p class="body">${esc(it.body)}</p>`:""}${attach(it)}${adminRow(it)}</article>`;
 }
 function quejaCard(it){
   const st = ESTADOS[it.status] || ESTADOS.presentada;
   const k = it.section==="proyectos"||it.kind==="proyecto" ? `<span class="pill p-green">Proyecto</span>` : it.section==="sugerencias" ? `<span class="pill p-amber">Sugerencia</span>` : `<span class="pill p-red">Queja</span>`;
   return `<article class="card"><div class="meta">${k}<span class="pill ${st[1]}">${st[0]}</span>${it.entity?`<span>Ante: ${esc(it.entity)}</span>`:""}<span>${fmtDate(it.date)}</span></div>
-    <h3>${esc(it.title)}</h3>${it.body?`<p class="body">${esc(it.body)}</p>`:""}${attach(it)}${adminRow(it)}</article>`;
+    <h3>${esc(it.title)}</h3>${regLine(it)}${it.body?`<p class="body">${esc(it.body)}</p>`:""}${attach(it)}${adminRow(it)}</article>`;
 }
 /* Quita las franjas negras (o casi negras) de los bordes de una foto. Devuelve null si no hay nada que quitar. */
 async function sinBordes(blob){
@@ -1138,9 +1139,10 @@ function openForm(section, it){
      + field("f-plazas","Plazas (déjalo vacío si no hay límite)",`<input id="f-plazas" type="number" min="1" inputmode="numeric" value="${esc(v.plazas||"")}">`);
   if(section==="avisos") extra = field("f-kind","Tipo",sel("f-kind",[["reunion","Reunión de socios"],["aviso","Aviso general"]],v.kind||"reunion"))
      + `<div class="two">${field("f-time","Hora",`<input id="f-time" type="time" value="${esc(v.time||"")}">`)}${field("f-place","Lugar",`<input id="f-place" value="${esc(v.place||"")}" placeholder="Local social, plaza…">`)}</div>`;
-  if(section==="reuniones") extra = field("f-entity","Reunión con",sel("f-entity",ENTIDADES,v.entity||"Alcaldía"));
+  const regF = `<div class="two">${field("f-regdate","Registrado en el Concello el (opcional)",`<input id="f-regdate" type="date" value="${esc(v.regDate||"")}">`)}${field("f-regnum","Nº de registro (opcional)",`<input id="f-regnum" value="${esc(v.regNum||"")}" placeholder="REGAGE…">`)}</div>`;
+  if(section==="reuniones") extra = field("f-entity","Reunión con",sel("f-entity",ENTIDADES,v.entity||"Alcaldía")) + regF;
   if(section==="proyectos"||section==="sugerencias"||section==="quejas") extra = `<div class="two">${field("f-status","Estado",sel("f-status",Object.entries(ESTADOS).map(([k,x])=>[k,x[0]]),v.status||"presentada"))}</div>`
-     + field("f-entity","Institución",sel("f-entity",ENTIDADES,v.entity||"Alcaldía"));
+     + field("f-entity","Institución",sel("f-entity",ENTIDADES,v.entity||"Alcaldía")) + regF;
   if(section==="colectivos") extra = field("f-entity","Colectivo",sel("f-entity",COLECTIVOS.map(c=>c.name),v.entity||COLECTIVOS[0].name));
   if(section==="fotos") extra = field("f-album","Álbum",sel("f-album",[...new Set([...ALBUMES, ...(v.album?[v.album]:[])])],v.album||(S.filter.fotos&&S.filter.fotos!=="todas"?S.filter.fotos:ALBUMES[0])));
   const isCartel = section==="carteles";
@@ -1173,7 +1175,7 @@ function openForm(section, it){
     const err=$("#f-err"); err.hidden=true;
     const val=id=>{const el=$("#"+id);return el?el.value.trim():undefined};
     const data = {section, title:val("f-title"), date:val("f-date")||"", updatedAt:new Date().toISOString()};
-    for(const [k,id] of [["body","f-body"],["kind","f-kind"],["time","f-time"],["place","f-place"],["entity","f-entity"],["status","f-status"],["album","f-album"],["plazas","f-plazas"]]){ const x=val(id); if(x!==undefined) data[k]=x; }
+    for(const [k,id] of [["body","f-body"],["kind","f-kind"],["time","f-time"],["place","f-place"],["entity","f-entity"],["status","f-status"],["album","f-album"],["plazas","f-plazas"],["regDate","f-regdate"],["regNum","f-regnum"]]){ const x=val(id); if(x!==undefined) data[k]=x; }
     if(!data.title && section==="fotos") data.title = data.album || "Foto";
     if(!data.title){ err.textContent="Escribe un título."; err.hidden=false; return; }
     const files = section==="fotos" && !it ? elegidas.slice() : ($("#f-photo") ? [...$("#f-photo").files] : []);
