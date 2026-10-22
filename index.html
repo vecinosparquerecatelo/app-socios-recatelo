@@ -448,6 +448,7 @@ const GROUPS = [
   {label:"Cursos", subs:[["cursos","Cursos"]]},
   {label:"Mercadiño", subs:[["mercadillo","Mercadiño"]]},
   {label:"Sugerencias", subs:[["sugerencias","Sugerencias"]]},
+  {label:"¿Para qué BIC?", subs:[["bic","¿Para qué BIC?"]]},
   {label:"La asociación", subs:[["reuniones","Reuniones"],["proyectos","Proyectos"],["colectivos","Colectivos"],["estatutos","Estatutos"]]},
   {label:"Fotos y carteles", subs:[["fotos","Fotos"],["carteles","Carteles"]]},
   {label:"Mi cuenta", subs:[["misdatos","Mis datos"],["privacidad","Protección de datos"]]}
@@ -468,7 +469,7 @@ const COLECTIVOS = [
 ];
 const ALBUMES = ["Festas Recatelo 2023","Festas Recatelo 2024","Festas Recatelo 2025","Festas Recatelo 2026","Día das Letras Galegas 2025","Festa do Día das Letras Galegas 2026","Mercadillo de Navidad 2024","Samaín 2024","Samaín 2025","Cantos de taberna","Foto temática libre socios","Fotos denuncia","Fotos murales zona","Otros"];
 const ESTADOS = {presentada:["Presentada","p-blue"], tramite:["En trámite","p-amber"], resuelta:["Resuelta","p-green"], rechazada:["Sin respuesta / rechazada","p-red"]};
-const ADD_LABEL = {inicio:"aviso", avisos:"aviso", reuniones:"resumen de reunión", proyectos:"proyecto", sugerencias:"sugerencia", colectivos:"noticia de colectivo", fotos:"foto", carteles:"cartel", cursos:"curso"};
+const ADD_LABEL = {bic:"documento", inicio:"aviso", avisos:"aviso", reuniones:"resumen de reunión", proyectos:"proyecto", sugerencias:"sugerencia", colectivos:"noticia de colectivo", fotos:"foto", carteles:"cartel", cursos:"curso"};
 
 const BTIPOS = ["Queja","Sugerencia","Otro"];
 const DEFAULT_LOGO = "c37727719b16fb206a49359b064fca6d";
@@ -631,6 +632,13 @@ const VIEWS = {
     return `<div><h2>Reuniones con instituciones</h2><p class="lead">Resúmenes de lo tratado con la Alcaldía, los grupos políticos, la Subdelegación del Gobierno, la Xunta de Galicia, la Diputación Provincial de Lugo y las policías Local, Autonómica y Nacional.</p></div>
       ${filterBar("reuniones",tabs,true)}
       <section class="stack">${list.length?list.map(reunionCard).join(""):emptyBox(f==="Otra"?"No hay resúmenes con otras instituciones.":"No hay resúmenes con "+esc(f)+".","Añade el resumen indicando con quién fue la reunión.")}</section>`;
+  },
+  bic(){
+    const list=sortDesc(bySection("bic"));
+    const card=it=>`<article class="card">${it.date?`<div class="meta"><span>${fmtDate(it.date)}</span></div>`:""}<h3>${esc(it.title)}</h3>${it.body?`<p class="body">${esc(it.body)}</p>`:""}${attach(it)}${adminRow(it)}</article>`;
+    return `<div><h2>¿Para qué BIC?</h2><p class="lead">Desde la asociación pedimos que el Parque de Rosalía de Castro sea declarado Bien de Interés Cultural (BIC), la máxima protección que reconoce la Ley 5/2016, de 4 de mayo, del patrimonio cultural de Galicia.</p></div>
+      <section class="card legal"><p>Un BIC no se puede alterar sin control de Patrimonio: protege su trazado, su arbolado, sus elementos históricos y su entorno, junto a la Muralla romana. Es la garantía de que el gran pulmón verde de Lugo llegue intacto a las próximas generaciones.</p><p>Aquí reunimos la auditoría del parque y los documentos que lo justifican.</p></section>
+      <section class="stack">${list.length?list.map(card).join(""):emptyBox("Pronto publicaremos aquí la auditoría del parque.",S.canEdit?"Pulsa “+ Añadir documento” y sube el PDF.":"")}</section>`;
   },
   proyectos(){
     const list=sortDesc(S.items.filter(i=>i.section==="proyectos"||(i.section==="quejas"&&i.kind==="proyecto")));
