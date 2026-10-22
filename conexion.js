@@ -18,6 +18,9 @@
     return sb.storage.from("archivos").getPublicUrl(id).data.publicUrl;
   };
 
+  // Recuentos que calcula Supabase sin enseñar quién ha votado o apoyado
+  window.rpcApp = async (name, args) => { const { data, error } = await sb.rpc(name, args || {}); if(error) throw err("unavailable", error.message); return data; };
+
   /* ---------- base de datos con forma de documentos ---------- */
   const listeners = new Map(); // key -> Set(fn)
   const err = (code, message) => ({ code, message });
@@ -240,6 +243,8 @@
     addTools();
     ponerBanner();
     readyResolve();
+    // Recordatorios: el primer socio que abre la app cada día hace que se envíen los de mañana (cursos y reuniones)
+    try{ const hoy = new Date().toISOString().slice(0,10); if(localStorage.getItem("recatelo-recordatorio") !== hoy) sb.functions.invoke("smart-task", { body: { accion: "recordatorios" } }).then(r => { if(r && r.data && !r.data.pronto) localStorage.setItem("recatelo-recordatorio", hoy); }).catch(() => {}); }catch(_){}
   }
 
   /* ---------- herramientas: instalar, ajustes de la directiva, salir ---------- */
@@ -349,7 +354,7 @@
     if(!pushOk() || (ios && !standalone)) return sheet(`<h2>Notificaciones en iPhone</h2><p class="body">En iPhone, las notificaciones solo funcionan con la app instalada.\n1. Abre esta página en Safari.\n2. Pulsa Compartir (el cuadrado con la flecha) y elige “Añadir a pantalla de inicio”.\n3. Abre la app desde el icono nuevo y pulsa “Activar notificaciones”.</p>`);
     const actual = await suscripcion().catch(() => null);
     if(actual && Notification.permission === "granted"){
-      return sheet(`<h2>Notificaciones activadas</h2><p class="body">Te avisaremos en este móvil cuando la directiva publique algo o haya un anuncio nuevo en el Mercadiño.</p><div class="row-actions"><button class="btn ghost" id="av-off">Desactivar en este móvil</button></div>`, r => {
+      return sheet(`<h2>Notificaciones activadas</h2><p class="body">Te avisaremos en este móvil cuando la directiva publique algo, cuando haya un anuncio nuevo en el Mercadiño y el día antes de cada curso o reunión.</p><div class="row-actions"><button class="btn ghost" id="av-off">Desactivar en este móvil</button></div>`, r => {
         r.querySelector("#av-off").onclick = async () => { await sb.rpc("quitar_movil", { endpoint: actual.endpoint }).catch(() => {}); await actual.unsubscribe().catch(() => {}); r.innerHTML = ""; pintarAvisos(); };
       });
     }
@@ -363,7 +368,7 @@
       const s = actual || await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: claveBytes(data.clave) });
       const { data: ok } = await sb.rpc("guardar_movil", { sub: s.toJSON() });
       if(!ok) throw new Error("guardar");
-      sheet(`<h2>¡Listo!</h2><p class="body">Te avisaremos en este móvil cuando la directiva publique algo o haya un anuncio nuevo en el Mercadiño.</p>`);
+      sheet(`<h2>¡Listo!</h2><p class="body">Te avisaremos en este móvil cuando la directiva publique algo, cuando haya un anuncio nuevo en el Mercadiño y el día antes de cada curso o reunión.</p>`);
     }catch(x){
       sheet(x.message === "permiso"
         ? `<h2>Notificaciones bloqueadas</h2><p class="body">El móvil no ha dado permiso. Para activarlas, entra en los ajustes del navegador o del móvil, busca esta app y permite las notificaciones. Después vuelve a pulsar el botón.</p>`

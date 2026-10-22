@@ -71,6 +71,14 @@ h3{font-family:var(--display);font-weight:600;font-size:1.12rem;margin:0;text-wr
 .cuota .big{font-family:var(--display);font-weight:800;font-size:3rem;line-height:1;font-variant-numeric:tabular-nums}
 .cuota .big span{font-size:1.1rem;font-weight:600}
 .cuota p{margin:0}
+.apoyo{display:grid;gap:8px;border:2px solid var(--green)}
+.apoyo .n{font-family:var(--display);font-weight:800;font-size:2.6rem;line-height:1;color:var(--green);font-variant-numeric:tabular-nums}
+.opc{display:grid;gap:8px}
+.opc button{justify-content:flex-start;text-align:left}
+.barra{height:10px;border-radius:5px;background:var(--green-soft);overflow:hidden}
+.barra i{display:block;height:100%;background:var(--green)}
+#mapa{height:320px;border-radius:var(--r);z-index:0}
+.inc img{max-width:100%;border-radius:10px;max-height:260px;object-fit:cover}
 .grid2{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
 .colectivo{display:grid;grid-template-columns:44px 1fr;gap:12px;align-items:start}
 .colectivo .ico{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;background:var(--amber-soft);color:var(--amber)}
@@ -446,8 +454,9 @@ body.con-fab footer{padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))}
 const GROUPS = [
   {label:"Inicio", subs:[["inicio","Inicio"]]},
   {label:"Cursos", subs:[["cursos","Cursos"]]},
+  {label:"Encuestas", subs:[["encuestas","Encuestas"]]},
   {label:"Mercadiño", subs:[["mercadillo","Mercadiño"]]},
-  {label:"Sugerencias", subs:[["sugerencias","Sugerencias"]]},
+  {label:"Sugerencias", subs:[["sugerencias","Sugerencias"],["incidencias","Avisos del barrio"]]},
   {label:"Parque Rosalía BIC", subs:[["bic","Parque Rosalía BIC"]]},
   {label:"La asociación", subs:[["reuniones","Reuniones"],["proyectos","Proyectos"],["colectivos","Colectivos"],["estatutos","Estatutos"]]},
   {label:"Fotos y carteles", subs:[["fotos","Fotos"],["carteles","Carteles"]]},
@@ -469,12 +478,14 @@ const COLECTIVOS = [
 ];
 const ALBUMES = ["Festas Recatelo 2023","Festas Recatelo 2024","Festas Recatelo 2025","Festas Recatelo 2026","Día das Letras Galegas 2025","Festa do Día das Letras Galegas 2026","Mercadillo de Navidad 2024","Samaín 2024","Samaín 2025","Cantos de taberna","Foto temática libre socios","Fotos denuncia","Fotos murales zona","Otros"];
 const ESTADOS = {presentada:["Presentada","p-blue"], tramite:["En trámite","p-amber"], resuelta:["Resuelta","p-green"], rechazada:["Sin respuesta / rechazada","p-red"]};
-const ADD_LABEL = {bic:"documento", inicio:"aviso", avisos:"aviso", reuniones:"resumen de reunión", proyectos:"proyecto", sugerencias:"sugerencia", colectivos:"noticia de colectivo", fotos:"foto", carteles:"cartel", cursos:"curso"};
+const ADD_LABEL = {encuestas:"encuesta", bic:"documento", inicio:"aviso", avisos:"aviso", reuniones:"resumen de reunión", proyectos:"proyecto", sugerencias:"sugerencia", colectivos:"noticia de colectivo", fotos:"foto", carteles:"cartel", cursos:"curso"};
 
 const BTIPOS = ["Queja","Sugerencia","Otro"];
+const ITIPOS = ["Farola o alumbrado","Bache o acera","Limpieza o basura","Árbol o jardín","Tráfico o aparcamiento","Otro"];
+const IESTADOS = {pendiente:["Pendiente","p-red"], comunicado:["Comunicado al Concello","p-amber"], arreglado:["Arreglado","p-green"]};
 const DEFAULT_LOGO = "c37727719b16fb206a49359b064fca6d";
 const LOT = {precio:20, donativo:3, sorteo:"Sorteo Extraordinario de Navidad 2026"};
-const S = {lot:null, lotAll:[], lotBlocked:false, insc:null, inscAll:[], inscBlocked:false, estatutos:null, ficha:null, fichasAll:[], fichaBlocked:false, logo:DEFAULT_LOGO, consent:null, consentAll:[], consentBlocked:false, buzon:null, buzonAll:[], mercAll:[], uid:null, user:null, names:{}, buzonBlocked:false, items:[], loaded:false, canEdit:false, db:null, assets:null, noDb:false, tab:"inicio", filter:{reuniones:"todas", quejas:"todas", fotos:"todas"}};
+const S = {apoyo:null, apoyosAll:[], nApoyos:null, votos:null, recVotos:{}, incAll:[], cuota:null, cuotasAll:[], lot:null, lotAll:[], lotBlocked:false, insc:null, inscAll:[], inscBlocked:false, estatutos:null, ficha:null, fichasAll:[], fichaBlocked:false, logo:DEFAULT_LOGO, consent:null, consentAll:[], consentBlocked:false, buzon:null, buzonAll:[], mercAll:[], uid:null, user:null, names:{}, buzonBlocked:false, items:[], loaded:false, canEdit:false, db:null, assets:null, noDb:false, tab:"inicio", filter:{reuniones:"todas", quejas:"todas", fotos:"todas"}};
 
 const $ = s => document.querySelector(s);
 function esc(t){return String(t ?? "").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
@@ -636,10 +647,36 @@ const VIEWS = {
   bic(){
     const list=sortDesc(bySection("bic"));
     const card=it=>`<article class="card">${it.date?`<div class="meta"><span>${fmtDate(it.date)}</span></div>`:""}<h3>${esc(it.title)}</h3>${it.body?`<p class="body">${esc(it.body)}</p>`:""}${attach(it)}${adminRow(it)}</article>`;
-    return `<div><h2>Parque Rosalía BIC</h2><p class="lead">Desde la asociación pedimos que el Parque de Rosalía de Castro sea declarado Bien de Interés Cultural (BIC), la máxima protección que reconoce la Ley 5/2016, de 4 de mayo, del patrimonio cultural de Galicia.</p></div>
+    return `<div><h2>Parque Rosalía BIC</h2><p class="lead">Desde la asociación pedimos que el Parque de Rosalía de Castro sea declarado Bien de Interés Cultural (BIC), la máxima protección que reconoce la Ley 5/2016, de 4 de mayo, del patrimonio cultural de Galicia.</p><p class="lead">El Parque de Rosalía es mucho más que un parque: es parte de la vida de Lugo. Aquí han jugado, paseado y se han enamorado varias generaciones de lucenses, y muchas familias guardan en él sus recuerdos más queridos. Por eso la asociación se ha empeñado en protegerlo e insiste ante las instituciones en su protección, empezando por que lo declaren BIC, para que nuestros hijos y nietos lo reciban tal y como lo conocimos.</p><p class="lead">El parque y el barrio de Recatelo están unidos desde su origen: las primeras obras del parque se hicieron en las tierras junto a Recatelo. Por eso nuestra asociación une los dos nombres, Parque de Rosalía de Castro y Recatelo, y defiende la zona como un todo.</p></div>
+      ${apoyoBIC()}
       <section class="card legal"><p>Un BIC no se puede alterar sin control de Patrimonio: protege su trazado, su arbolado, sus elementos históricos y su entorno, junto a la Muralla romana. Es la garantía de que el gran pulmón verde de Lugo llegue intacto a las próximas generaciones.</p><p>Aquí reunimos la auditoría del parque y los documentos que lo justifican.</p></section>
       <section class="card legal"><h3>Por qué el parque merece ser BIC</h3><p><strong>Un jardín centenario.</strong> Nació por acuerdo del Ayuntamiento el 2 de julio de 1921 y en 2021 cumplió cien años. Es uno de los jardines públicos históricos de Lugo que siguen en pie.</p><p><strong>Un jardín histórico de autor.</strong> Lo proyectó en 1921 el arquitecto municipal Ramiro Sainz, con la jardinería del ingeniero agrónomo Eguileor. Une el trazado natural del jardín paisajista inglés con la geometría de los jardines italianos y franceses. La Ley 5/2016 reconoce expresamente el «jardín histórico» como una de las categorías de BIC.</p><p><strong>Su arquitectura de los años 20 y 30.</strong> Conserva piezas de aquella época: la entrada de la Plaza de Avilés (1923-1927), el estanque con su puente y la casita de los patos, la pérgola (1927-1929), el quiosco de la música (1928), el mapa de la Península Ibérica (1929) y la balaustrada Art Decó del Balcón do Garañón de Eloy Maquieira (1929-1931).</p><p><strong>Un balcón sobre el Miño, junto a la Muralla.</strong> Está al lado de la Muralla romana, Patrimonio de la Humanidad, y se asoma al valle del Miño. Parque, Muralla y río forman un mismo paisaje que hay que proteger entero.</p><p><strong>La memoria de la ciudad.</strong> Se creó como «pulmón de la ciudad», para que los niños jugasen al aire libre y los mayores tuviesen un lugar de descanso. Lleva el nombre de Rosalía de Castro desde el 21 de abril de 1931 y generaciones de lucenses han crecido en él.</p><p><strong>La protección actual no basta.</strong> Hoy solo figura como elemento protegido en el catálogo del plan urbanístico de Lugo (ficha L-26). Como BIC, cualquier obra necesitaría el visto bueno de Patrimonio de la Xunta y no dependería solo de cada gobierno municipal.</p></section>
       <section class="stack">${list.length?list.map(card).join(""):emptyBox("Pronto publicaremos aquí la auditoría del parque.",S.canEdit?"Pulsa “+ Añadir documento” y sube el PDF.":"")}</section>`;
+  },
+  encuestas(){
+    const list=sortDesc(bySection("encuestas"));
+    return `<div><h2>Encuestas</h2><p class="lead">La directiva pregunta y los socios votan. Cada socio tiene un voto por encuesta y los resultados se muestran sin nombres.</p></div>
+      <section class="stack">${list.length?list.map(encuestaCard).join(""):emptyBox("No hay encuestas abiertas.","Pulsa “+ Añadir encuesta” y escribe la pregunta y las opciones.")}</section>`;
+  },
+  incidencias(){
+    let list=[]; for(const d of S.incAll) for(const a of (d.avisos||[])) list.push({...a, uid:d.uid});
+    list.sort((a,b)=>(b.at||"").localeCompare(a.at||""));
+    const form = S.uid ? `<form class="card" id="inc-form" novalidate><h3>Avisar de un problema en el barrio</h3>
+      ${field("inc-tipo","Qué pasa",sel("inc-tipo",ITIPOS,ITIPOS[0]))}
+      ${field("inc-texto","Explícalo en pocas palabras",`<textarea id="inc-texto" maxlength="400" style="min-height:80px" placeholder="Por ejemplo: la farola delante del portal 12 lleva una semana apagada"></textarea>`)}
+      ${field("inc-foto","Foto (opcional)",`<input id="inc-foto" type="file" accept="image/*">`)}
+      <div class="row-actions" style="justify-content:flex-start"><button type="button" class="btn ghost small" id="inc-gps">📍 Usar mi ubicación</button><span class="meta" id="inc-pos">${S.incPos?"Ubicación marcada en el mapa.":"O toca en el mapa el sitio exacto."}</span></div>
+      <p class="err" id="inc-err" hidden></p>
+      <div class="row-actions"><button class="btn" id="inc-save">Enviar aviso</button></div></form>` : `<div class="notice">Abre la app con tu cuenta para avisar de un problema.</div>`;
+    const card=a=>{ const st=IESTADOS[a.estado]||IESTADOS.pendiente;
+      return `<article class="card inc"><div class="meta"><span class="pill ${st[1]}">${st[0]}</span><span class="pill p-blue">${esc(a.tipo)}</span><span>${a.at?new Date(a.at).toLocaleDateString("es-ES",{day:"numeric",month:"long",year:"numeric"}):""}</span></div>
+        ${a.texto?`<p class="body">${esc(a.texto)}</p>`:""}${a.foto?`<img src="${imgSrc(a.foto)}" alt="" loading="lazy" onerror="this.remove()">`:""}
+        <div class="row-actions">${a.lat!=null?`<button type="button" class="btn ghost small" data-inc-ver="${esc(a.id)}">Ver en el mapa</button>`:""}
+        ${S.canEdit?sel("inc-est-"+a.id,Object.entries(IESTADOS).map(([k,x])=>[k,x[0]]),a.estado||"pendiente").replace("<select ",`<select data-inc-est="${esc(a.uid)}|${esc(a.id)}" `):""}
+        ${S.canEdit||a.uid===S.uid?`<button type="button" class="btn ghost small" data-inc-del="${esc(a.uid)}|${esc(a.id)}">Borrar</button>`:""}</div></article>`; };
+    return `<div><h2>Avisos del barrio</h2><p class="lead">¿Una farola apagada, un bache o basura acumulada? Avisa con una foto y marca el sitio en el mapa. La directiva lo comunica al Concello y aquí verás cómo va.</p></div>
+      ${form}<div id="mapa-slot" class="card" style="padding:6px"></div>
+      <section class="stack">${list.length?list.map(card).join(""):`<div class="empty"><strong>No hay avisos todavía.</strong>Cuando un socio avise de un problema, saldrá aquí.</div>`}</section>`;
   },
   proyectos(){
     const list=sortDesc(S.items.filter(i=>i.section==="proyectos"||(i.section==="quejas"&&i.kind==="proyecto")));
@@ -748,11 +785,11 @@ const VIEWS = {
     let admin="";
     if(S.canEdit){
       const rows=S.fichasAll.slice().sort((a,b)=>(a.nombre||"").localeCompare(b.nombre||"","es"));
-      admin=`<section class="stack"><h3>Socios registrados (solo directiva): ${rows.length}</h3>${rows.length?`<div class="card" style="overflow-x:auto"><table class="tbl"><thead><tr><th>Nombre</th><th>Dirección</th><th>Correo</th><th>Fecha</th><th></th></tr></thead><tbody>${rows.map(r=>`<tr><td>${esc(r.nombre)}</td><td>${esc(r.direccion)}</td><td>${esc(r.email)}</td><td>${r.at?new Date(r.at).toLocaleDateString("es-ES"):""}</td><td><button type="button" class="btn ghost small" data-ficha-del="${esc(r.uid)}">Borrar</button></td></tr>`).join("")}</tbody></table></div>
+      admin=`<section class="stack"><h3>Socios registrados (solo directiva): ${rows.length}</h3>${rows.length?`<div class="card" style="overflow-x:auto"><table class="tbl"><thead><tr><th>Nombre</th><th>Dirección</th><th>Correo</th><th>Fecha</th><th>Cuota ${anioCuota()}</th><th></th></tr></thead><tbody>${rows.map(r=>`<tr><td>${esc(r.nombre)}</td><td>${esc(r.direccion)}</td><td>${esc(r.email)}</td><td>${r.at?new Date(r.at).toLocaleDateString("es-ES"):""}</td><td>${cuotaPagada(r.uid)?`<button type="button" class="btn small" data-cuota="${esc(r.uid)}|0">✓ Pagada</button>`:`<button type="button" class="btn ghost small" data-cuota="${esc(r.uid)}|1">Pendiente</button>`}</td><td><button type="button" class="btn ghost small" data-ficha-del="${esc(r.uid)}">Borrar</button></td></tr>`).join("")}</tbody></table></div>
         <h3>Prioridades de los socios</h3>${rows.filter(r=>r.prioridad).map(r=>`<article class="card"><p class="body">“${esc(r.prioridad)}”</p><div class="meta">${esc(r.nombre)}</div></article>`).join("")||`<div class="empty">Nadie ha escrito su prioridad todavía.</div>`}`
         :`<div class="empty"><strong>Aún no hay socios registrados.</strong>Comparte el enlace de esta sección para que rellenen sus datos.</div>`}</section>`;
     }
-    return intro + form + admin;
+    return intro + cuotaSocio() + form + admin;
   },
   privacidad(){
     const c = S.consent;
@@ -771,19 +808,19 @@ const VIEWS = {
       const rows = S.consentAll.slice().sort((a,b)=>(b.at||"").localeCompare(a.at||""));
       admin = `<section class="stack"><h3>Registro de consentimientos (solo directiva)</h3>${rows.length?`<div class="card" style="overflow-x:auto"><table class="tbl"><thead><tr><th>Socio/a</th><th>Fecha</th><th>Datos</th><th>Fotos</th><th>Avisos</th><th></th></tr></thead><tbody>${rows.map(r=>`<tr><td>${esc(S.names[r.uid]||"Socio/a")}</td><td>${r.at?new Date(r.at).toLocaleDateString("es-ES"):""}</td><td>${r.acepta?"Sí":"No"}</td><td>${r.fotos?"Sí":"No"}</td><td>${r.comunicaciones?"Sí":"No"}</td><td><button type="button" class="btn ghost small" data-cs-del="${esc(r.uid)}">Borrar</button></td></tr>`).join("")}</tbody></table></div>`:`<div class="empty"><strong>Nadie ha registrado su consentimiento todavía.</strong>Aparecerán aquí con fecha y opciones elegidas.</div>`}</section>`;
     }
-    return `<div><h2>Protección de datos</h2><p class="lead">Información sobre el tratamiento de datos personales conforme al Reglamento (UE) 2016/679, General de Protección de Datos (RGPD), y a la Ley Orgánica 3/2018, de 5 de diciembre, de Protección de Datos Personales y garantía de los derechos digitales (LOPDGDD). Léela con atención antes de usar la app.</p></div>
+    return `<div><h2>Protección de datos</h2><p class="lead">Aquí te contamos, con palabras sencillas, qué hacemos con tus datos y cómo los cuidamos, tal y como piden el Reglamento General de Protección de Datos (RGPD) y la Ley Orgánica 3/2018 (LOPDGDD).</p></div>
       <section class="card legal">
-        <p><strong>1. Responsable del tratamiento:</strong> Asociación de Vecinos del Parque de Rosalía de Castro-Recatelo, CIF G72769482, con domicilio en Rúa Pascual Veiga 6, 27002 Lugo, y correo electrónico vecinosparquerecatelo@gmail.com. La asociación no está obligada a designar un Delegado de Protección de Datos; cualquier consulta debe dirigirse a ese correo.</p>
-        <p><strong>2. Datos que tratamos:</strong> nombre y apellidos, DNI cuando sea necesario (por ejemplo, para la reserva de lotería), dirección, teléfono, correo electrónico, datos de pago de la cuota, inscripciones en cursos y actividades, mensajes enviados al buzón, anuncios del Mercadiño, preferencias sobre el barrio y, solo con autorización expresa, la imagen en fotografías de las actividades. No solicitamos datos de categorías especiales (salud, ideología, religión u otros del artículo 9 del RGPD); te pedimos que no los incluyas en los mensajes.</p>
-        <p><strong>3. Finalidades:</strong> gestionar tu condición de socio/a y el cobro de la cuota anual; organizar cursos, actividades y la venta de lotería; enviarte avisos de la asociación si lo autorizas; atender las quejas y consejos del buzón y trasladarlos, sin tus datos personales, a las instituciones; publicar anuncios entre socios en el Mercadiño; y, si lo autorizas, publicar fotografías de las actividades. Tus datos no se usarán para ninguna finalidad distinta ni para elaborar perfiles o tomar decisiones automatizadas. Los datos se conservan mientras seas socio/a y, tras la baja, solo el tiempo que exija la ley.</p>
-        <p><strong>4. Base jurídica:</strong> la relación asociativa y el cumplimiento de los Estatutos (artículo 6.1.b RGPD); el cumplimiento de obligaciones legales, contables y fiscales (artículo 6.1.c RGPD); y tu consentimiento expreso para los avisos y las fotografías (artículo 6.1.a RGPD), que puedes retirar en cualquier momento sin que ello afecte a la licitud del tratamiento anterior.</p>
-        <p><strong>5. Destinatarios:</strong> solo la Junta Directiva accede a tus datos. Los anuncios del Mercadiño y los datos de contacto que tú incluyas en ellos los ven únicamente los socios con acceso a la app. No se ceden datos a terceros salvo obligación legal (por ejemplo, a la Administración Tributaria o a Juzgados y Tribunales). Los proveedores tecnológicos que alojan la app actúan como encargados del tratamiento, con contrato conforme al artículo 28 del RGPD y, si hubiera transferencias fuera del Espacio Económico Europeo, con las garantías del capítulo V del RGPD.</p>
-        <p><strong>6. Deber de confidencialidad de los socios:</strong> los datos de otros socios a los que tengas acceso en la app (nombres, teléfonos, anuncios, fotografías) son confidenciales. Queda terminantemente prohibido copiarlos, hacer capturas, reenviarlos, publicarlos en redes sociales o usarlos para cualquier fin ajeno a la asociación. Su uso indebido puede constituir una infracción de la normativa de protección de datos y del derecho a la propia imagen (Ley Orgánica 1/1982), y dará lugar a la retirada inmediata del acceso, sin perjuicio de las responsabilidades legales que correspondan a quien lo cometa.</p>
-        <p><strong>7. Código de acceso personal:</strong> el código de acceso es personal e intransferible y solo funciona en un móvil. Eres responsable de su custodia. Si sospechas que otra persona lo usa, comunícalo de inmediato a la directiva para anularlo.</p>
-        <p><strong>8. Menores de edad:</strong> los menores de 14 años no pueden facilitar sus datos ni aparecer en fotografías publicadas sin el consentimiento de sus padres, madres o tutores legales (artículo 7 LOPDGDD).</p>
-        <p><strong>9. Seguridad:</strong> la asociación aplica medidas técnicas y organizativas para proteger tus datos: acceso solo con código personal, conexión cifrada, permisos restringidos a la directiva y registro de consentimientos. Si se produjera una brecha de seguridad que suponga un riesgo para tus derechos, se notificará a la Agencia Española de Protección de Datos y, en su caso, a las personas afectadas.</p>
-        <p><strong>10. Tus derechos:</strong> puedes ejercer los derechos de acceso, rectificación, supresión, oposición, limitación del tratamiento y portabilidad escribiendo a vecinosparquerecatelo@gmail.com e indicando qué derecho ejerces. Responderemos en el plazo máximo de un mes. Si consideras que no se han respetado tus derechos, puedes presentar una reclamación ante la Agencia Española de Protección de Datos (www.aepd.es).</p>
-        <p><strong>11. Retirada del consentimiento:</strong> puedes retirarlo en cualquier momento desde esta misma pantalla. Sin la aceptación del tratamiento de datos como socio/a no es posible usar la app.</p>
+        <p><strong>1. Quién cuida tus datos:</strong> la Asociación de Vecinos del Parque de Rosalía de Castro-Recatelo (CIF G72769482), Rúa Pascual Veiga 6, 27002 Lugo. Para cualquier duda, escríbenos a vecinosparquerecatelo@gmail.com.</p>
+        <p><strong>2. Qué datos usamos:</strong> los que tú nos das: nombre y apellidos, dirección, teléfono, correo, el pago de la cuota, los cursos a los que te apuntas, tus mensajes al buzón, tus anuncios del Mercadiño, tus votos en las encuestas, tu apoyo a la declaración BIC y los avisos del barrio que envíes, con su foto y su ubicación. El DNI solo lo pedimos cuando hace falta, por ejemplo para reservar lotería. Las fotos en las que aparezcas solo se publican si nos das permiso. Te pedimos que no incluyas en los mensajes datos de salud, ideología o religión.</p>
+        <p><strong>3. Para qué los usamos:</strong> para llevar el día a día de la asociación: tu alta como socio/a y la cuota, los cursos y actividades, la lotería, los avisos que nos autorices a enviarte, el buzón de quejas y consejos (que llevamos a las instituciones sin tus datos personales), el Mercadiño, las encuestas y los avisos del barrio. No los usamos para nada más ni hacemos perfiles. Los guardamos mientras seas socio/a y, si te das de baja, solo el tiempo que obligue la ley.</p>
+        <p><strong>4. Por qué podemos usarlos:</strong> porque eres socio/a y así lo prevén los Estatutos; porque algunas cosas las exige la ley, como la contabilidad; y, para los avisos y las fotos, porque tú nos das tu permiso, que puedes retirar cuando quieras.</p>
+        <p><strong>5. Quién los ve:</strong> solo la Junta Directiva. Lo que tú publicas para todos (tus anuncios del Mercadiño y tus avisos del barrio) lo ven los demás socios de la app. Los resultados de las encuestas y el número de apoyos al BIC se muestran sin nombres. No damos tus datos a nadie más, salvo que la ley nos obligue. Las empresas que alojan la app solo los guardan por encargo nuestro y con las garantías que exige la ley.</p>
+        <p><strong>6. Entre vecinos, discreción:</strong> lo que veas de otros socios en la app (nombres, teléfonos, anuncios, fotos) es para usarlo dentro de la asociación. Te pedimos que no lo copies, no lo reenvíes ni lo subas a redes sociales. Si alguien no lo respeta, la directiva puede retirarle el acceso.</p>
+        <p><strong>7. Tu código de acceso:</strong> es solo tuyo y funciona en un único móvil. Guárdalo bien y, si crees que otra persona lo está usando, avísanos y te daremos uno nuevo.</p>
+        <p><strong>8. Menores:</strong> los menores de 14 años necesitan el permiso de sus padres, madres o tutores para dar sus datos o aparecer en fotos.</p>
+        <p><strong>9. Cómo los protegemos:</strong> solo se entra con código personal, la conexión va cifrada y únicamente la directiva puede ver los datos de los socios. Si algún día hubiera un problema de seguridad que te afectase, te lo diríamos y lo comunicaríamos a la Agencia Española de Protección de Datos.</p>
+        <p><strong>10. Tus derechos:</strong> puedes pedirnos ver tus datos, corregirlos, borrarlos, llevártelos u oponerte a que los usemos, escribiendo a vecinosparquerecatelo@gmail.com. Te contestaremos en menos de un mes. Si no quedas conforme, puedes acudir a la Agencia Española de Protección de Datos (www.aepd.es).</p>
+        <p><strong>11. Cambiar de opinión:</strong> puedes retirar tu permiso cuando quieras desde esta misma pantalla. Para usar la app sí hace falta aceptar el tratamiento de tus datos como socio/a.</p>
         <p><strong>Última actualización:</strong> 22 de octubre de 2026.</p>
       </section>${box}${admin}`;
   },
@@ -876,6 +913,162 @@ function cartelCard(it){
   const media = !it.photo ? `<div class="ph">Sin cartel</div>` : pdf ? `<a class="ph" href="${src}" target="_blank" rel="noopener">Abrir cartel (PDF)</a>` : `<a href="${src}" target="_blank" rel="noopener"><img src="${src}" alt="Cartel: ${esc(it.title)}" loading="lazy"></a>`;
   return `<figure class="photo" style="margin:0">${media}<figcaption class="cap"><strong>${esc(it.title)}</strong><span class="meta">${it.date?fmtDate(it.date):""}</span>${adminRow(it)}</figcaption></figure>`;
 }
+/* ---------- apoyo al BIC ---------- */
+function nombreDe(uid){ const f=S.fichasAll.find(x=>x.uid===uid); return (f&&f.nombre)||S.names[uid]||"Socio/a"; }
+function apoyoBIC(){
+  const yo=!!(S.apoyo&&S.apoyo.apoyo), n=S.nApoyos;
+  let btn="";
+  if(S.uid) btn = yo ? `<div class="row-actions" style="justify-content:flex-start"><span class="pill p-green" style="align-self:center">Ya lo apoyas. ¡Gracias!</span><button type="button" class="btn ghost small" data-apoyo="0">Retirar mi apoyo</button></div>`
+    : `<div class="row-actions" style="justify-content:flex-start"><button type="button" class="btn" data-apoyo="1">Apoyo que el parque sea BIC</button></div>`;
+  let lista="";
+  if(S.canEdit){ const ap=S.apoyosAll.filter(d=>d.apoyo).map(d=>nombreDe(d.uid)).sort((a,b)=>a.localeCompare(b,"es"));
+    lista=`<details class="insc"><summary>Ver quién lo apoya (solo directiva)</summary>${ap.length?`<ol>${ap.map(x=>`<li>${esc(x)}</li>`).join("")}</ol>`:`<p class="meta">Nadie todavía.</p>`}</details>`; }
+  return `<section class="card apoyo"><h3>Apoya la declaración BIC</h3><div class="n">${n==null?"—":n}</div><p class="meta">${n===1?"socio apoya ya que el parque sea BIC.":"socios apoyan ya que el parque sea BIC."}</p><p class="body">Cuantos más seamos, más fuerza tendrá la petición ante el Concello y la Xunta.</p>${btn}${lista}</section>`;
+}
+async function contarApoyos(){ if(!window.rpcApp) return; try{ const n=await rpcApp("recuento_apoyos"); if(typeof n==="number"){ S.nApoyos=n; render(); } }catch(e){} }
+async function setApoyo(on){
+  try{ await S.db.doc("apoyos/"+S.uid).set({uid:S.uid, apoyo:on, at:new Date().toISOString()}); S.apoyo={apoyo:on}; S.nApoyos=Math.max(0,(S.nApoyos||0)+(on?1:-1)); render(); contarApoyos(); }
+  catch(x){ alert("No se ha podido guardar. Vuelve a intentarlo."); }
+}
+async function startApoyos(){
+  if(!S.db||!S.uid) return;
+  S.db.doc("apoyos/"+S.uid).onSnapshot(snap=>{ S.apoyo=snap.exists?snap.data():null; render(); },()=>{});
+  if(S.canEdit) S.db.collection("apoyos").onSnapshot(snap=>{ S.apoyosAll=snap.docs.map(d=>({uid:d.id,...d.data()})); S.nApoyos=S.apoyosAll.filter(d=>d.apoyo).length; render(); },()=>{});
+  else contarApoyos();
+}
+
+/* ---------- encuestas ---------- */
+function encuestaCard(it){
+  const ops=it.opciones||[], mio=S.votos&&S.votos.votos?S.votos.votos[it.id]:undefined, votado=mio!==undefined;
+  const cerrada=!!(it.cierre&&it.cierre<today());
+  const rec=S.recVotos[it.id]||{}, total=Object.values(rec).reduce((a,b)=>a+b,0);
+  const verRes = votado || cerrada || S.canEdit;
+  const cuerpo = verRes
+    ? `<div class="opc">${ops.map((o,i)=>{ const n=rec[i]||0, pc=total?Math.round(n*100/total):0; return `<div><div class="meta" style="justify-content:space-between"><span>${String(mio)===String(i)?"✓ ":""}${esc(o)}</span><span>${n} (${pc}%)</span></div><div class="barra"><i style="width:${pc}%"></i></div></div>`; }).join("")}</div>
+       <p class="meta">${total===1?"1 voto":total+" votos"}${votado&&!cerrada?" · Has votado. Puedes cambiar tu voto:":""}</p>`
+    : "";
+  const botones = !cerrada && S.uid ? `<div class="opc">${ops.map((o,i)=>`<button type="button" class="btn ${votado?"ghost small":""}" data-voto="${esc(it.id)}|${i}">${esc(o)}</button>`).join("")}</div>` : "";
+  return `<article class="card"><div class="meta"><span class="pill ${cerrada?"p-amber":"p-green"}">${cerrada?"Cerrada":"Abierta"}</span>${it.cierre?`<span>${cerrada?"Cerró el":"Se puede votar hasta el"} ${fmtDate(it.cierre)}</span>`:""}</div>
+    <h3>${esc(it.title)}</h3>${it.body?`<p class="body">${esc(it.body)}</p>`:""}${cuerpo}${botones}${adminRow(it)}</article>`;
+}
+async function contarVotos(){ if(!window.rpcApp) return; try{ const r=await rpcApp("recuento_votos"); if(r&&typeof r==="object"){ S.recVotos=r; render(); } }catch(e){} }
+async function votar(enc, i){
+  const votos={...((S.votos&&S.votos.votos)||{})}; votos[enc]=i;
+  try{ await S.db.doc("votos/"+S.uid).set({uid:S.uid, votos}); S.votos={votos}; render(); contarVotos(); }
+  catch(x){ alert("No se ha podido guardar tu voto. Vuelve a intentarlo."); }
+}
+async function startVotos(){
+  if(!S.db||!S.uid) return;
+  S.db.doc("votos/"+S.uid).onSnapshot(snap=>{ S.votos=snap.exists?snap.data():null; render(); },()=>{});
+  contarVotos(); setInterval(()=>{ if(S.tab==="encuestas"&&document.visibilityState==="visible") contarVotos(); }, 30000);
+}
+
+/* ---------- avisos del barrio ---------- */
+let MAPA=null, MAPA_EL=null, MAPA_CAPA=null, MAPA_MIO=null;
+function cargarLeaflet(){
+  if(window.L) return Promise.resolve();
+  if(cargarLeaflet.p) return cargarLeaflet.p;
+  const css=document.createElement("link"); css.rel="stylesheet"; css.href="vendor/leaflet/leaflet.css"; document.head.appendChild(css);
+  return cargarLeaflet.p=new Promise((ok,ko)=>{ const sc=document.createElement("script"); sc.src="vendor/leaflet/leaflet.js"; sc.onload=ok; sc.onerror=ko; document.head.appendChild(sc); });
+}
+async function montarMapa(){
+  const slot=document.getElementById("mapa-slot"); if(!slot) return;
+  if(!MAPA_EL){ MAPA_EL=document.createElement("div"); MAPA_EL.id="mapa"; }
+  slot.appendChild(MAPA_EL);
+  try{ await cargarLeaflet(); }catch(e){ MAPA_EL.textContent="No se ha podido cargar el mapa."; return; }
+  if(!MAPA){
+    MAPA=L.map(MAPA_EL).setView([43.0072,-7.5615],16);
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19, attribution:"© OpenStreetMap"}).addTo(MAPA);
+    MAPA_CAPA=L.layerGroup().addTo(MAPA);
+    MAPA.on("click",ev=>{ if(!S.uid) return; marcarMio(ev.latlng.lat, ev.latlng.lng); });
+  }
+  setTimeout(()=>MAPA.invalidateSize(),50);
+  MAPA_CAPA.clearLayers();
+  for(const d of S.incAll) for(const a of (d.avisos||[])) if(a.lat!=null){
+    const st=IESTADOS[a.estado]||IESTADOS.pendiente;
+    L.circleMarker([a.lat,a.lng],{radius:9, weight:2, color:"#fff", fillOpacity:.95, fillColor:a.estado==="arreglado"?"#3e7d5a":a.estado==="comunicado"?"#b86a12":"#b3261e"})
+      .bindPopup(`<strong>${esc(a.tipo)}</strong><br>${esc(st[0])}${a.texto?"<br>"+esc(a.texto):""}`).addTo(MAPA_CAPA);
+  }
+  if(S.incPos) marcarMio(S.incPos.lat, S.incPos.lng, true);
+}
+function marcarMio(lat,lng,silencio){
+  S.incPos={lat:+lat.toFixed(6), lng:+lng.toFixed(6)};
+  if(!MAPA) return;
+  if(MAPA_MIO) MAPA_MIO.setLatLng([lat,lng]); else MAPA_MIO=L.marker([lat,lng]).addTo(MAPA);
+  const m=document.getElementById("inc-pos"); if(m && !silencio) m.textContent="Ubicación marcada en el mapa.";
+}
+async function startInc(){
+  if(!S.db) return;
+  S.db.collection("incidencias").onSnapshot(snap=>{ S.incAll=snap.docs.map(d=>({uid:d.id,...d.data()})); render(); },()=>{});
+}
+async function guardarInc(uid, cambiar){
+  const d=S.incAll.find(x=>x.uid===uid); const avisos=cambiar(((d&&d.avisos)||[]).slice());
+  await S.db.doc("incidencias/"+uid).set({avisos});
+}
+
+/* ---------- cuotas ---------- */
+function anioCuota(){ return String(new Date().getFullYear()); }
+function cuotaPagada(uid){ const d=S.cuotasAll.find(x=>x.uid===uid); return !!(d&&d.pagadas&&d.pagadas[anioCuota()]); }
+function cuotaSocio(){
+  if(!S.uid || S.canEdit) return "";
+  const pag=!!(S.cuota&&S.cuota.pagadas&&S.cuota.pagadas[anioCuota()]);
+  return pag ? `<section class="card"><h3>Tu cuota de ${anioCuota()}</h3><p><span class="pill p-green">Al día</span> Gracias por tu apoyo a la asociación.</p></section>`
+    : `<section class="card"><h3>Tu cuota de ${anioCuota()}</h3><p><span class="pill p-amber">Pendiente</span> La directiva todavía no tiene apuntado tu pago de este año. Si ya has pagado, no hace falta que hagas nada: lo marcaremos en cuanto lo veamos en el banco.</p><p class="body">Cuota: 35 € al año. Transferencia o ingreso en Caixa Rural Galega, a nombre de ASOC DE VECINOS PARQUE DE ROSALIA DE CASTRO-RECA. IBAN: ES15 3070 0001 2563 4625 3229. Concepto: tu nombre y DNI.</p></section>`;
+}
+async function startCuotas(){
+  if(!S.db||!S.uid) return;
+  if(S.canEdit) S.db.collection("cuotas").onSnapshot(snap=>{ S.cuotasAll=snap.docs.map(d=>({uid:d.id,...d.data()})); render(); },()=>{});
+  else S.db.doc("cuotas/"+S.uid).onSnapshot(snap=>{ S.cuota=snap.exists?snap.data():null; render(); },()=>{});
+}
+async function setCuota(uid,on){
+  const d=S.cuotasAll.find(x=>x.uid===uid); const pagadas={...((d&&d.pagadas)||{})};
+  if(on) pagadas[anioCuota()]=new Date().toISOString(); else delete pagadas[anioCuota()];
+  try{ await S.db.doc("cuotas/"+uid).set({uid, pagadas}); }catch(x){ alert("No se ha podido guardar. Vuelve a intentarlo."); }
+}
+
+$("#main").addEventListener("click", async e=>{
+  const ap=e.target.closest("[data-apoyo]"); if(ap) return setApoyo(ap.dataset.apoyo==="1");
+  const vt=e.target.closest("[data-voto]"); if(vt){ const [enc,i]=vt.dataset.voto.split("|"); return votar(enc,+i); }
+  const cu=e.target.closest("[data-cuota]"); if(cu){ const [u,on]=cu.dataset.cuota.split("|"); return setCuota(u,on==="1"); }
+  if(e.target.closest("#inc-gps")){
+    const m=$("#inc-pos"); if(!navigator.geolocation){ m.textContent="Este móvil no da la ubicación. Toca en el mapa el sitio."; return; }
+    m.textContent="Buscando dónde estás…";
+    navigator.geolocation.getCurrentPosition(p=>{ marcarMio(p.coords.latitude,p.coords.longitude); if(MAPA) MAPA.setView([p.coords.latitude,p.coords.longitude],18); },
+      ()=>{ m.textContent="No se ha podido saber tu ubicación. Toca en el mapa el sitio."; },{enableHighAccuracy:true, timeout:15000});
+    return;
+  }
+  const iv=e.target.closest("[data-inc-ver]"); if(iv){
+    for(const d of S.incAll) for(const a of (d.avisos||[])) if(a.id===iv.dataset.incVer && MAPA){ MAPA.setView([a.lat,a.lng],18); MAPA_EL.scrollIntoView({behavior:"smooth",block:"center"}); }
+    return;
+  }
+  const idl=e.target.closest("[data-inc-del]"); if(idl){
+    const [u,id]=idl.dataset.incDel.split("|"); if(!confirm("¿Borrar este aviso?")) return;
+    try{ await guardarInc(u, l=>l.filter(a=>a.id!==id)); }catch(x){ alert("No se ha podido borrar. Vuelve a intentarlo."); }
+  }
+});
+$("#main").addEventListener("change", async e=>{
+  const s=e.target.closest("[data-inc-est]"); if(!s) return;
+  const [u,id]=s.dataset.incEst.split("|");
+  try{ await guardarInc(u, l=>l.map(a=>a.id===id?{...a, estado:s.value}:a)); }catch(x){ alert("No se ha podido cambiar. Vuelve a intentarlo."); }
+});
+$("#main").addEventListener("submit", async e=>{
+  if(e.target.id!=="inc-form") return; e.preventDefault();
+  const err=$("#inc-err"); err.hidden=true;
+  const texto=$("#inc-texto").value.trim(), tipo=$("#inc-tipo").value, fl=$("#inc-foto").files[0];
+  if(!texto && !fl){ err.textContent="Escribe qué pasa o añade una foto."; err.hidden=false; return; }
+  if(!S.incPos){ err.textContent="Marca el sitio: pulsa “Usar mi ubicación” o toca en el mapa."; err.hidden=false; return; }
+  const btn=$("#inc-save"); btn.disabled=true; btn.textContent="Enviando…";
+  try{
+    let foto="";
+    if(fl){ const pf=await prepararFoto(fl); const up = window.subirFotoSocio ? await window.subirFotoSocio(pf) : await S.assets.upload(pf); foto=up.id; }
+    const a={id:Date.now().toString(36)+Math.random().toString(36).slice(2,6), tipo, texto, foto, lat:S.incPos.lat, lng:S.incPos.lng, estado:"pendiente", at:new Date().toISOString()};
+    await guardarInc(S.uid, l=>[...l, a].slice(-30));
+    S.incPos=null; if(MAPA_MIO){ MAPA_MIO.remove(); MAPA_MIO=null; }
+    $("#inc-texto").value=""; $("#inc-foto").value="";
+  }catch(x){ err.textContent="No se ha podido enviar. Vuelve a intentarlo."; err.hidden=false; }
+  btn.disabled=false; btn.textContent="Enviar aviso";
+});
+
 function inscritosDe(id){ return S.inscAll.filter(d=>d.cursos&&d.cursos[id]).map(d=>{ const f=S.fichasAll.find(x=>x.uid===d.uid); return (f&&f.nombre)||S.names[d.uid]||"Socio/a"; }); }
 function cursoCard(it, past){
   const yo = !!(S.insc&&S.insc.cursos&&S.insc.cursos[it.id]);
@@ -915,12 +1108,13 @@ function render(){
     if(g.subs.length>1) html += `<div class="filters" role="tablist" aria-label="${esc(g.label)}">${g.subs.map(([id,l])=>`<button data-go="${id}" aria-pressed="${S.tab===id}">${l}</button>`).join("")}</div>`;
     html += VIEWS[S.tab]();
   }
-  const keep = {}; for(const id of ["mc-tipo","mc-precio","mc-titulo","mc-texto","mc-contacto","mc-nombre","bz-texto","bz-contacto","bz-tipo","fi-nombre","fi-dir","fi-email","fi-prio","lt-nombre","lt-dni","lt-n"]){ const el=document.getElementById(id); if(el) keep[id]=el.value; }
+  const keep = {}; for(const id of ["mc-tipo","mc-precio","mc-titulo","mc-texto","mc-contacto","mc-nombre","bz-texto","bz-contacto","bz-tipo","fi-nombre","fi-dir","fi-email","fi-prio","lt-nombre","lt-dni","lt-n","inc-tipo","inc-texto"]){ const el=document.getElementById(id); if(el) keep[id]=el.value; }
   $("#main").innerHTML = html;
   for(const id in keep){ const el=document.getElementById(id); if(el) el.value=keep[id]; }
   $("#fab").hidden = !(S.canEdit && ADD_LABEL[S.tab]) || !!gate;
   if(!$("#fab").hidden) $("#fab").textContent = "+ Añadir " + ADD_LABEL[S.tab];
   document.body.classList.toggle("con-fab", !$("#fab").hidden);
+  if(S.tab==="incidencias") montarMapa();
 }
 
 $("#main").addEventListener("click", e=>{
@@ -1174,6 +1368,8 @@ function openForm(section, it){
   if(section==="reuniones") extra = regF;
   if(section==="proyectos"||section==="sugerencias"||section==="quejas") extra = `<div class="two">${field("f-status","Estado",sel("f-status",Object.entries(ESTADOS).map(([k,x])=>[k,x[0]]),v.status||"presentada"))}</div>`
      + field("f-entity","Institución",sel("f-entity",ENTIDADES,entDef)) + regF;
+  if(section==="encuestas") extra = field("f-opciones","Opciones (una por línea)",`<textarea id="f-opciones" style="min-height:110px" placeholder="Sí\nNo\nMe da igual">${esc((v.opciones||[]).join("\n"))}</textarea>`)
+     + field("f-cierre","Se puede votar hasta el (opcional)",`<input id="f-cierre" type="date" value="${esc(v.cierre||"")}">`);
   if(section==="colectivos") extra = field("f-entity","Colectivo",sel("f-entity",COLECTIVOS.map(c=>c.name),v.entity||COLECTIVOS[0].name));
   if(section==="fotos") extra = field("f-album","Álbum",sel("f-album",[...new Set([...ALBUMES, ...(v.album?[v.album]:[])])],v.album||(S.filter.fotos&&S.filter.fotos!=="todas"?S.filter.fotos:ALBUMES[0])));
   const isCartel = section==="carteles";
@@ -1182,7 +1378,7 @@ function openForm(section, it){
   $("#sheet-root").innerHTML = `<div class="sheet-bg" id="sheet-bg"><form class="sheet" id="f" novalidate>
     <h2>${it?"Editar":"Añadir"} ${ADD_LABEL[section]}</h2>
     ${section==="reuniones"?field("f-entity","¿Con quién fue la reunión? (elige la pestaña donde se guardará)",sel("f-entity",ENTIDADES,entDef)):""}
-    ${field("f-title", isCartel?"Nombre de la actividad":isFoto?(section==="fotos"&&!it?"Pie de foto (opcional)":"Pie de foto"):"Título", `<input id="f-title" ${section==="fotos"?"":"required"} value="${esc(v.title||"")}">`)}
+    ${field("f-title", section==="encuestas"?"Pregunta":isCartel?"Nombre de la actividad":isFoto?(section==="fotos"&&!it?"Pie de foto (opcional)":"Pie de foto"):"Título", `<input id="f-title" ${section==="fotos"?"":"required"} value="${esc(v.title||"")}">`)}
     ${field("f-date","Fecha",`<input id="f-date" type="date" value="${esc(v.date||"")}">`)}
     ${extra}
     ${isFoto?"":field("f-body", section==="reuniones"?"Resumen":section==="cursos"?"Explicación del curso":"Texto", `<textarea id="f-body">${esc(v.body||"")}</textarea>`)}
@@ -1209,6 +1405,8 @@ function openForm(section, it){
     const data = {section, title:val("f-title"), date:val("f-date")||"", updatedAt:new Date().toISOString()};
     for(const [k,id] of [["body","f-body"],["kind","f-kind"],["time","f-time"],["place","f-place"],["entity","f-entity"],["status","f-status"],["album","f-album"],["plazas","f-plazas"],["regDate","f-regdate"],["regNum","f-regnum"]]){ const x=val(id); if(x!==undefined) data[k]=x; }
     if(!data.title && section==="fotos") data.title = data.album || "Foto";
+    if(section==="encuestas"){ data.opciones=(val("f-opciones")||"").split("\n").map(x=>x.trim()).filter(Boolean); data.cierre=val("f-cierre")||"";
+      if(data.opciones.length<2){ err.textContent="Escribe al menos dos opciones, una en cada línea."; err.hidden=false; return; } }
     if(!data.title){ err.textContent="Escribe un título."; err.hidden=false; return; }
     const files = section==="fotos" && !it ? elegidas.slice() : ($("#f-photo") ? [...$("#f-photo").files] : []);
     if(section==="fotos" && !it && files.length>1){
@@ -1316,6 +1514,7 @@ async function recibirCompartidas(){
     db.collection("mercadillo").onSnapshot(snap=>{ S.mercAll=snap.docs.map(d=>({uid:d.id,...d.data()})); render(); },()=>{});
     db.collection("fotosocios").onSnapshot(snap=>{ S.fotoSoc=snap.docs.map(d=>({uid:d.id,...d.data()})); render(); },()=>{});
     if(compartidas && window.caches) userP.then(recibirCompartidas);
+    startInc(); userP.then(startApoyos); userP.then(startVotos); userP.then(startCuotas);
     userP.then(startBuzon); userP.then(startLot); userP.then(startInsc); userP.then(startFicha); userP.then(startConsent);
   });
 })();
