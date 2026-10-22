@@ -559,7 +559,7 @@ function photoCard(it, i){
   const pie=pieDe(it), pieH=pie?`<span class="pie">${esc(pie)}</span>`:"";
   return `<figure class="photo" style="margin:0">${it.photo?`<button type="button" class="ver" data-ver="${i}" aria-label="Ver la foto en grande"><img src="${imgSrc(it.photo)}" alt="${esc(pie||it.title||"")}" loading="lazy"></button>`:`<div class="ph">Sin imagen</div>`}
     ${it.socio ? ((S.canEdit||it.socio===S.uid)?`<figcaption class="cap">${pieH}<div class="row-actions"><button class="btn ghost small" data-fs-del="${esc(it.socio)}|${esc(it.fid)}">Quitar</button></div></figcaption>`:(pie?`<figcaption class="cap">${pieH}</figcaption>`:""))
-      : (S.canEdit||pie)?`<figcaption class="cap">${pieH}${S.canEdit?adminRow(it)+(it.photo?`<div class="row-actions"><button class="btn ghost small" data-trim="${esc(it.id)}">Quitar bordes negros</button></div>`:""):""}</figcaption>`:""}</figure>`;
+      : (S.canEdit||pie)?`<figcaption class="cap">${pieH}${S.canEdit?adminRow(it):""}</figcaption>`:""}</figure>`;
 }
 function abrirVisor(i){
   const fotos=S.verList||[]; if(!fotos.length) return;
@@ -679,7 +679,7 @@ const VIEWS = {
         <section class="carpetas" data-filter="fotos">${albs.map(card).join("")}</section>`;
     }
     const list=all.filter(i=>(i.album||"Otros")===f); S.verList=list.filter(i=>i.photo);
-    const trimAll = S.canEdit && list.some(i=>i.photo&&!i.socio) ? `<div class="row-actions"><button class="btn ghost small" data-trim-all="1">Quitar bordes negros de toda la carpeta</button></div>` : "";
+    const trimAll = "";
     const puedeSubir = SOC_ALBS.includes(f) && S.uid && !S.canEdit && !S.noDb && (window.subirFotoSocio || S.assets);
     const n=(S.fsElegidas||[]).length;
     const subir = puedeSubir ? `<form class="card" id="fs-form" novalidate><h3>Sube tus fotos</h3><p class="meta">${f===LIBRE?"Esta carpeta es de los socios: cualquier tema vale. Solo las ven los socios.":"Enseña lo que hay que arreglar en el barrio: baches, suciedad, farolas, aceras… Las ven la directiva y los socios."}</p>

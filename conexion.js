@@ -158,6 +158,14 @@
   .acc .tabs2{display:flex;gap:6px}.acc .tabs2 button{flex:1;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:8px;font:inherit;font-weight:700;cursor:pointer}
   .acc .tabs2 button[aria-pressed="true"]{background:var(--green);color:var(--surface);border-color:var(--green)}
   .acc-small{color:var(--muted);font-size:.9rem;margin:0}
+  .inst{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:#e8efe9;color:#24413b;border:1px solid #c9d8cd;border-radius:14px;padding:10px 12px;margin:12px 0;font-size:.95rem}
+  .inst img{width:40px;height:40px;border-radius:9px;background:#fff;object-fit:contain;flex:none}
+  .inst p{flex:1 1 180px;margin:0;line-height:1.35}
+  .inst .btn{flex:none}
+  .inst .inst-x{background:none;border:0;font-size:1.2rem;line-height:1;color:#24413b;padding:6px;cursor:pointer}
+  .pasos{margin:.4em 0 0;padding-left:1.3em;line-height:1.5}
+  #sheet-root .sheet-bg{z-index:60} /* también por encima de la pantalla de entrada */
+  .pasos li{margin:.25em 0}
   `;
   const style = document.createElement("style"); style.textContent = css; document.head.appendChild(style);
 
@@ -170,7 +178,7 @@
       <form class="card" id="acc-socio" novalidate>
         <label for="acc-codigo">Tu código personal<input id="acc-codigo" value="${(()=>{try{return (localStorage.getItem("recatelo-codigo")||"").replace(/[^A-Z0-9]/g,"")}catch(_){return ""}})()}" autocomplete="off" autocapitalize="characters" placeholder="El que te ha mandado la directiva"></label>
         <p class="acc-small">Cada socio tiene su propio código. Solo hay que ponerlo una vez y no sirve para otras personas.</p>
-        ${/iphone|ipad|ipod/i.test(navigator.userAgent) && !navigator.standalone ? `<div class="notice">En iPhone, instala primero la app: pulsa Compartir y “Añadir a pantalla de inicio”. Después ábrela desde el icono y escribe ahí tu código.</div>` : ""}
+        ${enApp() ? "" : bannerHTML(false)}
         <p class="err" id="acc-err1" hidden></p>
         <button class="btn">Entrar</button>
       </form>
@@ -183,6 +191,7 @@
       ${msg ? `<div class="notice">${msg}</div>` : ""}
     </div>`;
     document.body.appendChild(el);
+    activarBanner(el);
     el.querySelector(".tabs2").addEventListener("click", e => {
       const b = e.target.closest("[data-m]"); if(!b) return;
       el.querySelectorAll(".tabs2 button").forEach(x => x.setAttribute("aria-pressed", x === b));
@@ -227,18 +236,59 @@
     state.uid = session.user.id; state.directiva = !!dir; state.email = session.user.email || null;
     const acc = document.getElementById("acc"); if(acc) acc.remove();
     addTools();
+    ponerBanner();
     readyResolve();
   }
 
   /* ---------- herramientas: instalar, ajustes de la directiva, salir ---------- */
   let installEvt = null;
-  window.addEventListener("beforeinstallprompt", e => { e.preventDefault(); installEvt = e; const b = document.getElementById("btn-instalar"); if(b) b.hidden = false; });
+  window.addEventListener("beforeinstallprompt", e => { e.preventDefault(); installEvt = e; });
+  window.addEventListener("appinstalled", () => { installEvt = null; document.querySelectorAll(".inst,#btn-instalar").forEach(x => x.remove()); });
+  // Pasos para dejar el icono de la app en la pantalla del móvil, según el teléfono y el navegador
+  function pasosInstalar(){
+    const ua = navigator.userAgent;
+    const ios = /iphone|ipad|ipod/i.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+    const android = /android/i.test(ua);
+    const dentro = /FBAN|FBAV|FB_IAB|Instagram|WhatsApp|Line\/|Telegram/i.test(ua);
+    const ol = xs => `<ol class="pasos">${xs.map(x => `<li>${x}</li>`).join("")}</ol>`;
+    let h = "";
+    if(dentro) h += `<div class="notice">Ahora la tienes abierta dentro de otra app (WhatsApp, Facebook…). Pulsa los tres puntos y elige <b>«Abrir en el navegador»</b>${ios ? " o <b>«Abrir en Safari»</b>" : ""}. Luego sigue estos pasos.</div>`;
+    if(ios && /CriOS|EdgiOS|FxiOS/i.test(ua)) h += `<h3>iPhone</h3>` + ol(["Pulsa el botón <b>Compartir</b> (el cuadrado con la flecha hacia arriba), arriba en la barra.", "Elige <b>«Añadir a pantalla de inicio»</b> y pulsa <b>Añadir</b>.", "Si no te sale esa opción, abre esta página en <b>Safari</b> y hazlo desde allí."]);
+    else if(ios) h += `<h3>iPhone (Safari)</h3>` + ol(["Pulsa el botón <b>Compartir</b> (el cuadrado con la flecha hacia arriba). En los iPhone más nuevos, toca antes los tres puntos <b>···</b> de la barra.", "Baja en la lista y pulsa <b>«Añadir a pantalla de inicio»</b>.", "Deja activado <b>«Abrir como app web»</b> si te sale y pulsa <b>Añadir</b>."]);
+    else if(android && /SamsungBrowser/i.test(ua)) h += `<h3>Android (Samsung Internet)</h3>` + ol(["Pulsa el menú <b>☰</b> de abajo a la derecha.", "Elige <b>«Añadir página a»</b> y luego <b>«Pantalla de inicio»</b>.", "Confirma con <b>Añadir</b>."]);
+    else if(android && /Firefox/i.test(ua)) h += `<h3>Android (Firefox)</h3>` + ol(["Pulsa los tres puntos <b>⋮</b>.", "Elige <b>«Instalar»</b> o <b>«Añadir a pantalla de inicio»</b>.", "Confirma con <b>Añadir</b>."]);
+    else if(android) h += `<h3>Android (Chrome)</h3>` + ol(["Pulsa los tres puntos <b>⋮</b> arriba a la derecha.", "Elige <b>«Instalar aplicación»</b> o <b>«Añadir a pantalla de inicio»</b>.", "Pulsa <b>Instalar</b>."]);
+    else h += `<p class="body">Abre esta página en el móvil y pulsa aquí otra vez: te saldrán los pasos para tu teléfono.</p>` + `<h3>iPhone</h3>` + ol(["En Safari, pulsa <b>Compartir</b>.", "Elige <b>«Añadir a pantalla de inicio»</b>."]) + `<h3>Android</h3>` + ol(["En Chrome, pulsa los tres puntos <b>⋮</b>.", "Elige <b>«Instalar aplicación»</b>."]);
+    h += `<p class="acc-small" style="margin-top:10px">El icono aparecerá en la pantalla del móvil con el logo de la asociación. Ábrela siempre desde ese icono${ios ? ". La primera vez tendrás que escribir ahí tu código de socio" : ""}.</p>`;
+    return `<h2>Instalar la app en el móvil</h2>` + h;
+  }
+  async function instalar(){
+    if(installEvt){
+      const ev = installEvt; installEvt = null; ev.prompt();
+      try{ const r = await ev.userChoice; if(r && r.outcome === "accepted") return document.querySelectorAll(".inst,#btn-instalar").forEach(x => x.remove()); }catch(_){}
+      return;
+    }
+    sheet(pasosInstalar());
+  }
+  const enApp = () => matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+  const bannerHTML = cerrable => `<div class="inst" role="region" aria-label="Instalar la app"><img src="icons/icon-192.png" alt=""><p><b>Instala la app en tu móvil</b> y tendrás su icono en la pantalla, como cualquier otra app.</p><button type="button" class="btn small" data-inst>Instalar</button>${cerrable ? `<button type="button" class="inst-x" data-inst-x aria-label="Ahora no">✕</button>` : ""}</div>`;
+  function activarBanner(el){
+    el.querySelectorAll("[data-inst]").forEach(b => b.addEventListener("click", e => { e.preventDefault(); instalar(); }));
+    el.querySelectorAll("[data-inst-x]").forEach(b => b.addEventListener("click", () => { try{ localStorage.setItem("recatelo-inst-no", String(Date.now())); }catch(_){} b.closest(".inst").remove(); }));
+  }
+  function ponerBanner(){
+    if(enApp() || document.querySelector("#inst-top")) return;
+    let no = 0; try{ no = +localStorage.getItem("recatelo-inst-no") || 0; }catch(_){}
+    if(Date.now() - no < 7 * 864e5) return; // si dijo «ahora no», se vuelve a ofrecer a la semana
+    const m = document.getElementById("main"); if(!m) return;
+    const d = document.createElement("div"); d.id = "inst-top"; d.innerHTML = bannerHTML(true);
+    m.parentNode.insertBefore(d, m); activarBanner(d);
+  }
   function addTools(){
     const f = document.querySelector("footer"); if(!f || document.getElementById("tools")) return;
     const standalone = matchMedia("(display-mode: standalone)").matches || navigator.standalone;
-    const ios = /iphone|ipad|ipod/i.test(navigator.userAgent);
     const t = document.createElement("div"); t.id = "tools"; t.style.cssText = "display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:10px";
-    t.innerHTML = `${standalone ? "" : `<button class="btn ghost small" id="btn-instalar" ${installEvt || ios ? "" : "hidden"}>Instalar la app en el móvil</button>`}
+    t.innerHTML = `${standalone ? "" : `<button class="btn ghost small" id="btn-instalar">Instalar la app en el móvil</button>`}
       <button class="btn ghost small" id="btn-avisos" hidden>Activar notificaciones</button>
       ${state.directiva ? `<button class="btn ghost small" id="btn-codigo">Códigos de socios</button><button class="btn ghost small" id="btn-clave">Cambiar contraseña</button>` : ""}
       <button class="btn ghost small" id="btn-salir">Cerrar sesión</button>`;
@@ -246,8 +296,7 @@
     pintarAvisos();
     t.addEventListener("click", async e => {
       if(e.target.id === "btn-instalar"){
-        if(installEvt){ installEvt.prompt(); installEvt = null; e.target.hidden = true; }
-        else sheet(`<h2>Instalar en iPhone</h2><p class="body">1. Abre esta página en Safari.\n2. Pulsa el botón Compartir (el cuadrado con la flecha).\n3. Elige “Añadir a pantalla de inicio”.</p>`);
+        instalar();
       }
       if(e.target.id === "btn-salir"){
         // Socios: se guarda la sesión y el código para volver a entrar con un toque; la directiva sí cierra del todo

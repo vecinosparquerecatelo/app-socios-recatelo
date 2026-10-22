@@ -1,4 +1,5 @@
 {
+  "id": "./",
   "name": "Asoc. Vecinos Parque de Rosalía de Castro-Recatelo",
   "short_name": "Recatelo",
   "description": "App para los socios de la Asociación de Vecinos Parque de Rosalía de Castro-Recatelo",
@@ -20,6 +21,12 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
+    },
+    {
+      "src": "icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ],
   "share_target": {
