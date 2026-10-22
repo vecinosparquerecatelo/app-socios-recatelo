@@ -1,5 +1,6 @@
 /* Traducción al gallego de los textos de la app (castellano -> galego). La usa i18n.js. */
 window.GL_DICT = {
+  "Hoy el parque tiene dos grandes enemigos: el botellón y el vandalismo, que dañan sus jardines, su mobiliario y sus elementos históricos ante la pasividad de las instituciones. La declaración BIC obligaría a protegerlo de verdad.": "Hoxe o parque ten dous grandes inimigos: o botellón e o vandalismo, que danan os seus xardíns, o seu mobiliario e os seus elementos históricos ante a pasividade das institucións. A declaración BIC obrigaría a protexelo de verdade.",
   "Encuestas": "Enquisas",
   "Avisos del barrio": "Avisos do barrio",
   "encuesta": "enquisa",
