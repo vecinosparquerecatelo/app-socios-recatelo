@@ -9,7 +9,15 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/icon-192.png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
-<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}/* Protección: no se puede seleccionar, copiar ni guardar fotos; marca de agua con el nombre de quien mira */
+body{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+input,textarea,select,[contenteditable]{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}
+img{-webkit-user-drag:none;-webkit-touch-callout:none}
+#marca{position:fixed;inset:0;pointer-events:none;z-index:9999;opacity:.09;background-repeat:repeat}
+body.oculta #main,body.oculta header{filter:blur(18px)}
+@media print{body{display:none!important}}
+@media (prefers-color-scheme: dark){#marca{filter:invert(1);opacity:.12}}
+</style>
 </head>
 <body>
 <title>Vecinos Parque-Recatelo</title>
@@ -443,6 +451,7 @@ body.con-fab footer{padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))}
 </template>
 <button class="btn fab" id="fab" hidden>+ Añadir</button>
 <div id="sheet-root"></div>
+<div id="marca" aria-hidden="true" data-noi18n></div>
 
 <script src="config.js"></script>
 <script src="vendor/supabase.js"></script>
@@ -1115,6 +1124,7 @@ function render(){
   if(!$("#fab").hidden) $("#fab").textContent = "+ Añadir " + ADD_LABEL[S.tab];
   document.body.classList.toggle("con-fab", !$("#fab").hidden);
   if(S.tab==="incidencias") montarMapa();
+  pintarMarca();
 }
 
 $("#main").addEventListener("click", e=>{
@@ -1492,6 +1502,30 @@ async function recibirCompartidas(){
   }
 }
 
+
+/* ---------- protección del contenido ---------- */
+(function(){
+  const libre = t => t && t.closest && t.closest("input,textarea,select,[contenteditable]");
+  for(const ev of ["copy","cut"]) document.addEventListener(ev, e=>{ if(!libre(e.target)) e.preventDefault(); });
+  document.addEventListener("contextmenu", e=>{ if(!libre(e.target)) e.preventDefault(); });
+  document.addEventListener("dragstart", e=>{ if(e.target && e.target.tagName==="IMG") e.preventDefault(); });
+  document.addEventListener("keydown", e=>{ const k=(e.key||"").toLowerCase(); if((e.ctrlKey||e.metaKey) && (k==="p"||k==="s")) e.preventDefault(); });
+  // Al salir de la app (cambiar de app, multitarea) se emborrona para que no quede la vista previa
+  document.addEventListener("visibilitychange", ()=>document.body.classList.toggle("oculta", document.visibilityState==="hidden"));
+  window.addEventListener("blur", ()=>document.body.classList.add("oculta"));
+  window.addEventListener("focus", ()=>document.body.classList.remove("oculta"));
+})();
+let MARCA_TXT="";
+function pintarMarca(){
+  const el=document.getElementById("marca"); if(!el) return;
+  let quien=(S.ficha&&S.ficha.nombre)||"";
+  if(!quien){ try{ const c=localStorage.getItem("recatelo-codigo"); if(c) quien="Código "+c; }catch(_){} }
+  if(!S.uid){ el.style.backgroundImage="none"; MARCA_TXT=""; return; }
+  const txt=("Asoc. Vecinos Recatelo · "+(quien||"Socio/a")+" · "+new Date().toLocaleDateString("es-ES")).replace(/[<&>"]/g,"");
+  if(txt===MARCA_TXT) return; MARCA_TXT=txt;
+  const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="360" height="200"><text x="10" y="120" transform="rotate(-25 180 100)" font-family="sans-serif" font-size="15" font-weight="700" fill="#000">${txt}</text></svg>`;
+  el.style.backgroundImage=`url("data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}")`;
+}
 /* ---------- arranque ---------- */
 (function init(){
   // Siempre se abre en Inicio; solo una notificación (?n=1#pestaña) abre otra pestaña
