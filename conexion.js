@@ -14,6 +14,7 @@
   /* ---------- archivos ---------- */
   window.blobUrl = function(id){
     if(!id || id === DEFAULT_LOGO) return "logo.jpg";
+    if(id.startsWith("docs/")) return id; // documentos fijos que van dentro de la app
     return sb.storage.from("archivos").getPublicUrl(id).data.publicUrl;
   };
 
