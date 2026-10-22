@@ -17,7 +17,7 @@ self.addEventListener("fetch", e => {
     })());
     return;
   }
-  if(e.request.method !== "GET" || url.origin !== location.origin || url.pathname.includes("/docs/")) return; // los datos siempre van a internet
+  if(e.request.method !== "GET" || url.origin !== location.origin || url.pathname.includes("/docs/")) return; // los datos y los PDF grandes siempre van a internet
   e.respondWith(fetch(e.request, { cache: "no-cache" }).then(r => { const copy = r.clone(); caches.open(CACHE).then(c => c.put(e.request, copy)); return r; }).catch(() => caches.match(e.request)));
 });
 
