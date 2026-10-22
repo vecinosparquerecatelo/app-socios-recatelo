@@ -172,6 +172,7 @@
   function showLogin(msg){
     const el = document.createElement("div"); el.className = "acc-bg"; el.id = "acc";
     el.innerHTML = `<div class="acc">
+      ${window.idiomaHTML ? idiomaHTML() : ""}
       <img src="logo.jpg" alt="Asociación de Vecinos Parque de Rosalía de Castro-Recatelo">
       <h1>App de socios</h1>
       <div class="tabs2"><button type="button" data-m="socio" aria-pressed="true">Soy socio/a</button><button type="button" data-m="dir" aria-pressed="false">Soy de la directiva</button></div>

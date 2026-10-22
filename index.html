@@ -163,6 +163,7 @@ body.con-fab footer{padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))}
     <div class="brand">
       <span id="brand-logo"><svg width="40" height="40" viewBox="0 0 40 40" aria-hidden="true"><rect width="40" height="40" rx="10" fill="currentColor" opacity=".16"/><path d="M8 30V18l6-5 6 5v12M20 30V14l6-5 6 5v16M6 30h28" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/><rect x="12" y="22" width="4" height="8" fill="currentColor"/><rect x="24" y="17" width="4" height="4" fill="currentColor"/></svg></span>
       <div><small>Asociación de Vecinos</small><h1>Parque Rosalía de Castro-Recatelo</h1></div>
+      <span id="idioma-top"></span>
     </div>
     <nav class="tabs" id="tabs" role="tablist" aria-label="Secciones"></nav>
   </div>
@@ -436,6 +437,9 @@ body.con-fab footer{padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))}
 
 <script src="config.js"></script>
 <script src="vendor/supabase.js"></script>
+<script src="gl.js"></script>
+<script src="i18n.js"></script>
+<script>document.getElementById("idioma-top").innerHTML = idiomaHTML();</script>
 <script src="conexion.js"></script>
 <script>
 const GROUPS = [
@@ -683,7 +687,7 @@ const VIEWS = {
     const puedeSubir = SOC_ALBS.includes(f) && S.uid && !S.canEdit && !S.noDb && (window.subirFotoSocio || S.assets);
     const n=(S.fsElegidas||[]).length;
     const subir = puedeSubir ? `<form class="card" id="fs-form" novalidate><h3>Sube tus fotos</h3><p class="meta">${f===LIBRE?"Esta carpeta es de los socios: cualquier tema vale. Solo las ven los socios.":"Enseña lo que hay que arreglar en el barrio: baches, suciedad, farolas, aceras… Las ven la directiva y los socios."}</p>
-      <label class="field"><span>Carpeta</span><select id="fs-alb">${SOC_ALBS.map(a=>`<option${a===f?" selected":""}>${esc(a)}</option>`).join("")}</select></label>
+      <label class="field"><span>Carpeta</span><select id="fs-alb">${SOC_ALBS.map(a=>`<option value="${esc(a)}"${a===f?" selected":""}>${esc(a)}</option>`).join("")}</select></label>
       <label class="field"><span>Elige una o varias fotos</span><input id="fs-files" type="file" accept="image/*,.jpg,.jpeg,.png,.webp,.gif" multiple></label>
       ${n?`<p class="meta">${n} foto${n===1?"":"s"} elegida${n===1?"":"s"}. Puedes volver a pulsar para añadir más. <button type="button" class="btn ghost small" id="fs-limpiar">Quitar todas</button></p>`:""}
       <p class="err" id="fs-err" hidden></p><div class="row-actions"><button class="btn" id="fs-send">Subir ${n>1?n+" fotos":"foto"}</button></div></form>` : "";
@@ -862,7 +866,7 @@ function cursoCard(it, past){
     <h3>${esc(it.title)}</h3>${it.time||it.place?`<div class="meta">${it.time?"🕒 "+esc(it.time):""}${it.time&&it.place?" · ":""}${it.place?"📍 "+esc(it.place):""}</div>`:""}
     ${it.body?`<p class="body">${esc(it.body)}</p>`:""}${attach(it)}${action}${admin}${adminRow(it)}</article>`;
 }
-function estLabel(t){ const parts=t.split(/[.:]\s*/); let l=(parts.length>1?parts.slice(1).join(" "):t).trim().replace(/\.$/,"")||t; l=l.toLowerCase(); return l.charAt(0).toUpperCase()+l.slice(1); }
+function estLabel(t){ if(window.trGL) t=trGL(t); const parts=t.split(/[.:]\s*/); let l=(parts.length>1?parts.slice(1).join(" "):t).trim().replace(/\.$/,"")||t; l=l.toLowerCase(); return l.charAt(0).toUpperCase()+l.slice(1); }
 function colNews(it){
   const lot = it.link==="loteria";
   const body = lot ? (it.body||"").replace("en la pestaña Lotería","aquí abajo") : it.body;
