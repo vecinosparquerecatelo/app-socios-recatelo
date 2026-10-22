@@ -1,5 +1,12 @@
 /* Traducción al gallego de los textos de la app (castellano -> galego). La usa i18n.js. */
 window.GL_DICT = {
+ "Ofrezco empleo": "Ofrezo emprego",
+  "Busco empleo": "Busco emprego",
+  "Empleo": "Emprego",
+  "Precio o sueldo (opcional)": "Prezo ou soldo (opcional)",
+  "Por ejemplo: busco cuidadora por las tardes": "Por exemplo: busco coidadora polas tardes",
+  "No hay ofertas ni demandas de empleo todavía.": "Aínda non hai ofertas nin demandas de emprego.",
+  "Alquila, vende, dona, compra o haz trueque entre vecinos, y ofrece o busca empleo en la pestaña Empleo. Solo los socios ven los anuncios. Si te interesa uno, pulsa “Me interesa” y le escribes directamente a quien lo publicó.": "Aluga, vende, doa, compra ou fai troco entre veciños, e ofrece ou busca emprego na pestana Emprego. Só os socios ven os anuncios. Se che interesa un, preme “Interésame” e escríbeslle directamente a quen o publicou.",
 "(el cuadrado con la flecha hacia arriba), arriba en la barra.": "(o cadrado coa frecha cara arriba), arriba na barra.",
 "(el cuadrado con la flecha hacia arriba). En los iPhone más nuevos, toca antes los tres puntos": "(o cadrado coa frecha cara arriba). Nos iPhone máis novos, toca antes os tres puntos",
 "+ Añadir": "+ Engadir",

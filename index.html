@@ -454,6 +454,7 @@ const GROUPS = [
 const TABS = GROUPS.flatMap(g=>g.subs.map(([id,label])=>({id,label})));
 const groupOf = tab => GROUPS.find(g=>g.subs.some(([id])=>id===tab)) || GROUPS[0];
 const MTIPOS = ["Alquilo","Vendo","Dono","Compro","Trueque"];
+const ETIPOS = ["Ofrezco empleo","Busco empleo"];
 const RGPD_VERSION = "2026-10";
 const ENTIDADES = ["Alcaldía","BNG","PSOE","Subdelegación del Gobierno","Xunta de Galicia","Diputación Provincial de Lugo","Policía Local","Policía Autonómica","Policía Nacional","Otra"];
 const COLECTIVOS = [
@@ -641,21 +642,22 @@ const VIEWS = {
     const f=S.filter.mercadillo;
     let list=[]; for(const d of S.mercAll) for(const a of (d.anuncios||[])) list.push({...a, uid:d.uid});
     list.sort((x,y)=>(y.at||"").localeCompare(x.at||""));
-    if(f!=="todas") list=list.filter(a=>a.tipo===f);
-    const card = a => `<article class="card"><div class="meta"><span class="pill ${a.tipo==="Dono"?"p-green":a.tipo==="Compro"?"p-amber":a.tipo==="Trueque"?"p-blue":a.tipo==="Alquilo"?"p-green":"p-red"}">${esc(a.tipo)}</span>${a.precio?`<span><strong>${esc(a.precio)}</strong></span>`:""}<span>${a.at?new Date(a.at).toLocaleDateString("es-ES",{day:"numeric",month:"long"}):""}</span></div>
+    if(f==="Empleo") list=list.filter(a=>ETIPOS.includes(a.tipo));
+    else if(f!=="todas") list=list.filter(a=>a.tipo===f);
+    const card = a => `<article class="card"><div class="meta"><span class="pill ${a.tipo==="Dono"?"p-green":a.tipo==="Compro"?"p-amber":a.tipo==="Trueque"?"p-blue":a.tipo==="Alquilo"?"p-green":a.tipo==="Ofrezco empleo"?"p-blue":a.tipo==="Busco empleo"?"p-amber":"p-red"}">${esc(a.tipo)}</span>${a.precio?`<span><strong>${esc(a.precio)}</strong></span>`:""}<span>${a.at?new Date(a.at).toLocaleDateString("es-ES",{day:"numeric",month:"long"}):""}</span></div>
       <h3>${esc(a.titulo)}</h3>${a.texto?`<p class="body">${esc(a.texto)}</p>`:""}<p class="body"><strong>Contacto:</strong> ${esc(a.contacto)}${a.nombre?" · "+esc(a.nombre):""}</p>
       ${a.uid!==S.uid?mercContacto(a):""}
       ${(a.uid===S.uid||S.canEdit)?`<div class="row-actions"><button class="btn ghost small" data-merc-del="${esc(a.uid)}|${esc(a.id)}">Quitar anuncio</button></div>`:""}</article>`;
     let form="";
     if(S.uid && !S.noDb) form = `<details class="card"><summary><strong>Poner un anuncio</strong></summary><form id="mc-form" novalidate style="display:grid;gap:12px;margin-top:12px">
-      <div class="two">${field("mc-tipo","Qué quieres hacer",sel("mc-tipo",MTIPOS,"Alquilo"))}${field("mc-precio","Precio (opcional)",`<input id="mc-precio" placeholder="Por ejemplo: 20 € o 50 €/mes">`)}</div>
-      ${field("mc-titulo","Título",`<input id="mc-titulo" placeholder="Por ejemplo: bicicleta de niño">`)}
+      <div class="two">${field("mc-tipo","Qué quieres hacer",sel("mc-tipo",[...MTIPOS,...ETIPOS],f==="Empleo"?"Ofrezco empleo":"Alquilo"))}${field("mc-precio","Precio o sueldo (opcional)",`<input id="mc-precio" placeholder="Por ejemplo: 20 € o 50 €/mes">`)}</div>
+      ${field("mc-titulo","Título",`<input id="mc-titulo" placeholder="${f==="Empleo"?"Por ejemplo: busco cuidadora por las tardes":"Por ejemplo: bicicleta de niño"}">`)}
       ${field("mc-texto","Descripción (opcional)",`<textarea id="mc-texto"></textarea>`)}
       <div class="two">${field("mc-contacto","Teléfono o correo para contactar",`<input id="mc-contacto" autocomplete="tel">`)}${field("mc-nombre","Tu nombre (opcional)",`<input id="mc-nombre" autocomplete="name">`)}</div>
       <p class="err" id="mc-err" hidden></p><div class="row-actions"><button class="btn" id="mc-send">Publicar anuncio</button></div></form></details>`;
-    return `<div><h2>Mercadiño</h2><p class="lead">Alquila, vende, dona, compra o haz trueque entre vecinos. Solo los socios ven los anuncios. Si te interesa uno, pulsa “Me interesa” y le escribes directamente a quien lo publicó.</p></div>
-      ${form}${filterBar("mercadillo",MTIPOS)}
-      <section class="stack">${list.length?list.map(card).join(""):emptyBox("No hay anuncios todavía.","Pon el primero con “Poner un anuncio”.")}</section>`;
+    return `<div><h2>Mercadiño</h2><p class="lead">Alquila, vende, dona, compra o haz trueque entre vecinos, y ofrece o busca empleo en la pestaña Empleo. Solo los socios ven los anuncios. Si te interesa uno, pulsa “Me interesa” y le escribes directamente a quien lo publicó.</p></div>
+      ${form}${filterBar("mercadillo",["Empleo",...MTIPOS])}
+      <section class="stack">${list.length?list.map(card).join(""):emptyBox(f==="Empleo"?"No hay ofertas ni demandas de empleo todavía.":"No hay anuncios todavía.","Pon el primero con “Poner un anuncio”.")}</section>`;
   },
   sugerencias(){
     const list=sortDesc(S.items.filter(i=>i.section==="sugerencias"||(i.section==="quejas"&&i.kind!=="proyecto")));
@@ -900,7 +902,10 @@ function render(){
 
 $("#main").addEventListener("click", e=>{
   const g=e.target.closest("[data-go]"); if(g) return go(g.dataset.go);
-  const fb=e.target.closest("[data-f]"); if(fb){ S.filter[fb.parentElement.dataset.filter]=fb.dataset.f; return render(); }
+  const fb=e.target.closest("[data-f]"); if(fb){ const k=fb.parentElement.dataset.filter, v=fb.dataset.f; S.filter[k]=v; render();
+    // En el Mercadiño, el anuncio nuevo toma el tipo de la pestaña abierta
+    const mt=document.getElementById("mc-tipo"); if(k==="mercadillo" && mt){ if(v==="Empleo"){ if(!ETIPOS.includes(mt.value)) mt.value="Ofrezco empleo"; } else if(v!=="todas") mt.value=v; }
+    return; }
   const ed=e.target.closest("[data-edit]"); if(ed){ const it=S.items.find(i=>i.id===ed.dataset.edit); if(it) openForm(it.section,it); return; }
   const dl=e.target.closest("[data-del]"); if(dl){ askDelete(dl.dataset.del); }
   const tr=e.target.closest("[data-trim]"); if(tr){ recortarFotos([tr.dataset.trim], tr); return; }
