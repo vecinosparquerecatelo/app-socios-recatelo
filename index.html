@@ -1013,7 +1013,7 @@ function cuotaSocio(){
   if(!S.uid || S.canEdit) return "";
   const pag=!!(S.cuota&&S.cuota.pagadas&&S.cuota.pagadas[anioCuota()]);
   return pag ? `<section class="card"><h3>Tu cuota de ${anioCuota()}</h3><p><span class="pill p-green">Al día</span> Gracias por tu apoyo a la asociación.</p></section>`
-    : `<section class="card"><h3>Tu cuota de ${anioCuota()}</h3><p><span class="pill p-amber">Pendiente</span> La directiva todavía no tiene apuntado tu pago de este año. Si ya has pagado, no hace falta que hagas nada: lo marcaremos en cuanto lo veamos en el banco.</p><p class="body">Cuota: 35 € al año. Transferencia o ingreso en Caixa Rural Galega, a nombre de ASOC DE VECINOS PARQUE DE ROSALIA DE CASTRO-RECA. IBAN: ES15 3070 0001 2563 4625 3229. Concepto: tu nombre y DNI.</p></section>`;
+    : `<section class="card"><h3>Tu cuota de ${anioCuota()}</h3><p><span class="pill p-amber">Pendiente</span> La directiva todavía no tiene apuntado tu pago de este año. Si ya has pagado, no hace falta que hagas nada: lo marcaremos en cuanto lo veamos en el banco.</p><p class="body">Cuota: 35 € al año, en la primera quincena de enero. Transferencia o ingreso en Caixa Rural Galega, a nombre de ASOC DE VECINOS PARQUE DE ROSALIA DE CASTRO-RECA. IBAN: ES15 3070 0001 2563 4625 3229. Concepto: tu nombre y DNI.</p></section>`;
 }
 async function startCuotas(){
   if(!S.db||!S.uid) return;

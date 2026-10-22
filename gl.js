@@ -65,7 +65,7 @@ window.GL_DICT = {
   "Al día": "Ao día",
   "Gracias por tu apoyo a la asociación.": "Grazas polo teu apoio á asociación.",
   "La directiva todavía no tiene apuntado tu pago de este año. Si ya has pagado, no hace falta que hagas nada: lo marcaremos en cuanto lo veamos en el banco.": "A directiva aínda non ten anotado o teu pagamento deste ano. Se xa pagaches, non fai falta que fagas nada: marcarémolo en canto o vexamos no banco.",
-  "Cuota: 35 € al año. Transferencia o ingreso en Caixa Rural Galega, a nombre de ASOC DE VECINOS PARQUE DE ROSALIA DE CASTRO-RECA. IBAN: ES15 3070 0001 2563 4625 3229. Concepto: tu nombre y DNI.": "Cota: 35 € ao ano. Transferencia ou ingreso en Caixa Rural Galega, a nome de ASOC DE VECINOS PARQUE DE ROSALIA DE CASTRO-RECA. IBAN: ES15 3070 0001 2563 4625 3229. Concepto: o teu nome e DNI.",
+  "Cuota: 35 € al año, en la primera quincena de enero. Transferencia o ingreso en Caixa Rural Galega, a nombre de ASOC DE VECINOS PARQUE DE ROSALIA DE CASTRO-RECA. IBAN: ES15 3070 0001 2563 4625 3229. Concepto: tu nombre y DNI.": "Cota: 35 € ao ano, na primeira quincena de xaneiro. Transferencia ou ingreso en Caixa Rural Galega, a nome de ASOC DE VECINOS PARQUE DE ROSALIA DE CASTRO-RECA. IBAN: ES15 3070 0001 2563 4625 3229. Concepto: o teu nome e DNI.",
   "Cuota {0}": "Cota {0}",
   "✓ Pagada": "✓ Pagada",
   "Aquí te contamos, con palabras sencillas, qué hacemos con tus datos y cómo los cuidamos, tal y como piden el Reglamento General de Protección de Datos (RGPD) y la Ley Orgánica 3/2018 (LOPDGDD).": "Aquí contámosche, con palabras sinxelas, que facemos cos teus datos e como os coidamos, tal e como piden o Regulamento Xeral de Protección de Datos (RXPD) e a Lei Orgánica 3/2018 (LOPDGDD).",
