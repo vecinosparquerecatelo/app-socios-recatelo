@@ -22,8 +22,8 @@
   .idioma button{border:0;background:none;color:inherit;font:inherit;font-size:.85rem;font-weight:600;padding:5px 12px;border-radius:999px;cursor:pointer;opacity:.85}
   .idioma button[aria-pressed="true"]{background:#fff;color:#2f5d46;opacity:1}
   .acc .idioma{background:#e8efe9;border-color:#c9d8cd;color:#24413b;justify-self:center}
-  .top .idioma{margin-left:auto;flex:none}
-  #idioma-top{margin-left:auto;flex:none}`;
+  #idioma-top{display:flex;justify-content:flex-end;padding-top:10px;margin-bottom:-6px}
+  #idioma-top .idioma button{font-size:.8rem;padding:4px 11px}`;
   document.head.appendChild(css);
 
   if(lang !== "gl") return;
@@ -81,9 +81,14 @@
   function walk(root){
     if(root.nodeType === 3){ textNode(root); return; }
     if(root.nodeType !== 1 && root.nodeType !== 11) return;
-    if(root.nodeType === 1){ if(omitir(root)) return; attrs(root); }
+    if(root.nodeType === 1){ if(root.hasAttribute("data-noi18n")) return; attrs(root); if(omitir(root)) return; }
     const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT, {
-      acceptNode: n => n.nodeType === 1 && (SKIP.has(n.tagName) || n.hasAttribute("data-noi18n") || n.isContentEditable) ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT
+      acceptNode: n => {
+        if(n.nodeType !== 1) return NodeFilter.FILTER_ACCEPT;
+        if(n.hasAttribute("data-noi18n") || n.isContentEditable) return NodeFilter.FILTER_REJECT;
+        if(SKIP.has(n.tagName)){ attrs(n); return NodeFilter.FILTER_REJECT; } // los campos: solo el texto de ayuda
+        return NodeFilter.FILTER_ACCEPT;
+      }
     });
     let n; while((n = w.nextNode())){ if(n.nodeType === 3) textNode(n); else attrs(n); }
   }
