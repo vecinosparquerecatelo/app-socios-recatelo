@@ -380,7 +380,7 @@
         <span style="display:flex;flex-wrap:wrap;gap:6px">${k.activo ? `<button class="btn ghost small" data-wa="${escH(k.codigo)}" data-n="${escH(k.nombre)}">WhatsApp</button><button class="btn ghost small" data-quitar="${escH(k.codigo)}" data-n="${escH(k.nombre)}">Quitar acceso</button>` : ""}<button class="btn ghost small" data-borrar="${escH(k.codigo)}" data-n="${escH(k.nombre)}">Borrar</button></span>
       </li>`).join("");
     sheet(`<h2>Códigos de socios</h2>
-      <p class="body">Cada socio recibe su propio código. Funciona en un máximo de 2 móviles o navegadores de esa persona; si alguien lo reenvía, no le servirá a nadie más. Si un socio cambia de móvil, quítale el acceso y créale uno nuevo.</p>
+      <p class="body">Cada socio tiene un solo código. Funciona en un máximo de 2 móviles o navegadores de esa persona; si alguien lo reenvía, no le servirá a nadie más. Si un socio cambia de móvil, quítale el acceso y créale uno nuevo.</p>
       ${aviso || ""}
       <label for="cod-nombre">Nombre del socio<input id="cod-nombre" autocomplete="off"></label><p class="err" id="cod-err" hidden></p>
       <div class="row-actions"><button class="btn" id="cod-crear">Crear código</button></div>
@@ -388,6 +388,10 @@
       root.querySelector("#cod-crear").onclick = async () => {
         const n = root.querySelector("#cod-nombre").value.trim(); const er = root.querySelector("#cod-err");
         if(n.length < 2){ er.textContent = "Escribe el nombre del socio."; er.hidden = false; return; }
+        // Un solo código por socio: si ya tiene uno con acceso, no se crea otro
+        const clave = v => String(v || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/\s+/g, " ").trim();
+        const ya = (lista || []).find(k => k.activo && clave(k.nombre) === clave(n));
+        if(ya){ er.textContent = `${ya.nombre} ya tiene su código (${ya.codigo}). Si ha cambiado de móvil, pulsa «Quitar acceso» en su código y crea uno nuevo.`; er.hidden = false; return; }
         const { data: c } = await sb.rpc("crear_codigo", { nombre: n });
         if(!c){ er.textContent = "No se ha podido crear. Inténtalo de nuevo."; er.hidden = false; return; }
         codigos(`<div class="notice">Código de <strong>${escH(n)}</strong>: <strong>${escH(c)}</strong><br><a class="btn small" style="margin-top:8px" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent(mensaje(n, c))}">Enviar por WhatsApp</a></div>`);
