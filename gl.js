@@ -1,6 +1,5 @@
 /* Traducción al gallego de los textos de la app (castellano -> galego). La usa i18n.js. */
 window.GL_DICT = {
-  "¿Para qué BIC?": "Para que BIC?",
   "Desde la asociación pedimos que el Parque de Rosalía de Castro sea declarado Bien de Interés Cultural (BIC), la máxima protección que reconoce la Ley 5/2016, de 4 de mayo, del patrimonio cultural de Galicia.": "Desde a asociación pedimos que o Parque de Rosalía de Castro sexa declarado Ben de Interese Cultural (BIC), a máxima protección que recoñece a Lei 5/2016, do 4 de maio, do patrimonio cultural de Galicia.",
   "Un BIC no se puede alterar sin control de Patrimonio: protege su trazado, su arbolado, sus elementos históricos y su entorno, junto a la Muralla romana. Es la garantía de que el gran pulmón verde de Lugo llegue intacto a las próximas generaciones.": "Un BIC non se pode alterar sen control de Patrimonio: protexe o seu trazado, o seu arborado, os seus elementos históricos e a súa contorna, xunto á Muralla romana. É a garantía de que o gran pulmón verde de Lugo chegue intacto ás próximas xeracións.",
   "Aquí reunimos la auditoría del parque y los documentos que lo justifican.": "Aquí reunimos a auditoría do parque e os documentos que o xustifican.",

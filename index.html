@@ -448,7 +448,7 @@ const GROUPS = [
   {label:"Cursos", subs:[["cursos","Cursos"]]},
   {label:"Mercadiño", subs:[["mercadillo","Mercadiño"]]},
   {label:"Sugerencias", subs:[["sugerencias","Sugerencias"]]},
-  {label:"¿Para qué BIC?", subs:[["bic","¿Para qué BIC?"]]},
+  {label:"Parque Rosalía BIC", subs:[["bic","Parque Rosalía BIC"]]},
   {label:"La asociación", subs:[["reuniones","Reuniones"],["proyectos","Proyectos"],["colectivos","Colectivos"],["estatutos","Estatutos"]]},
   {label:"Fotos y carteles", subs:[["fotos","Fotos"],["carteles","Carteles"]]},
   {label:"Mi cuenta", subs:[["misdatos","Mis datos"],["privacidad","Protección de datos"]]}
@@ -636,7 +636,7 @@ const VIEWS = {
   bic(){
     const list=sortDesc(bySection("bic"));
     const card=it=>`<article class="card">${it.date?`<div class="meta"><span>${fmtDate(it.date)}</span></div>`:""}<h3>${esc(it.title)}</h3>${it.body?`<p class="body">${esc(it.body)}</p>`:""}${attach(it)}${adminRow(it)}</article>`;
-    return `<div><h2>¿Para qué BIC?</h2><p class="lead">Desde la asociación pedimos que el Parque de Rosalía de Castro sea declarado Bien de Interés Cultural (BIC), la máxima protección que reconoce la Ley 5/2016, de 4 de mayo, del patrimonio cultural de Galicia.</p></div>
+    return `<div><h2>Parque Rosalía BIC</h2><p class="lead">Desde la asociación pedimos que el Parque de Rosalía de Castro sea declarado Bien de Interés Cultural (BIC), la máxima protección que reconoce la Ley 5/2016, de 4 de mayo, del patrimonio cultural de Galicia.</p></div>
       <section class="card legal"><p>Un BIC no se puede alterar sin control de Patrimonio: protege su trazado, su arbolado, sus elementos históricos y su entorno, junto a la Muralla romana. Es la garantía de que el gran pulmón verde de Lugo llegue intacto a las próximas generaciones.</p><p>Aquí reunimos la auditoría del parque y los documentos que lo justifican.</p></section>
       <section class="stack">${list.length?list.map(card).join(""):emptyBox("Pronto publicaremos aquí la auditoría del parque.",S.canEdit?"Pulsa “+ Añadir documento” y sube el PDF.":"")}</section>`;
   },
