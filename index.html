@@ -64,6 +64,7 @@ h3{font-family:var(--display);font-weight:600;font-size:1.12rem;margin:0;text-wr
 .empty{border:2px dashed var(--line);border-radius:var(--r);padding:20px;color:var(--muted);text-align:left}
 .empty strong{color:var(--ink);display:block;margin-bottom:2px}
 .filters{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px}
+.filters[data-filter="mercadillo"]{flex-wrap:wrap}
 .filters button{flex:none;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:6px 12px;font:inherit;font-size:.9rem;cursor:pointer}
 .filters button[aria-pressed="true"]{background:var(--green);border-color:var(--green);color:var(--surface)}
 .cuota{background:var(--green);color:var(--surface);border-radius:var(--r);padding:20px;display:grid;gap:6px}
@@ -455,6 +456,8 @@ const TABS = GROUPS.flatMap(g=>g.subs.map(([id,label])=>({id,label})));
 const groupOf = tab => GROUPS.find(g=>g.subs.some(([id])=>id===tab)) || GROUPS[0];
 const MTIPOS = ["Alquilo","Vendo","Dono","Compro","Trueque"];
 const ETIPOS = ["Ofrezco empleo","Busco empleo"];
+// Publicaciones que siempre deben estar, aunque falten en la base de datos (la directiva puede editarlas o borrarlas)
+const SEMILLAS = [{"id": "curso-ictus-atencion-temprana", "section": "cursos", "title": "Prevención del ictus y atención temprana", "date": "", "cuando": "Noviembre de 2026 (día por determinar)", "time": "Duración: 3 horas", "place": "Por determinar, en las inmediaciones del barrio", "body": "Curso práctico sobre cómo prevenir el ictus y reconocer sus primeros síntomas, y sobre la importancia de la atención temprana para actuar a tiempo.\n\nLo imparte Cruz Roja, a través de los especialistas de su Centro de Parálisis y Daño Cerebral.\n\nDuración: 3 horas. Será en noviembre, en un lugar cercano al barrio. El día y el sitio se anunciarán próximamente; si te apuntas ya, te avisaremos en cuanto estén confirmados.", "createdAt": "2026-10-19T07:50:00Z", "updatedAt": "2026-10-19T07:54:00Z"}];
 const RGPD_VERSION = "2026-10";
 const ENTIDADES = ["Alcaldía","BNG","PSOE","Subdelegación del Gobierno","Xunta de Galicia","Diputación Provincial de Lugo","Policía Local","Policía Autonómica","Policía Nacional","Otra"];
 const COLECTIVOS = [
@@ -578,8 +581,8 @@ function abrirVisor(i){
   let x0=null; v.addEventListener("touchstart",e=>{x0=e.touches[0].clientX},{passive:true}); v.addEventListener("touchend",e=>{ if(x0===null) return; const dx=e.changedTouches[0].clientX-x0; if(Math.abs(dx)>50) mover(dx<0?1:-1); x0=null; });
   document.addEventListener("keydown",tecla); document.body.style.overflow="hidden"; document.body.appendChild(v); pinta(); v.querySelector(".vx").focus();
 }
-function filterBar(key, opts){
-  return `<div class="filters" data-filter="${key}">${["todas",...opts].map(o=>`<button data-f="${esc(o)}" aria-pressed="${S.filter[key]===o}">${o==="todas"?"Todas":esc(o)}</button>`).join("")}</div>`;
+function filterBar(key, opts, sinTodas){
+  return `<div class="filters" data-filter="${key}">${(sinTodas?opts:["todas",...opts]).map(o=>`<button data-f="${esc(o)}" aria-pressed="${S.filter[key]===o}">${o==="todas"?"Todas":esc(o)}</button>`).join("")}</div>`;
 }
 function sortDesc(a){ return a.slice().sort((x,y)=>(y.date||"").localeCompare(x.date||"")); }
 
@@ -618,11 +621,16 @@ const VIEWS = {
       ${pas.length?`<section class="stack"><h3>Anteriores</h3>${pas.map(avisoCard).join("")}</section>`:""}`;
   },
   reuniones(){
-    let list=sortDesc(bySection("reuniones")); const f=S.filter.reuniones;
-    if(f!=="todas") list=list.filter(i=>i.entity===f);
+    let list=sortDesc(bySection("reuniones"));
+    // Sin pestaña "Todas": cada reunión está en la pestaña de su institución
+    const ents=ENTIDADES.filter(e=>e!=="Otra"), hayOtras=list.some(i=>!ents.includes(i.entity));
+    const tabs=hayOtras?[...ents,"Otra"]:ents;
+    if(!tabs.includes(S.filter.reuniones)) S.filter.reuniones = list.length ? (ents.includes(list[0].entity)?list[0].entity:"Otra") : ents[0];
+    const f=S.filter.reuniones;
+    list = f==="Otra" ? list.filter(i=>!ents.includes(i.entity)) : list.filter(i=>i.entity===f);
     return `<div><h2>Reuniones con instituciones</h2><p class="lead">Resúmenes de lo tratado con la Alcaldía, los grupos políticos, la Subdelegación del Gobierno, la Xunta de Galicia, la Diputación Provincial de Lugo y las policías Local, Autonómica y Nacional.</p></div>
-      ${filterBar("reuniones",ENTIDADES.filter(e=>e!=="Otra"))}
-      <section class="stack">${list.length?list.map(reunionCard).join(""):emptyBox(f==="todas"?"Todavía no hay resúmenes.":"No hay resúmenes con "+esc(f)+".","Añade el resumen indicando con quién fue la reunión.")}</section>`;
+      ${filterBar("reuniones",tabs,true)}
+      <section class="stack">${list.length?list.map(reunionCard).join(""):emptyBox(f==="Otra"?"No hay resúmenes con otras instituciones.":"No hay resúmenes con "+esc(f)+".","Añade el resumen indicando con quién fue la reunión.")}</section>`;
   },
   proyectos(){
     const list=sortDesc(S.items.filter(i=>i.section==="proyectos"||(i.section==="quejas"&&i.kind==="proyecto")));
@@ -638,25 +646,26 @@ const VIEWS = {
         if(d.length>=11){ b.push(`<a class="btn small" target="_blank" rel="noopener" href="https://wa.me/${d}?text=${encodeURIComponent(msg)}">Me interesa: WhatsApp</a>`); b.push(`<a class="btn ghost small" href="tel:+${d}">Llamar</a>`); } }
       return b.length?`<div class="row-actions" style="justify-content:flex-start">${b.join("")}</div>`:"";
     };
-    if(!S.filter.mercadillo) S.filter.mercadillo="todas";
-    const f=S.filter.mercadillo;
     let list=[]; for(const d of S.mercAll) for(const a of (d.anuncios||[])) list.push({...a, uid:d.uid});
     list.sort((x,y)=>(y.at||"").localeCompare(x.at||""));
-    if(f==="Empleo") list=list.filter(a=>ETIPOS.includes(a.tipo));
-    else if(f!=="todas") list=list.filter(a=>a.tipo===f);
+    // Sin pestaña "Todas": se abre en la pestaña del anuncio más reciente
+    const pestMerc = t => ETIPOS.includes(t) ? "Empleo" : t;
+    if(![...MTIPOS,"Empleo"].includes(S.filter.mercadillo)) S.filter.mercadillo = list.length ? pestMerc(list[0].tipo) : MTIPOS[0];
+    const f=S.filter.mercadillo;
+    list = f==="Empleo" ? list.filter(a=>ETIPOS.includes(a.tipo)) : list.filter(a=>a.tipo===f);
     const card = a => `<article class="card"><div class="meta"><span class="pill ${a.tipo==="Dono"?"p-green":a.tipo==="Compro"?"p-amber":a.tipo==="Trueque"?"p-blue":a.tipo==="Alquilo"?"p-green":a.tipo==="Ofrezco empleo"?"p-blue":a.tipo==="Busco empleo"?"p-amber":"p-red"}">${esc(a.tipo)}</span>${a.precio?`<span><strong>${esc(a.precio)}</strong></span>`:""}<span>${a.at?new Date(a.at).toLocaleDateString("es-ES",{day:"numeric",month:"long"}):""}</span></div>
       <h3>${esc(a.titulo)}</h3>${a.texto?`<p class="body">${esc(a.texto)}</p>`:""}<p class="body"><strong>Contacto:</strong> ${esc(a.contacto)}${a.nombre?" · "+esc(a.nombre):""}</p>
       ${a.uid!==S.uid?mercContacto(a):""}
       ${(a.uid===S.uid||S.canEdit)?`<div class="row-actions"><button class="btn ghost small" data-merc-del="${esc(a.uid)}|${esc(a.id)}">Quitar anuncio</button></div>`:""}</article>`;
     let form="";
     if(S.uid && !S.noDb) form = `<details class="card"><summary><strong>Poner un anuncio</strong></summary><form id="mc-form" novalidate style="display:grid;gap:12px;margin-top:12px">
-      <div class="two">${field("mc-tipo","Qué quieres hacer",sel("mc-tipo",[...MTIPOS,...ETIPOS],f==="Empleo"?"Ofrezco empleo":"Alquilo"))}${field("mc-precio","Precio o sueldo (opcional)",`<input id="mc-precio" placeholder="Por ejemplo: 20 € o 50 €/mes">`)}</div>
+      <div class="two">${field("mc-tipo","Qué quieres hacer",sel("mc-tipo",[...MTIPOS,...ETIPOS],f==="Empleo"?"Ofrezco empleo":f))}${field("mc-precio","Precio o sueldo (opcional)",`<input id="mc-precio" placeholder="Por ejemplo: 20 € o 50 €/mes">`)}</div>
       ${field("mc-titulo","Título",`<input id="mc-titulo" placeholder="${f==="Empleo"?"Por ejemplo: busco cuidadora por las tardes":"Por ejemplo: bicicleta de niño"}">`)}
       ${field("mc-texto","Descripción (opcional)",`<textarea id="mc-texto"></textarea>`)}
       <div class="two">${field("mc-contacto","Teléfono o correo para contactar",`<input id="mc-contacto" autocomplete="tel">`)}${field("mc-nombre","Tu nombre (opcional)",`<input id="mc-nombre" autocomplete="name">`)}</div>
       <p class="err" id="mc-err" hidden></p><div class="row-actions"><button class="btn" id="mc-send">Publicar anuncio</button></div></form></details>`;
     return `<div><h2>Mercadiño</h2><p class="lead">Alquila, vende, dona, compra o haz trueque entre vecinos, y ofrece o busca empleo en la pestaña Empleo. Solo los socios ven los anuncios. Si te interesa uno, pulsa “Me interesa” y le escribes directamente a quien lo publicó.</p></div>
-      ${form}${filterBar("mercadillo",["Empleo",...MTIPOS])}
+      ${form}${filterBar("mercadillo",[...MTIPOS,"Empleo"],true)}
       <section class="stack">${list.length?list.map(card).join(""):emptyBox(f==="Empleo"?"No hay ofertas ni demandas de empleo todavía.":"No hay anuncios todavía.","Pon el primero con “Poner un anuncio”.")}</section>`;
   },
   sugerencias(){
@@ -782,7 +791,7 @@ const VIEWS = {
       else if(S.inscBlocked) note=`<div class="notice">Tu acceso solo permite leer. Pide a la directiva permiso de “Colaborador” para apuntarte a los cursos.</div>`;
     }
     return `<div><h2>Cursos</h2><p class="lead">Cursos y talleres para los socios. Mira el día y de qué trata cada uno, y apúntate con un toque.</p></div>${note}
-      <section class="stack"><h3>Próximos cursos</h3>${prox.length?prox.map(cursoCard).join(""):emptyBox("No hay cursos programados ahora mismo.","Añade un curso con su fecha, horario, lugar y explicación.")}</section>
+      <section class="stack"><h3>Próximos cursos</h3>${prox.length?prox.map(c=>cursoCard(c)).join(""):emptyBox("No hay cursos programados ahora mismo.","Añade un curso con su fecha, horario, lugar y explicación.")}</section>
       ${pas.length?`<section class="stack"><h3>Cursos anteriores</h3>${pas.map(c=>cursoCard(c,true)).join("")}</section>`:""}
       <section class="stack"><h3>Cursos realizados</h3><div class="card"><ul class="hechos">
         <li><strong>Primeros auxilios</strong>, con Cruz Roja <span class="meta">· diciembre de 2025</span></li>
@@ -904,7 +913,7 @@ $("#main").addEventListener("click", e=>{
   const g=e.target.closest("[data-go]"); if(g) return go(g.dataset.go);
   const fb=e.target.closest("[data-f]"); if(fb){ const k=fb.parentElement.dataset.filter, v=fb.dataset.f; S.filter[k]=v; render();
     // En el Mercadiño, el anuncio nuevo toma el tipo de la pestaña abierta
-    const mt=document.getElementById("mc-tipo"); if(k==="mercadillo" && mt){ if(v==="Empleo"){ if(!ETIPOS.includes(mt.value)) mt.value="Ofrezco empleo"; } else if(v!=="todas") mt.value=v; }
+    const mt=document.getElementById("mc-tipo"); if(k==="mercadillo" && mt){ if(v==="Empleo"){ if(!ETIPOS.includes(mt.value)) mt.value="Ofrezco empleo"; } else mt.value=v; }
     return; }
   const ed=e.target.closest("[data-edit]"); if(ed){ const it=S.items.find(i=>i.id===ed.dataset.edit); if(it) openForm(it.section,it); return; }
   const dl=e.target.closest("[data-del]"); if(dl){ askDelete(dl.dataset.del); }
@@ -922,7 +931,7 @@ $("#main").addEventListener("submit", async e=>{
   if(!a.contacto){ er.textContent="Pon un teléfono o correo para que te contacten."; er.hidden=false; return; }
   const btn=$("#mc-send"); btn.disabled=true; btn.textContent="Publicando…";
   const mine=(S.mercAll.find(d=>d.uid===S.uid)||{}).anuncios||[];
-  try{ await S.db.doc("mercadillo/"+S.uid).set({anuncios:[...mine,a].slice(-20)}); S.filter.mercadillo="todas"; render(); }
+  try{ await S.db.doc("mercadillo/"+S.uid).set({anuncios:[...mine,a].slice(-20)}); S.filter.mercadillo=ETIPOS.includes(a.tipo)?"Empleo":a.tipo; render(); }
   catch(x){ er.textContent="No se ha podido publicar. Vuelve a intentarlo."; er.hidden=false; btn.disabled=false; btn.textContent="Publicar anuncio"; }
 });
 $("#main").addEventListener("click", async e=>{
@@ -1243,7 +1252,8 @@ function askDelete(id){
   $("#d-no").onclick=closeSheet;
   $("#d-yes").onclick=async()=>{
     try{
-      await S.db.collection("items").doc(id).delete();
+      if(SEMILLAS.some(s=>s.id===id)) await S.db.collection("items").doc(id).set({section:"_borrado", updatedAt:new Date().toISOString()});
+      else await S.db.collection("items").doc(id).delete();
       if(it.photo && S.assets){ try{ await S.assets.delete(it.photo) }catch(e){} }
       if(it.doc && S.assets){ try{ await S.assets.delete(it.doc) }catch(e){} }
       closeSheet();
@@ -1284,7 +1294,8 @@ async function recibirCompartidas(){
     if(!db){ S.noDb=true; render(); return; }
     S.db=db;
     db.collection("items").onSnapshot(snap=>{
-      S.items = snap.docs.map(d=>({id:d.id, ...d.data()}));
+      const rows = snap.docs.map(d=>({id:d.id, ...d.data()}));
+      S.items = [...rows, ...SEMILLAS.filter(s=>!rows.some(r=>r.id===s.id))].filter(i=>i.section!=="_borrado");
       S.loaded = true; render();
     }, ()=>{ S.loaded=true; render(); });
     db.doc("config/ajustes").onSnapshot(snap=>{ S.logo = snap.exists ? (snap.data().logo||DEFAULT_LOGO) : DEFAULT_LOGO; S.estatutos = snap.exists ? (snap.data().estatutos||null) : null; paintLogo(); render(); },()=>{});
