@@ -496,7 +496,7 @@ const ITIPOS = ["Farola o alumbrado","Bache o acera","Limpieza o basura","Árbol
 const IESTADOS = {pendiente:["Pendiente","p-red"], comunicado:["Comunicado al Concello","p-amber"], arreglado:["Arreglado","p-green"]};
 const DEFAULT_LOGO = "c37727719b16fb206a49359b064fca6d";
 const LOT = {precio:20, donativo:3, sorteo:"Sorteo Extraordinario de Navidad 2026"};
-const S = {mcFotos:[], lect:null, lectAll:[], apoyo:null, apoyosAll:[], nApoyos:null, votos:null, recVotos:{}, incAll:[], cuota:null, cuotasAll:[], lot:null, lotAll:[], lotBlocked:false, insc:null, inscAll:[], inscBlocked:false, estatutos:null, ficha:null, fichasAll:[], fichaBlocked:false, logo:DEFAULT_LOGO, consent:null, consentAll:[], consentBlocked:false, buzon:null, buzonAll:[], mercAll:[], uid:null, user:null, names:{}, buzonBlocked:false, items:[], loaded:false, canEdit:false, db:null, assets:null, noDb:false, tab:"inicio", filter:{reuniones:"todas", quejas:"todas", fotos:"todas"}};
+const S = {fichaLoaded:false, mcFotos:[], lect:null, lectAll:[], apoyo:null, apoyosAll:[], nApoyos:null, votos:null, recVotos:{}, incAll:[], cuota:null, cuotasAll:[], lot:null, lotAll:[], lotBlocked:false, insc:null, inscAll:[], inscBlocked:false, estatutos:null, ficha:null, fichasAll:[], fichaBlocked:false, logo:DEFAULT_LOGO, consent:null, consentAll:[], consentBlocked:false, buzon:null, buzonAll:[], mercAll:[], uid:null, user:null, names:{}, buzonBlocked:false, items:[], loaded:false, canEdit:false, db:null, assets:null, noDb:false, tab:"inicio", filter:{reuniones:"todas", quejas:"todas", fotos:"todas"}};
 
 const $ = s => document.querySelector(s);
 function esc(t){return String(t ?? "").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
@@ -810,13 +810,13 @@ const VIEWS = {
     else if(S.fichaBlocked) form = `<div class="notice">Tu acceso solo permite leer. Pide a la directiva permiso de “Colaborador” para guardar tus datos.</div>`;
     else if(S.ficha && !S.fichaEdit) form = `<section class="card"><h3>Tus datos</h3>
       <div class="notice">Guardados el ${new Date(f.at).toLocaleDateString("es-ES",{day:"numeric",month:"long",year:"numeric"})}. Si algo está mal, pulsa “Editar mis datos” y corrígelo.</div>
-      <dl class="datos"><dt>Nombre y apellidos</dt><dd>${esc(f.nombre||"—")}</dd><dt>Dirección</dt><dd>${esc(f.direccion||"—")}</dd><dt>Correo electrónico</dt><dd>${esc(f.email||"—")}</dd><dt>Tu prioridad para el barrio</dt><dd>${esc(f.prioridad||"—")}</dd></dl>
+      <dl class="datos"><dt>Nombre y apellidos</dt><dd>${esc(f.nombre||"—")}</dd><dt>Dirección</dt><dd>${esc(f.direccion||"—")}</dd><dt>Teléfono</dt><dd>${esc(f.telefono||"—")}</dd><dt>Correo electrónico</dt><dd>${esc(f.email||"—")}</dd><dt>Tu prioridad para el barrio</dt><dd>${esc(f.prioridad||"—")}</dd></dl>
       <div class="row-actions"><button type="button" class="btn ghost" id="fi-borrar">Borrar mis datos</button><button type="button" class="btn" id="fi-editar">Editar mis datos</button></div></section>`;
     else form = `<form class="card" id="fi-form" novalidate>
       ${S.ficha?`<h3>Editar mis datos</h3>`:""}
       ${field("fi-nombre","Nombre y apellidos",`<input id="fi-nombre" autocomplete="name" value="${esc(f.nombre||"")}">`)}
       ${field("fi-dir","Dirección",`<input id="fi-dir" autocomplete="street-address" placeholder="Calle, número, piso" value="${esc(f.direccion||"")}">`)}
-      ${field("fi-email","Correo electrónico",`<input id="fi-email" type="email" autocomplete="email" value="${esc(f.email||"")}">`)}
+      <div class="two">${field("fi-tel","Teléfono",`<input id="fi-tel" type="tel" autocomplete="tel" value="${esc(f.telefono||"")}">`)}${field("fi-email","Correo electrónico (si tienes)",`<input id="fi-email" type="email" autocomplete="email" value="${esc(f.email||"")}">`)}</div>
       ${field("fi-prio","Tu prioridad para mejorar el barrio",`<textarea id="fi-prio" maxlength="300" style="min-height:90px" placeholder="En una frase: ¿qué es lo primero que mejorarías en la zona?">${esc(f.prioridad||"")}</textarea>`)}
       <label class="check"><input type="checkbox" id="fi-ok" ${S.ficha?"checked":""}> <span>Acepto que la asociación guarde estos datos según la <a href="#privacidad" data-go="privacidad">información de protección de datos</a>.</span></label>
       <p class="err" id="fi-err" hidden></p>
@@ -1144,13 +1144,17 @@ function render(){
   else if(!S.loaded) html += `<div class="notice">Cargando publicaciones…</div>`;
   const gate = S.uid && !S.canEdit && S.consentLoaded && !(S.consent&&S.consent.acepta) && !S.consentBlocked;
   $("#tabs").hidden = !!gate;
+  // Después de la protección de datos, también hay que rellenar «Mis datos» para poder navegar
+  const gateFicha = !gate && S.uid && !S.canEdit && S.consent && S.consent.acepta && S.fichaLoaded && !S.ficha && !S.fichaBlocked;
+  if(gateFicha){ $("#tabs").hidden = true; S.fichaEdit = true; }
   if(gate) html += `<div class="next"><span class="eyebrow">Bienvenida/o a la app de socios</span><h3>Antes de empezar, firma la protección de datos</h3><span>Lee la información y marca la primera casilla. Solo tendrás que hacerlo una vez.</span></div>` + VIEWS.privacidad();
+  else if(gateFicha) html += `<div class="next"><span class="eyebrow">Un último paso</span><h3>Rellena tus datos de socio</h3><span>Así la directiva sabe quién eres y puede contactarte. Solo tendrás que hacerlo una vez y solo los ve la directiva.</span></div>` + VIEWS.misdatos();
   else {
     const g = groupOf(S.tab);
     if(g.subs.length>1) html += `<div class="filters" role="tablist" aria-label="${esc(g.label)}">${g.subs.map(([id,l])=>`<button data-go="${id}" aria-pressed="${S.tab===id}">${l}</button>`).join("")}</div>`;
     html += VIEWS[S.tab]();
   }
-  const keep = {}; for(const id of ["mc-tipo","mc-precio","mc-titulo","mc-texto","mc-contacto","mc-nombre","bz-texto","bz-contacto","bz-tipo","fi-nombre","fi-dir","fi-email","fi-prio","lt-nombre","lt-dni","lt-n","inc-tipo","inc-texto"]){ const el=document.getElementById(id); if(el) keep[id]=el.value; }
+  const keep = {}; for(const id of ["mc-tipo","mc-precio","mc-titulo","mc-texto","mc-contacto","mc-nombre","bz-texto","bz-contacto","bz-tipo","fi-nombre","fi-dir","fi-tel","fi-email","fi-prio","lt-nombre","lt-dni","lt-n","inc-tipo","inc-texto"]){ const el=document.getElementById(id); if(el) keep[id]=el.value; }
   const abiertos = [...document.querySelectorAll("#main details[id]")].filter(d=>d.open).map(d=>d.id);
   $("#main").innerHTML = html;
   for(const id of abiertos){ const d=document.getElementById(id); if(d) d.open=true; }
@@ -1259,11 +1263,13 @@ $("#main").addEventListener("click", async e=>{
 $("#main").addEventListener("submit", async e=>{
   if(e.target.id!=="fi-form") return; e.preventDefault();
   const err=$("#fi-err"); err.hidden=true; const v=id=>$("#"+id).value.trim();
-  const d={uid:S.uid, nombre:v("fi-nombre"), direccion:v("fi-dir"), email:v("fi-email"), prioridad:v("fi-prio"), at:new Date().toISOString()};
+  const d={uid:S.uid, nombre:v("fi-nombre"), direccion:v("fi-dir"), telefono:v("fi-tel"), email:v("fi-email"), prioridad:v("fi-prio"), at:new Date().toISOString()};
   const fail=t=>{err.textContent=t; err.hidden=false;};
   if(!d.nombre) return fail("Escribe tu nombre y apellidos.");
   if(!d.direccion) return fail("Escribe tu dirección.");
-  if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(d.email)) return fail("Revisa el correo electrónico, parece incompleto.");
+  if(!d.telefono && !d.email) return fail("Pon un teléfono o un correo para que la directiva pueda contactarte.");
+  if(d.telefono && d.telefono.replace(/\D/g,"").length<9) return fail("Revisa el teléfono, parece incompleto.");
+  if(d.email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(d.email)) return fail("Revisa el correo electrónico, parece incompleto.");
   if(!$("#fi-ok").checked) return fail("Para guardar tus datos tienes que aceptar la protección de datos.");
   const btn=$("#fi-save"); btn.disabled=true; btn.textContent="Guardando…";
   try{ await S.db.doc("socios/"+S.uid).set(d); S.ficha=d; S.fichaEdit=false; render(); }
@@ -1276,7 +1282,7 @@ $("#main").addEventListener("click", async e=>{
 });
 async function startFicha(){
   if(!S.db || !S.user) return;
-  if(S.uid) S.db.doc("socios/"+S.uid).onSnapshot(snap=>{ S.ficha=snap.exists?snap.data():null; renderDatos(); },()=>{});
+  if(S.uid) S.db.doc("socios/"+S.uid).onSnapshot(snap=>{ S.ficha=snap.exists?snap.data():null; S.fichaLoaded=true; renderDatos(); },()=>{ S.fichaLoaded=true; });
   if(S.canEdit) S.db.collection("socios").onSnapshot(snap=>{ S.fichasAll=snap.docs.map(d=>({uid:d.id,...d.data()})); renderDatos(); },()=>{});
 }
 $("#main").addEventListener("change", async e=>{

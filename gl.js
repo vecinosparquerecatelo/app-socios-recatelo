@@ -1,5 +1,12 @@
 /* Traducción al gallego de los textos de la app (castellano -> galego). La usa i18n.js. */
 window.GL_DICT = {
+  "Un último paso": "Un último paso",
+  "Rellena tus datos de socio": "Enche os teus datos de socio",
+  "Así la directiva sabe quién eres y puede contactarte. Solo tendrás que hacerlo una vez y solo los ve la directiva.": "Así a directiva sabe quen es e pode contactarte. Só terás que facelo unha vez e só os ve a directiva.",
+  "Teléfono": "Teléfono",
+  "Correo electrónico (si tienes)": "Correo electrónico (se tes)",
+  "Pon un teléfono o un correo para que la directiva pueda contactarte.": "Pon un teléfono ou un correo para que a directiva poida contactarte.",
+  "Revisa el teléfono, parece incompleto.": "Revisa o teléfono, parece incompleto.",
   "👁 Ningún socio lo ha abierto todavía (solo lo ve la directiva)": "👁 Ningún socio o abriu aínda (só o ve a directiva)",
   "👁 Lo han abierto {0} socio (solo lo ve la directiva)": "👁 Abriuno {0} socio (só o ve a directiva)",
   "👁 Lo han abierto {0} socios (solo lo ve la directiva)": "👁 Abríronno {0} socios (só o ve a directiva)",
