@@ -1104,6 +1104,7 @@ function colIcon(id){
 
 // Los datos se refrescan cada 30 segundos; mientras alguien escribe en un formulario no se repinta la pantalla
 // (si no, se cierra el teclado y el formulario a mitad de escribir). Se repinta al terminar.
+window.sinAvisos = () => !!(S.uid && !S.canEdit && S.consent && S.consent.comunicaciones===false);
 let RENDER_PEND=false;
 function escribiendo(){ const a=document.activeElement; return !!(a && a.closest && a.closest("#main, #sheet-root") && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)); }
 function renderDatos(){ if(escribiendo()){ RENDER_PEND=true; return; } render(); }

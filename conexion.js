@@ -365,6 +365,9 @@
     const ios = /iphone|ipad|ipod/i.test(navigator.userAgent), standalone = matchMedia("(display-mode: standalone)").matches || navigator.standalone;
     if(!pushOk() || (ios && !standalone)) return sheet(`<h2>Notificaciones en iPhone</h2><p class="body">En iPhone, las notificaciones solo funcionan con la app instalada.\n1. Abre esta página en Safari.\n2. Pulsa Compartir (el cuadrado con la flecha) y elige “Añadir a pantalla de inicio”.\n3. Abre la app desde el icono nuevo y pulsa “Activar notificaciones”.</p>`);
     const actual = await suscripcion().catch(() => null);
+    // Quien marcó en protección de datos que no quiere avisos no los recibe hasta que cambie esa casilla
+    if(!(actual && Notification.permission === "granted") && window.sinAvisos && window.sinAvisos())
+      return sheet(`<h2>Has elegido no recibir avisos</h2><p class="body">En Protección de datos marcaste que no quieres recibir avisos de la asociación. Si ahora sí los quieres, marca esa casilla en Protección de datos, guarda, y vuelve a pulsar aquí.</p>`);
     if(actual && Notification.permission === "granted"){
       return sheet(`<h2>Notificaciones activadas</h2><p class="body">Te avisaremos en este móvil cuando la directiva publique algo, cuando haya un anuncio nuevo en el Mercadiño y el día antes de cada curso o reunión.</p><div class="row-actions"><button class="btn ghost" id="av-off">Desactivar en este móvil</button></div>`, r => {
         r.querySelector("#av-off").onclick = async () => { await sb.rpc("quitar_movil", { endpoint: actual.endpoint }).catch(() => {}); await actual.unsubscribe().catch(() => {}); r.innerHTML = ""; pintarAvisos(); };

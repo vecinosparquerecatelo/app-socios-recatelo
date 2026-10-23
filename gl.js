@@ -1,5 +1,7 @@
 /* Traducción al gallego de los textos de la app (castellano -> galego). La usa i18n.js. */
 window.GL_DICT = {
+  "Has elegido no recibir avisos": "Escolliches non recibir avisos",
+  "En Protección de datos marcaste que no quieres recibir avisos de la asociación. Si ahora sí los quieres, marca esa casilla en Protección de datos, guarda, y vuelve a pulsar aquí.": "En Protección de datos marcaches que non queres recibir avisos da asociación. Se agora si os queres, marca esa caixa en Protección de datos, garda, e volve premer aquí.",
   "Fotos (opcional, hasta 3)": "Fotos (opcional, ata 3)",
   "{0} foto elegida": "{0} foto escollida",
   "{0} fotos elegidas": "{0} fotos escollidas",
