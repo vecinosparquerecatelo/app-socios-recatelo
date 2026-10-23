@@ -310,10 +310,12 @@
     t.innerHTML = `${standalone ? "" : `<button class="btn ghost small" id="btn-instalar">Instalar la app en el móvil</button>`}
       <button class="btn ghost small" id="btn-avisos" hidden>Activar notificaciones</button>
       ${state.directiva ? `<button class="btn ghost small" id="btn-codigo">Códigos de socios</button><button class="btn ghost small" id="btn-clave">Cambiar contraseña</button>` : ""}
+      <button class="btn ghost small" id="btn-buscar">🔍 Buscar</button>
       <button class="btn ghost small" id="btn-salir">Cerrar sesión</button>`;
     f.appendChild(t);
     pintarAvisos();
     t.addEventListener("click", async e => {
+      if(e.target.id === "btn-buscar"){ if(typeof go === "function") go("buscar"); return; }
       if(e.target.id === "btn-instalar"){
         instalar();
       }

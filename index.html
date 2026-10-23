@@ -464,7 +464,6 @@ body.con-fab footer{padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))}
 <script>
 const GROUPS = [
   {label:"Inicio", subs:[["inicio","Inicio"]]},
-  {label:"🔍 Buscar", subs:[["buscar","Buscar"]]},
   {label:"Cursos", subs:[["cursos","Cursos"]]},
   {label:"Encuestas", subs:[["encuestas","Encuestas"]]},
   {label:"Mercadiño", subs:[["mercadillo","Mercadiño"]]},
@@ -475,6 +474,7 @@ const GROUPS = [
   {label:"Mi cuenta", subs:[["misdatos","Mis datos"],["privacidad","Protección de datos"]]}
 ];
 const TABS = GROUPS.flatMap(g=>g.subs.map(([id,label])=>({id,label})));
+TABS.push({id:"buscar",label:"Buscar"}); // se abre desde el botón 🔍 Buscar, junto a «Cerrar sesión»
 const groupOf = tab => GROUPS.find(g=>g.subs.some(([id])=>id===tab)) || GROUPS[0];
 const MTIPOS = ["Alquilo","Vendo","Dono","Compro","Trueque"];
 const ETIPOS = ["Ofrezco empleo","Busco empleo"];
