@@ -490,6 +490,11 @@ const COLECTIVOS = [
 ];
 const ALBUMES = ["Festas Recatelo 2023","Festas Recatelo 2024","Festas Recatelo 2025","Festas Recatelo 2026","Día das Letras Galegas 2025","Festa do Día das Letras Galegas 2026","Mercadillo de Navidad 2024","Samaín 2024","Samaín 2025","Cantos de taberna","Foto temática libre socios","Fotos denuncia","Fotos murales zona","Otros"];
 const ESTADOS = {presentada:["Presentada","p-blue"], tramite:["En trámite","p-amber"], resuelta:["Resuelta","p-green"], rechazada:["Sin respuesta / rechazada","p-red"]};
+const PTABS = ["Banco de la memoria","Cesión de la caseta del guarda como local social"];
+const PINTRO = {
+  "Banco de la memoria":"Proponemos que vecinos, familias y entidades puedan apadrinar un banco o un árbol del parque con una pequeña placa en recuerdo de una persona querida o de un momento especial. La idea se inspira en el programa «Adopt-A-Bench» de Central Park y ayudaría a cuidar el parque y su memoria. La presentamos al Concello en junio de 2026.",
+  "Cesión de la caseta del guarda como local social":"La antigua caseta del guarda del parque lleva años abandonada y sufre pintadas e intentos de ocupación. Pedimos al Concello que la rehabilite y nos la ceda como local social para el barrio. El 7 de julio de 2026 la alcaldía se comprometió a cederla y a rehabilitarla; seguimos insistiendo para que el compromiso quede por escrito y tenga calendario."
+};
 const ADD_LABEL = {encuestas:"encuesta", bic:"documento", inicio:"aviso", avisos:"aviso", reuniones:"resumen de reunión", proyectos:"proyecto", sugerencias:"sugerencia", colectivos:"noticia de colectivo", fotos:"foto", carteles:"cartel", cursos:"curso"};
 
 const BTIPOS = ["Queja","Sugerencia","Otro"];
@@ -497,7 +502,7 @@ const ITIPOS = ["Farola o alumbrado","Bache o acera","Limpieza o basura","Árbol
 const IESTADOS = {pendiente:["Pendiente","p-red"], comunicado:["Comunicado al Concello","p-amber"], arreglado:["Arreglado","p-green"]};
 const DEFAULT_LOGO = "c37727719b16fb206a49359b064fca6d";
 const LOT = {precio:20, donativo:3, sorteo:"Sorteo Extraordinario de Navidad 2026"};
-const S = {bq:"", fichaLoaded:false, mcFotos:[], lect:null, lectAll:[], apoyo:null, apoyosAll:[], nApoyos:null, votos:null, recVotos:{}, incAll:[], cuota:null, cuotasAll:[], lot:null, lotAll:[], lotBlocked:false, insc:null, inscAll:[], inscBlocked:false, estatutos:null, ficha:null, fichasAll:[], fichaBlocked:false, logo:DEFAULT_LOGO, consent:null, consentAll:[], consentBlocked:false, buzon:null, buzonAll:[], mercAll:[], uid:null, user:null, names:{}, buzonBlocked:false, items:[], loaded:false, canEdit:false, db:null, assets:null, noDb:false, tab:"inicio", filter:{reuniones:"todas", quejas:"todas", fotos:"todas"}};
+const S = {bq:"", fichaLoaded:false, mcFotos:[], lect:null, lectAll:[], apoyo:null, apoyosAll:[], nApoyos:null, votos:null, recVotos:{}, incAll:[], cuota:null, cuotasAll:[], lot:null, lotAll:[], lotBlocked:false, insc:null, inscAll:[], inscBlocked:false, estatutos:null, ficha:null, fichasAll:[], fichaBlocked:false, logo:DEFAULT_LOGO, consent:null, consentAll:[], consentBlocked:false, buzon:null, buzonAll:[], mercAll:[], uid:null, user:null, names:{}, buzonBlocked:false, items:[], loaded:false, canEdit:false, db:null, assets:null, noDb:false, tab:"inicio", filter:{reuniones:"todas", quejas:"todas", fotos:"todas", proyectos:""}};
 
 const $ = s => document.querySelector(s);
 function esc(t){return String(t ?? "").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
@@ -752,9 +757,15 @@ const VIEWS = {
       <section class="stack">${list.length?list.map(card).join(""):`<div class="empty"><strong>No hay avisos todavía.</strong>Cuando un socio avise de un problema, saldrá aquí.</div>`}</section>`;
   },
   proyectos(){
-    const list=sortDesc(S.items.filter(i=>i.section==="proyectos"||(i.section==="quejas"&&i.kind==="proyecto")));
+    let list=sortDesc(S.items.filter(i=>i.section==="proyectos"||(i.section==="quejas"&&i.kind==="proyecto")));
+    const hayOtros=list.some(i=>!PTABS.includes(i.ptab)), tabs=hayOtros?[...PTABS,"Otros"]:PTABS;
+    if(!tabs.includes(S.filter.proyectos)) S.filter.proyectos=PTABS[0];
+    const f=S.filter.proyectos;
+    list = f==="Otros" ? list.filter(i=>!PTABS.includes(i.ptab)) : list.filter(i=>i.ptab===f);
     return `<div><h2>Proyectos</h2><p class="lead">Los proyectos que la asociación impulsa para el barrio y en qué punto está cada uno.</p></div>
-      <section class="stack">${list.length?list.map(quejaCard).join(""):emptyBox("No hay proyectos todavía.","Añade cada proyecto con la institución y su estado.")}</section>`;
+      ${filterBar("proyectos",tabs,true)}
+      ${PINTRO[f]?`<div class="card"><p style="margin:0">${PINTRO[f]}</p></div>`:""}
+      <section class="stack">${list.length?list.map(quejaCard).join(""):emptyBox("Todavía no hay documentos en esta pestaña.","Añade el documento con «+ Añadir proyecto» y elige esta pestaña.")}</section>`;
   },
   mercadillo(){
     const mercContacto = a => {
@@ -1472,6 +1483,7 @@ function openForm(section, it){
   if(section==="reuniones") extra = regF;
   if(section==="proyectos"||section==="sugerencias"||section==="quejas") extra = `<div class="two">${field("f-status","Estado",sel("f-status",Object.entries(ESTADOS).map(([k,x])=>[k,x[0]]),v.status||"presentada"))}</div>`
      + field("f-entity","Institución",sel("f-entity",ENTIDADES,entDef)) + regF;
+  if(section==="proyectos") extra = field("f-ptab","Pestaña",sel("f-ptab",[...PTABS,"Otros"],v.ptab||(PTABS.includes(S.filter.proyectos)?S.filter.proyectos:PTABS[0]))) + extra;
   if(section==="encuestas") extra = field("f-opciones","Opciones (una por línea)",`<textarea id="f-opciones" style="min-height:110px" placeholder="Sí\nNo\nMe da igual">${esc((v.opciones||[]).join("\n"))}</textarea>`)
      + field("f-cierre","Se puede votar hasta el (opcional)",`<input id="f-cierre" type="date" value="${esc(v.cierre||"")}">`);
   if(section==="colectivos") extra = field("f-entity","Colectivo",sel("f-entity",COLECTIVOS.map(c=>c.name),v.entity||COLECTIVOS[0].name));
@@ -1507,7 +1519,7 @@ function openForm(section, it){
     const err=$("#f-err"); err.hidden=true;
     const val=id=>{const el=$("#"+id);return el?el.value.trim():undefined};
     const data = {section, title:val("f-title"), date:val("f-date")||"", updatedAt:new Date().toISOString()};
-    for(const [k,id] of [["body","f-body"],["kind","f-kind"],["time","f-time"],["place","f-place"],["entity","f-entity"],["status","f-status"],["album","f-album"],["plazas","f-plazas"],["regDate","f-regdate"],["regNum","f-regnum"]]){ const x=val(id); if(x!==undefined) data[k]=x; }
+    for(const [k,id] of [["body","f-body"],["kind","f-kind"],["time","f-time"],["place","f-place"],["entity","f-entity"],["status","f-status"],["album","f-album"],["ptab","f-ptab"],["plazas","f-plazas"],["regDate","f-regdate"],["regNum","f-regnum"]]){ const x=val(id); if(x!==undefined) data[k]=x; }
     if(!data.title && section==="fotos") data.title = data.album || "Foto";
     if(section==="encuestas"){ data.opciones=(val("f-opciones")||"").split("\n").map(x=>x.trim()).filter(Boolean); data.cierre=val("f-cierre")||"";
       if(data.opciones.length<2){ err.textContent="Escribe al menos dos opciones, una en cada línea."; err.hidden=false; return; } }
