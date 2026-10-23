@@ -464,6 +464,7 @@ body.con-fab footer{padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))}
 <script>
 const GROUPS = [
   {label:"Inicio", subs:[["inicio","Inicio"]]},
+  {label:"🔍 Buscar", subs:[["buscar","Buscar"]]},
   {label:"Cursos", subs:[["cursos","Cursos"]]},
   {label:"Encuestas", subs:[["encuestas","Encuestas"]]},
   {label:"Mercadiño", subs:[["mercadillo","Mercadiño"]]},
@@ -496,7 +497,7 @@ const ITIPOS = ["Farola o alumbrado","Bache o acera","Limpieza o basura","Árbol
 const IESTADOS = {pendiente:["Pendiente","p-red"], comunicado:["Comunicado al Concello","p-amber"], arreglado:["Arreglado","p-green"]};
 const DEFAULT_LOGO = "c37727719b16fb206a49359b064fca6d";
 const LOT = {precio:20, donativo:3, sorteo:"Sorteo Extraordinario de Navidad 2026"};
-const S = {fichaLoaded:false, mcFotos:[], lect:null, lectAll:[], apoyo:null, apoyosAll:[], nApoyos:null, votos:null, recVotos:{}, incAll:[], cuota:null, cuotasAll:[], lot:null, lotAll:[], lotBlocked:false, insc:null, inscAll:[], inscBlocked:false, estatutos:null, ficha:null, fichasAll:[], fichaBlocked:false, logo:DEFAULT_LOGO, consent:null, consentAll:[], consentBlocked:false, buzon:null, buzonAll:[], mercAll:[], uid:null, user:null, names:{}, buzonBlocked:false, items:[], loaded:false, canEdit:false, db:null, assets:null, noDb:false, tab:"inicio", filter:{reuniones:"todas", quejas:"todas", fotos:"todas"}};
+const S = {bq:"", fichaLoaded:false, mcFotos:[], lect:null, lectAll:[], apoyo:null, apoyosAll:[], nApoyos:null, votos:null, recVotos:{}, incAll:[], cuota:null, cuotasAll:[], lot:null, lotAll:[], lotBlocked:false, insc:null, inscAll:[], inscBlocked:false, estatutos:null, ficha:null, fichasAll:[], fichaBlocked:false, logo:DEFAULT_LOGO, consent:null, consentAll:[], consentBlocked:false, buzon:null, buzonAll:[], mercAll:[], uid:null, user:null, names:{}, buzonBlocked:false, items:[], loaded:false, canEdit:false, db:null, assets:null, noDb:false, tab:"inicio", filter:{reuniones:"todas", quejas:"todas", fotos:"todas"}};
 
 const $ = s => document.querySelector(s);
 function esc(t){return String(t ?? "").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
@@ -516,6 +517,34 @@ function go(tab){
   renderTabs(); render(); window.scrollTo({top:0});
   const b=$('#tabs [aria-selected="true"]'); b && b.scrollIntoView({inline:"center",block:"nearest"});
 }
+
+/* ---------- buscador ---------- */
+const SIN_TILDES = t => String(t||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase();
+function resultadosBusqueda(q){
+  const palabras = SIN_TILDES(q).split(/\s+/).filter(w=>w.length>1);
+  if(!palabras.length) return "";
+  const nombreSec = sec => sec==="avisos" ? ["inicio","Avisos"] : (TABS.find(t=>t.id===sec) ? [sec, TABS.find(t=>t.id===sec).label] : [sec==="quejas"?"proyectos":"inicio", sec==="quejas"?"Proyectos":"Avisos"]);
+  const casa = txt => { const t=SIN_TILDES(txt); return palabras.every(w=>t.includes(w)); };
+  const trozo = txt => { const t=String(txt||""); if(t.length<=220) return t; const k=SIN_TILDES(t).indexOf(palabras[0]); const a=Math.max(0,k-80); return (a?"…":"")+t.slice(a,a+220)+"…"; };
+  const out=[];
+  for(const it of S.items){
+    if(!it.section || it.section==="_borrado") continue;
+    const txt=[it.title,it.body,it.docName,it.entity,it.place,it.time,it.cuando,it.album].filter(Boolean).join(" · ");
+    if(!casa(txt)) continue;
+    const [tab,label]=nombreSec(it.section);
+    out.push({at:it.date||"", html:`<article class="card"><div class="meta"><span class="pill p-blue">${esc(label)}</span>${it.date?`<span>${fmtDate(it.date)}</span>`:""}</div><h3>${esc(it.title||"")}</h3>${it.body?`<p class="body">${esc(trozo(it.body))}</p>`:""}${attach(it)}<div class="row-actions"><button type="button" class="btn ghost small" data-go="${tab}">Ver en ${esc(label)}</button></div></article>`});
+  }
+  for(const d of S.mercAll) for(const a of (d.anuncios||[])){
+    if(!casa([a.tipo,a.titulo,a.texto,a.precio].join(" · "))) continue;
+    out.push({at:(a.at||"").slice(0,10), html:`<article class="card"><div class="meta"><span class="pill p-green">Mercadiño · ${esc(a.tipo)}</span>${a.precio?`<span><strong>${esc(a.precio)}</strong></span>`:""}</div><h3>${esc(a.titulo)}</h3>${a.texto?`<p class="body">${esc(trozo(a.texto))}</p>`:""}<div class="row-actions"><button type="button" class="btn ghost small" data-go="mercadillo">Ver en el Mercadiño</button></div></article>`});
+  }
+  out.sort((x,y)=>(y.at||"").localeCompare(x.at||""));
+  return out.length ? `<p class="meta">${out.length===1?"1 resultado":out.length+" resultados"}</p>`+out.slice(0,60).map(r=>r.html).join("") : `<div class="empty"><strong>No hemos encontrado nada con «${esc(q)}».</strong>Prueba con otra palabra.</div>`;
+}
+$("#main").addEventListener("input", e=>{
+  if(e.target.id!=="bq") return;
+  S.bq=e.target.value; const r=$("#bq-res"); if(r){ r.innerHTML=resultadosBusqueda(S.bq); }
+});
 
 /* ---------- piezas ---------- */
 function emptyBox(what, how){
@@ -682,6 +711,11 @@ const VIEWS = {
     return `<div><h2>Reuniones con instituciones</h2><p class="lead">Resúmenes de lo tratado con la Alcaldía, los grupos políticos, la Subdelegación del Gobierno, la Xunta de Galicia, la Diputación Provincial de Lugo y las policías Local, Autonómica y Nacional.</p></div>
       ${filterBar("reuniones",tabs,true)}
       <section class="stack">${list.length?list.map(reunionCard).join(""):emptyBox(f==="Otra"?"No hay resúmenes con otras instituciones.":"No hay resúmenes con "+esc(f)+".","Añade el resumen indicando con quién fue la reunión.")}</section>`;
+  },
+  buscar(){
+    return `<div><h2>Buscar</h2><p class="lead">Escribe una palabra para encontrar reuniones, documentos, avisos, cursos, proyectos o anuncios del Mercadiño.</p></div>
+      <div class="card"><input id="bq" type="search" autocomplete="off" placeholder="Por ejemplo: alcalde, BIC, farolas, ictus…" value="${esc(S.bq||"")}" style="width:100%"></div>
+      <section class="stack" id="bq-res">${resultadosBusqueda(S.bq||"")}</section>`;
   },
   bic(){
     const list=sortDesc(bySection("bic"));
@@ -1155,7 +1189,7 @@ function render(){
     if(g.subs.length>1) html += `<div class="filters" role="tablist" aria-label="${esc(g.label)}">${g.subs.map(([id,l])=>`<button data-go="${id}" aria-pressed="${S.tab===id}">${l}</button>`).join("")}</div>`;
     html += VIEWS[S.tab]();
   }
-  const keep = {}; for(const id of ["mc-tipo","mc-precio","mc-titulo","mc-texto","mc-contacto","mc-nombre","bz-texto","bz-contacto","bz-tipo","fi-nombre","fi-dir","fi-tel","fi-email","fi-prio","lt-nombre","lt-dni","lt-n","inc-tipo","inc-texto"]){ const el=document.getElementById(id); if(el) keep[id]=el.value; }
+  const keep = {}; for(const id of ["mc-tipo","mc-precio","mc-titulo","mc-texto","mc-contacto","mc-nombre","bz-texto","bz-contacto","bz-tipo","fi-nombre","fi-dir","fi-tel","fi-email","fi-prio","lt-nombre","lt-dni","lt-n","inc-tipo","inc-texto","bq"]){ const el=document.getElementById(id); if(el) keep[id]=el.value; }
   const abiertos = [...document.querySelectorAll("#main details[id]")].filter(d=>d.open).map(d=>d.id);
   $("#main").innerHTML = html;
   for(const id of abiertos){ const d=document.getElementById(id); if(d) d.open=true; }

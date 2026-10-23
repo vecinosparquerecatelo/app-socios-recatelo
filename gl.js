@@ -1,5 +1,15 @@
 /* Traducción al gallego de los textos de la app (castellano -> galego). La usa i18n.js. */
 window.GL_DICT = {
+  "🔍 Buscar": "🔍 Buscar",
+  "Buscar": "Buscar",
+  "Escribe una palabra para encontrar reuniones, documentos, avisos, cursos, proyectos o anuncios del Mercadiño.": "Escribe unha palabra para atopar reunións, documentos, avisos, cursos, proxectos ou anuncios do Mercadiño.",
+  "1 resultado": "1 resultado",
+  "{0} resultados": "{0} resultados",
+  "No hemos encontrado nada con «{0}».": "Non atopamos nada con «{0}».",
+  "Prueba con otra palabra.": "Proba con outra palabra.",
+  "Ver en {0}": "Ver en {0}",
+  "Ver en el Mercadiño": "Ver no Mercadiño",
+  "Mercadiño · {0}": "Mercadiño · {0}",
   "El Parque de Rosalía de Castro es mucho más que un parque. Es un jardín histórico con cien años de vida y un auténtico jardín botánico en el corazón de Lugo: árboles centenarios de muchas especies, flores que cambian con cada estación y una fauna propia que vive en él todo el año, sobre todo aves, que anidan en sus copas y llenan el parque de cantos.": "O Parque de Rosalía de Castro é moito máis ca un parque. É un xardín histórico con cen anos de vida e un auténtico xardín botánico no corazón de Lugo: árbores centenarias de moitas especies, flores que cambian con cada estación e unha fauna propia que vive nel todo o ano, sobre todo aves, que aniñan nas súas copas e enchen o parque de cantos.",
   "Nació en 1921, cuando el Concello decidió crear un gran parque para que los niños jugasen al aire libre y los mayores tuviesen dónde pasear y descansar. La gente enseguida lo llamó «Bella Vista» por su mirador sobre el valle del Miño. En 1927 recibió el nombre de Alfonso XIII y desde el 21 de abril de 1931 lleva el de Rosalía de Castro.": "Naceu en 1921, cando o Concello decidiu crear un gran parque para que os nenos xogasen ao aire libre e os maiores tivesen onde pasear e descansar. A xente axiña o chamou «Bela Vista» polo seu miradoiro sobre o val do Miño. En 1927 recibiu o nome de Alfonso XIII e desde o 21 de abril de 1931 leva o de Rosalía de Castro.",
   "Desde entonces, varias generaciones de lucenses han jugado, paseado y se han enamorado bajo sus árboles, y muchas familias guardan aquí sus mejores recuerdos. Ese cariño es lo que nos mueve: queremos que nuestros hijos y nietos lo reciban tal y como lo conocimos.": "Desde entón, varias xeracións de lucenses xogaron, pasearon e namoráronse baixo as súas árbores, e moitas familias gardan aquí os seus mellores recordos. Ese cariño é o que nos move: queremos que os nosos fillos e netos o reciban tal e como o coñecemos.",
