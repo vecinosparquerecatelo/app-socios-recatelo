@@ -479,7 +479,7 @@ const groupOf = tab => GROUPS.find(g=>g.subs.some(([id])=>id===tab)) || GROUPS[0
 const MTIPOS = ["Alquilo","Vendo","Dono","Compro","Trueque"];
 const ETIPOS = ["Ofrezco empleo","Busco empleo"];
 // Publicaciones que siempre deben estar, aunque falten en la base de datos (la directiva puede editarlas o borrarlas)
-const SEMILLAS = [{"id": "curso-ictus-atencion-temprana", "section": "cursos", "title": "Prevención del ictus y atención temprana", "date": "", "cuando": "Noviembre de 2026 (día por determinar)", "time": "Duración: 3 horas", "place": "Por determinar, en las inmediaciones del barrio", "body": "Curso práctico sobre cómo prevenir el ictus y reconocer sus primeros síntomas, y sobre la importancia de la atención temprana para actuar a tiempo.\n\nLo imparte Cruz Roja, a través de los especialistas de su Centro de Parálisis y Daño Cerebral.\n\nDuración: 3 horas. Será en noviembre, en un lugar cercano al barrio. El día y el sitio se anunciarán próximamente; si te apuntas ya, te avisaremos en cuanto estén confirmados.", "createdAt": "2026-10-19T07:50:00Z", "updatedAt": "2026-10-19T07:54:00Z"}];
+const SEMILLAS = [{"id": "proyecto-bancos-arboles-memoria", "section": "proyectos", "ptab": "Bancos y árboles de la memoria", "status": "presentada", "entity": "Alcaldía", "title": "Bancos y árboles de la memoria: memoria del proyecto", "date": "2026-06-30", "body": "Memoria completa del programa de adopción de bancos y árboles del Parque Rosalía de Castro, traducida al castellano. Se presentó a la Alcaldía del Concello de Lugo en junio de 2026 y también a los diferentes grupos políticos.", "doc": "docs/Bancos-y-arboles-de-la-memoria.pdf", "docName": "Bancos y árboles de la memoria (PDF)", "createdAt": "2026-10-23T09:00:00Z", "updatedAt": "2026-10-23T09:00:00Z"}, {"id": "curso-ictus-atencion-temprana", "section": "cursos", "title": "Prevención del ictus y atención temprana", "date": "", "cuando": "Noviembre de 2026 (día por determinar)", "time": "Duración: 3 horas", "place": "Por determinar, en las inmediaciones del barrio", "body": "Curso práctico sobre cómo prevenir el ictus y reconocer sus primeros síntomas, y sobre la importancia de la atención temprana para actuar a tiempo.\n\nLo imparte Cruz Roja, a través de los especialistas de su Centro de Parálisis y Daño Cerebral.\n\nDuración: 3 horas. Será en noviembre, en un lugar cercano al barrio. El día y el sitio se anunciarán próximamente; si te apuntas ya, te avisaremos en cuanto estén confirmados.", "createdAt": "2026-10-19T07:50:00Z", "updatedAt": "2026-10-19T07:54:00Z"}];
 const RGPD_VERSION = "2026-10";
 const ENTIDADES = ["Alcaldía","BNG","PSOE","Subdelegación del Gobierno","Xunta de Galicia","Diputación Provincial de Lugo","Policía Local","Policía Autonómica","Policía Nacional","Otra"];
 const COLECTIVOS = [
@@ -490,9 +490,9 @@ const COLECTIVOS = [
 ];
 const ALBUMES = ["Festas Recatelo 2023","Festas Recatelo 2024","Festas Recatelo 2025","Festas Recatelo 2026","Día das Letras Galegas 2025","Festa do Día das Letras Galegas 2026","Mercadillo de Navidad 2024","Samaín 2024","Samaín 2025","Cantos de taberna","Foto temática libre socios","Fotos denuncia","Fotos murales zona","Otros"];
 const ESTADOS = {presentada:["Presentada","p-blue"], tramite:["En trámite","p-amber"], resuelta:["Resuelta","p-green"], rechazada:["Sin respuesta / rechazada","p-red"]};
-const PTABS = ["Banco de la memoria","Cesión de la caseta del guarda como local social"];
+const PTABS = ["Bancos y árboles de la memoria","Cesión de la caseta del guarda como local social"];
 const PINTRO = {
-  "Banco de la memoria":"Proponemos que vecinos, familias y entidades puedan apadrinar un banco o un árbol del parque con una pequeña placa en recuerdo de una persona querida o de un momento especial. La idea se inspira en el programa «Adopt-A-Bench» de Central Park y ayudaría a cuidar el parque y su memoria. La presentamos al Concello en junio de 2026.",
+  "Bancos y árboles de la memoria":"Proponemos que vecinos, familias y entidades puedan apadrinar un banco o un árbol del parque con una pequeña placa en recuerdo de una persona querida o de un momento especial. La idea se inspira en el programa «Adopt-A-Bench» de Central Park y ayudaría a cuidar el parque y su memoria. La presentamos al Concello en junio de 2026 y ya la hemos presentado también a los diferentes grupos políticos.",
   "Cesión de la caseta del guarda como local social":"La antigua caseta del guarda del parque lleva años abandonada y sufre pintadas e intentos de ocupación. Pedimos al Concello que la rehabilite y nos la ceda como local social para el barrio. El 7 de julio de 2026 la alcaldía se comprometió a cederla y a rehabilitarla; seguimos insistiendo para que el compromiso quede por escrito y tenga calendario."
 };
 const ADD_LABEL = {encuestas:"encuesta", bic:"documento", inicio:"aviso", avisos:"aviso", reuniones:"resumen de reunión", proyectos:"proyecto", sugerencias:"sugerencia", colectivos:"noticia de colectivo", fotos:"foto", carteles:"cartel", cursos:"curso"};
@@ -560,7 +560,7 @@ function adminRow(it){
   return `<div class="row-actions"><button class="btn ghost small" data-edit="${esc(it.id)}">Editar</button><button class="btn ghost small" data-del="${esc(it.id)}">Borrar</button></div>`;
 }
 function attach(it){ return (it.photo ? `<img class="att" src="${imgSrc(it.photo)}" alt="${esc(it.title)}" loading="lazy" onerror="this.remove()">` : "")
-  + (it.doc ? `<div><a class="btn ghost small" href="${imgSrc(it.doc)}" target="_blank" rel="noopener" data-lee="${esc(it.id)}">📄 Abrir documento${it.docName?": "+esc(it.docName):""}</a></div>${lectoresDe(it.id)}` : ""); }
+  + (it.doc ? `<div><a class="btn ghost small" href="${/^docs\//.test(it.doc)?it.doc:imgSrc(it.doc)}" target="_blank" rel="noopener" data-lee="${esc(it.id)}">📄 Abrir documento${it.docName?": "+esc(it.docName):""}</a></div>${lectoresDe(it.id)}` : ""); }
 /* ---------- quién ha abierto cada documento (solo lo ve la directiva) ---------- */
 function lectoresDe(id){
   if(!S.canEdit) return "";
@@ -757,7 +757,7 @@ const VIEWS = {
       <section class="stack">${list.length?list.map(card).join(""):`<div class="empty"><strong>No hay avisos todavía.</strong>Cuando un socio avise de un problema, saldrá aquí.</div>`}</section>`;
   },
   proyectos(){
-    let list=sortDesc(S.items.filter(i=>i.section==="proyectos"||(i.section==="quejas"&&i.kind==="proyecto")));
+    let list=sortDesc(S.items.filter(i=>i.section==="proyectos"||(i.section==="quejas"&&i.kind==="proyecto"))).map(i=>i.ptab==="Banco de la memoria"?{...i,ptab:PTABS[0]}:i);
     const hayOtros=list.some(i=>!PTABS.includes(i.ptab)), tabs=hayOtros?[...PTABS,"Otros"]:PTABS;
     if(!tabs.includes(S.filter.proyectos)) S.filter.proyectos=PTABS[0];
     const f=S.filter.proyectos;
