@@ -73,6 +73,7 @@ h3{font-family:var(--display);font-weight:600;font-size:1.12rem;margin:0;text-wr
 .empty strong{color:var(--ink);display:block;margin-bottom:2px}
 .filters{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px}
 .filters[data-filter="mercadillo"]{flex-wrap:wrap}
+.lectores ul{margin:4px 0 0;padding-left:18px;font-size:.88rem}.lectores summary{cursor:pointer}
 .merc-fotos{display:flex;gap:8px;overflow-x:auto;margin:6px 0}.merc-fotos img{height:160px;width:auto;max-width:85%;object-fit:cover;border-radius:10px;flex:0 0 auto}
 .filters button{flex:none;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:6px 12px;font:inherit;font-size:.9rem;cursor:pointer}
 .filters button[aria-pressed="true"]{background:var(--green);border-color:var(--green);color:var(--surface)}
@@ -495,7 +496,7 @@ const ITIPOS = ["Farola o alumbrado","Bache o acera","Limpieza o basura","Árbol
 const IESTADOS = {pendiente:["Pendiente","p-red"], comunicado:["Comunicado al Concello","p-amber"], arreglado:["Arreglado","p-green"]};
 const DEFAULT_LOGO = "c37727719b16fb206a49359b064fca6d";
 const LOT = {precio:20, donativo:3, sorteo:"Sorteo Extraordinario de Navidad 2026"};
-const S = {mcFotos:[], apoyo:null, apoyosAll:[], nApoyos:null, votos:null, recVotos:{}, incAll:[], cuota:null, cuotasAll:[], lot:null, lotAll:[], lotBlocked:false, insc:null, inscAll:[], inscBlocked:false, estatutos:null, ficha:null, fichasAll:[], fichaBlocked:false, logo:DEFAULT_LOGO, consent:null, consentAll:[], consentBlocked:false, buzon:null, buzonAll:[], mercAll:[], uid:null, user:null, names:{}, buzonBlocked:false, items:[], loaded:false, canEdit:false, db:null, assets:null, noDb:false, tab:"inicio", filter:{reuniones:"todas", quejas:"todas", fotos:"todas"}};
+const S = {mcFotos:[], lect:null, lectAll:[], apoyo:null, apoyosAll:[], nApoyos:null, votos:null, recVotos:{}, incAll:[], cuota:null, cuotasAll:[], lot:null, lotAll:[], lotBlocked:false, insc:null, inscAll:[], inscBlocked:false, estatutos:null, ficha:null, fichasAll:[], fichaBlocked:false, logo:DEFAULT_LOGO, consent:null, consentAll:[], consentBlocked:false, buzon:null, buzonAll:[], mercAll:[], uid:null, user:null, names:{}, buzonBlocked:false, items:[], loaded:false, canEdit:false, db:null, assets:null, noDb:false, tab:"inicio", filter:{reuniones:"todas", quejas:"todas", fotos:"todas"}};
 
 const $ = s => document.querySelector(s);
 function esc(t){return String(t ?? "").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
@@ -525,7 +526,34 @@ function adminRow(it){
   return `<div class="row-actions"><button class="btn ghost small" data-edit="${esc(it.id)}">Editar</button><button class="btn ghost small" data-del="${esc(it.id)}">Borrar</button></div>`;
 }
 function attach(it){ return (it.photo ? `<img class="att" src="${imgSrc(it.photo)}" alt="${esc(it.title)}" loading="lazy" onerror="this.remove()">` : "")
-  + (it.doc ? `<div><a class="btn ghost small" href="${imgSrc(it.doc)}" target="_blank" rel="noopener">📄 Abrir documento${it.docName?": "+esc(it.docName):""}</a></div>` : ""); }
+  + (it.doc ? `<div><a class="btn ghost small" href="${imgSrc(it.doc)}" target="_blank" rel="noopener" data-lee="${esc(it.id)}">📄 Abrir documento${it.docName?": "+esc(it.docName):""}</a></div>${lectoresDe(it.id)}` : ""); }
+/* ---------- quién ha abierto cada documento (solo lo ve la directiva) ---------- */
+function lectoresDe(id){
+  if(!S.canEdit) return "";
+  const l=S.lectAll.filter(d=>d.vistos&&d.vistos[id]).map(d=>({uid:d.uid, ...d.vistos[id]})).sort((a,b)=>(b.ultima||"").localeCompare(a.ultima||""));
+  if(!l.length) return `<p class="meta">👁 Ningún socio lo ha abierto todavía (solo lo ve la directiva)</p>`;
+  return `<details class="lectores"><summary class="meta">👁 Lo han abierto ${l.length} ${l.length===1?"socio":"socios"} (solo lo ve la directiva)</summary><ul>${l.map(x=>`<li>${esc(nombreDe(x.uid))} · ${x.ultima?new Date(x.ultima).toLocaleDateString("es-ES",{day:"numeric",month:"short"}):""}${x.veces>1?" · "+x.veces+" veces":""}</li>`).join("")}</ul></details>`;
+}
+async function registrarLectura(id){
+  if(!S.db||!S.uid||S.canEdit||!id) return;
+  try{
+    if(!S.lect){ const snap=await S.db.doc("lecturas/"+S.uid).get(); S.lect=snap.exists?snap.data():{uid:S.uid, vistos:{}}; }
+    const v={...(S.lect.vistos||{})}, ahora=new Date().toISOString(), y=v[id]||{primera:ahora, veces:0};
+    v[id]={primera:y.primera, ultima:ahora, veces:(y.veces||0)+1};
+    S.lect={uid:S.uid, vistos:v};
+    await S.db.doc("lecturas/"+S.uid).set(S.lect);
+  }catch(e){}
+}
+function startLecturas(){
+  if(!S.db||!S.canEdit) return;
+  S.db.collection("lecturas").onSnapshot(async snap=>{
+    S.lectAll=snap.docs.map(d=>({uid:d.id,...d.data()}));
+    const faltan=S.lectAll.map(d=>d.uid).filter(u=>!S.names[u]);
+    if(faltan.length){ try{ const ps=await S.user.profiles(faltan); for(const u in ps) S.names[u]=ps[u].name||""; }catch(e){} }
+    renderDatos();
+  },()=>{});
+}
+document.addEventListener("click", e=>{ const a=e.target.closest("[data-lee]"); if(a) registrarLectura(a.dataset.lee); }, true);
 
 function avisoCard(it){
   const tipo = it.kind==="reunion" ? `<span class="pill p-amber">Reunión de socios</span>` : `<span class="pill p-blue">Aviso</span>`;
@@ -822,7 +850,7 @@ const VIEWS = {
     return `<div><h2>Protección de datos</h2><p class="lead">Aquí te contamos, con palabras sencillas, qué hacemos con tus datos y cómo los cuidamos, tal y como piden el Reglamento General de Protección de Datos (RGPD) y la Ley Orgánica 3/2018 (LOPDGDD).</p></div>
       <section class="card legal">
         <p><strong>1. Quién cuida tus datos:</strong> la Asociación de Vecinos del Parque de Rosalía de Castro-Recatelo (CIF G72769482), Rúa Pascual Veiga 6, 27002 Lugo. Para cualquier duda, escríbenos a vecinosparquerecatelo@gmail.com.</p>
-        <p><strong>2. Qué datos usamos:</strong> solo los que tú decides darnos para participar en la asociación: tus datos de contacto (nombre, dirección, teléfono y correo), si tienes la cuota al día, y lo que tú mismo haces en la app, como apuntarte a un curso, votar, apoyar el BIC o enviar un mensaje, un anuncio o un aviso del barrio con su foto y su sitio en el mapa. El DNI solo lo pedimos cuando hace falta, por ejemplo para reservar lotería. Las fotos en las que aparezcas solo se publican si nos das permiso. Te pedimos que no incluyas en los mensajes datos de salud, ideología o religión.</p>
+        <p><strong>2. Qué datos usamos:</strong> solo los que tú decides darnos para participar en la asociación: tus datos de contacto (nombre, dirección, teléfono y correo), si tienes la cuota al día, y lo que tú mismo haces en la app, como apuntarte a un curso, votar, apoyar el BIC, abrir un documento o enviar un mensaje, un anuncio o un aviso del barrio con su foto y su sitio en el mapa. El DNI solo lo pedimos cuando hace falta, por ejemplo para reservar lotería. Las fotos en las que aparezcas solo se publican si nos das permiso. Te pedimos que no incluyas en los mensajes datos de salud, ideología o religión.</p>
         <p><strong>3. Para qué los usamos:</strong> para llevar el día a día de la asociación: tu alta como socio/a y la cuota, los cursos y actividades, la lotería, los avisos que nos autorices a enviarte, el buzón de quejas y consejos (que llevamos a las instituciones sin tus datos personales), el Mercadiño, las encuestas y los avisos del barrio. No los usamos para nada más ni hacemos perfiles. Los guardamos mientras seas socio/a y, si te das de baja, solo el tiempo que obligue la ley.</p>
         <p><strong>4. Por qué podemos usarlos:</strong> porque eres socio/a y así lo prevén los Estatutos; porque algunas cosas las exige la ley, como la contabilidad; y, para los avisos y las fotos, porque tú nos das tu permiso, que puedes retirar cuando quieras.</p>
         <p><strong>5. Quién los ve:</strong> solo la Junta Directiva. Lo que tú publicas para todos (tus anuncios del Mercadiño y tus avisos del barrio) lo ven los demás socios de la app. Los resultados de las encuestas y el número de apoyos al BIC se muestran sin nombres. No damos tus datos a nadie más, salvo que la ley nos obligue. Las empresas que alojan la app solo los guardan por encargo nuestro y con las garantías que exige la ley.</p>
@@ -1568,7 +1596,7 @@ function pintarMarca(){
     db.collection("mercadillo").onSnapshot(snap=>{ S.mercAll=snap.docs.map(d=>({uid:d.id,...d.data()})); renderDatos(); },()=>{});
     db.collection("fotosocios").onSnapshot(snap=>{ S.fotoSoc=snap.docs.map(d=>({uid:d.id,...d.data()})); renderDatos(); },()=>{});
     if(compartidas && window.caches) userP.then(recibirCompartidas);
-    startInc(); userP.then(startApoyos); userP.then(startVotos); userP.then(startCuotas);
+    startInc(); userP.then(startApoyos); userP.then(startVotos); userP.then(startCuotas); userP.then(startLecturas);
     userP.then(startBuzon); userP.then(startLot); userP.then(startInsc); userP.then(startFicha); userP.then(startConsent);
   });
 })();
