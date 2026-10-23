@@ -647,12 +647,111 @@ async function recortarFotos(ids, btn){
   if(btn){ btn.disabled=false; btn.textContent=txt; }
   alert(its.length ? `Listo: ${hechas} foto${hechas===1?"":"s"} recortada${hechas===1?"":"s"}${sin?`, ${sin} sin bordes negros`:""}${fallos?`, ${fallos} no se ${fallos===1?"ha":"han"} podido arreglar`:""}.` : "No hay fotos que revisar.");
 }
+/* Pixelar caras (solo directiva): detecta las caras en el móvil y las tapa con cuadros. */
+const FACE_CDN = "https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.13/";
+let caraApiP = null;
+function cargarCaras(){
+  return caraApiP || (caraApiP = (async()=>{
+    const fa = await import(window.FACE_JS || FACE_CDN+"dist/face-api.esm.js");
+    await fa.nets.ssdMobilenetv1.loadFromUri(window.FACE_MODELS || FACE_CDN+"model/");
+    return fa;
+  })().catch(e=>{ caraApiP=null; throw e; }));
+}
+function zonasCaras(dets){ return dets.map(d=>{ const b=d.box; return {x:b.x-b.width*0.25, y:b.y-b.height*0.45, w:b.width*1.5, h:b.height*1.7}; }); }
+function pixelarZona(c, r){
+  const x0=Math.max(0,Math.round(r.x)), y0=Math.max(0,Math.round(r.y));
+  const ww=Math.min(c.width-x0,Math.round(r.w+Math.min(0,r.x))), hh=Math.min(c.height-y0,Math.round(r.h+Math.min(0,r.y)));
+  if(ww<2||hh<2) return;
+  const t=Math.max(4,Math.round(Math.max(ww,hh)/10)), sw=Math.max(1,Math.round(ww/t)), shh=Math.max(1,Math.round(hh/t));
+  const m=document.createElement("canvas"); m.width=sw; m.height=shh;
+  m.getContext("2d").drawImage(c,x0,y0,ww,hh,0,0,sw,shh);
+  const x=c.getContext("2d"); x.imageSmoothingEnabled=false; x.drawImage(m,0,0,sw,shh,x0,y0,ww,hh); x.imageSmoothingEnabled=true;
+}
+async function pixelarCaras(blob){
+  const fa = await cargarCaras();
+  const img = await createImageBitmap(blob);
+  const c = document.createElement("canvas"); c.width=img.width; c.height=img.height;
+  const x = c.getContext("2d"); x.drawImage(img,0,0);
+  const dets = await fa.detectAllFaces(c, new fa.SsdMobilenetv1Options({minConfidence:0.3, maxResults:100}));
+  if(!dets.length) return null;
+  for(const r of zonasCaras(dets)) pixelarZona(c, r);
+  const out = await new Promise(r=>c.toBlob(r,"image/jpeg",0.9));
+  return { file:new File([out],"foto.jpg",{type:"image/jpeg"}), caras:dets.length };
+}
+/* Editor para pixelar a mano: se arrastra el dedo sobre la zona (un logo, una cara que no se detectó). */
+async function editorPixelar(id){
+  const it=S.items.find(i=>i.id===id); if(!it||!it.photo) return;
+  $("#sheet-root").innerHTML=`<div class="sheet-bg" id="sheet-bg"><div class="sheet" role="dialog" aria-label="Pixelar la foto"><h2>Pixelar la foto</h2>
+    <p class="meta">Arrastra el dedo sobre lo que quieras tapar (una cara, un logo…). También puedes buscar las caras automáticamente.</p>
+    <div id="px-wrap" style="position:relative;margin:10px 0"><p class="meta" id="px-cargando">Cargando la foto…</p><canvas id="px-c" style="width:100%;height:auto;touch-action:none;display:none;border-radius:10px"></canvas></div>
+    <p class="err" id="px-err" hidden></p>
+    <div class="row-actions"><button type="button" class="btn ghost small" id="px-auto">Buscar caras</button><button type="button" class="btn ghost small" id="px-undo" disabled>Deshacer</button></div>
+    <div class="row-actions" style="margin-top:12px"><button type="button" class="btn ghost" id="px-cancel">Cancelar</button><button type="button" class="btn" id="px-save" disabled>Guardar</button></div></div></div>`;
+  const c=$("#px-c"), err=t=>{ const e=$("#px-err"); e.textContent=t; e.hidden=!t; };
+  let hist=[], ini=null, base=null;
+  const cambiar=()=>{ $("#px-undo").disabled=!hist.length; $("#px-save").disabled=!hist.length; };
+  const guarda=()=>{ hist.push(c.getContext("2d").getImageData(0,0,c.width,c.height)); if(hist.length>15) hist.shift(); };
+  try{
+    const r=await fetch(imgSrc(it.photo)); if(!r.ok) throw 0;
+    const img=await createImageBitmap(await r.blob());
+    const k=Math.min(1, 2400/Math.max(img.width,img.height));
+    c.width=Math.round(img.width*k); c.height=Math.round(img.height*k); c.getContext("2d").drawImage(img,0,0,c.width,c.height);
+    $("#px-cargando").remove(); c.style.display="block";
+  }catch(_){ return err("No se ha podido abrir la foto."); }
+  const pos=e=>{ const b=c.getBoundingClientRect(); return {x:(e.clientX-b.left)*c.width/b.width, y:(e.clientY-b.top)*c.height/b.height}; };
+  c.addEventListener("pointerdown",e=>{ ini=pos(e); base=c.getContext("2d").getImageData(0,0,c.width,c.height); c.setPointerCapture(e.pointerId); });
+  c.addEventListener("pointermove",e=>{ if(!ini) return; const p=pos(e), x=c.getContext("2d"); x.putImageData(base,0,0); x.strokeStyle="#ff3b30"; x.lineWidth=Math.max(3,c.width/250); x.strokeRect(ini.x,ini.y,p.x-ini.x,p.y-ini.y); });
+  c.addEventListener("pointerup",e=>{ if(!ini) return; const p=pos(e), x=c.getContext("2d"); x.putImageData(base,0,0);
+    const r={x:Math.min(ini.x,p.x), y:Math.min(ini.y,p.y), w:Math.abs(p.x-ini.x), h:Math.abs(p.y-ini.y)}; ini=null;
+    if(r.w<8||r.h<8) return; hist.push(base); pixelarZona(c,r); cambiar(); });
+  $("#px-undo").onclick=()=>{ const d=hist.pop(); if(d) c.getContext("2d").putImageData(d,0,0); cambiar(); };
+  $("#px-cancel").onclick=closeSheet;
+  $("#px-auto").onclick=async ev=>{ const b=ev.currentTarget, t=b.textContent; b.disabled=true; b.textContent="Buscando…"; err("");
+    try{ const fa=await cargarCaras(); const dets=await fa.detectAllFaces(c, new fa.SsdMobilenetv1Options({minConfidence:0.3, maxResults:100}));
+      if(!dets.length) err("No se ha encontrado ninguna cara. Puedes taparlas a mano arrastrando el dedo.");
+      else { guarda(); for(const r of zonasCaras(dets)) pixelarZona(c,r); cambiar(); }
+    }catch(_){ err("No se ha podido cargar el detector de caras. Comprueba la conexión."); }
+    b.disabled=false; b.textContent=t; };
+  $("#px-save").onclick=async ev=>{ const b=ev.currentTarget; b.disabled=true; b.textContent="Guardando…"; err("");
+    try{
+      const bl=await new Promise(r=>c.toBlob(r,"image/jpeg",0.9));
+      const up=await S.assets.upload(new File([bl],"foto.jpg",{type:"image/jpeg"}));
+      const {id:_i, ...resto}=it, vieja=it.photo;
+      await S.db.collection("items").doc(it.id).set({...resto, photo:up.id, photoType:"image/jpeg", updatedAt:new Date().toISOString()});
+      try{ await S.assets.delete(vieja); }catch(_){}
+      closeSheet();
+    }catch(x){ b.disabled=false; b.textContent="Guardar"; err("No se ha podido guardar. Vuelve a intentarlo."+((x&&(x.message||x.code))?" (Detalle: "+String(x.message||x.code).slice(0,120)+")":"")); }
+  };
+}
+async function pixelarFotos(ids, btn){
+  const its=ids.map(id=>S.items.find(i=>i.id===id)).filter(i=>i&&i.photo&&!/pdf/i.test(i.photoType||""));
+  if(!its.length) return alert("No hay fotos que revisar.");
+  if(!confirm(`Se buscarán las caras en ${its.length===1?"esta foto":"las "+its.length+" fotos"} y se pixelarán todas las que se encuentren. La foto original se borra y no se puede recuperar. ¿Seguimos?`)) return;
+  let hechas=0, caras=0, sin=0, fallos=0; const txt=btn?btn.textContent:"";
+  if(btn){ btn.disabled=true; btn.textContent="Preparando…"; }
+  try{ await cargarCaras(); }catch(_){ if(btn){ btn.disabled=false; btn.textContent=txt; } return alert("No se ha podido cargar el detector de caras. Comprueba la conexión y vuelve a probar."); }
+  for(const it of its){
+    if(btn) btn.textContent=`Revisando ${hechas+sin+fallos+1} de ${its.length}…`;
+    try{
+      const r = await fetch(imgSrc(it.photo)); if(!r.ok) throw 0;
+      const res = await pixelarCaras(await r.blob());
+      if(!res){ sin++; continue; }
+      const up = await S.assets.upload(res.file);
+      const {id, ...resto} = it, vieja = it.photo;
+      await S.db.collection("items").doc(id).set({...resto, photo:up.id, photoType:"image/jpeg", updatedAt:new Date().toISOString()});
+      try{ await S.assets.delete(vieja); }catch(_){}
+      hechas++; caras+=res.caras;
+    }catch(_){ fallos++; }
+  }
+  if(btn){ btn.disabled=false; btn.textContent=txt; }
+  alert(`Listo: ${caras} cara${caras===1?"":"s"} pixelada${caras===1?"":"s"} en ${hechas} foto${hechas===1?"":"s"}${sin?`. En ${sin} no se ha encontrado ninguna cara`:""}${fallos?`. ${fallos} no se ${fallos===1?"ha":"han"} podido arreglar`:""}. Revisa las fotos: con disfraces o caras de perfil puede escaparse alguna.`);
+}
 function pieDe(it){ const t=(it.title||"").trim(); return t && t!=="Foto" && t!==it.album ? t : ""; }
 function photoCard(it, i){
   const pie=pieDe(it), pieH=pie?`<span class="pie">${esc(pie)}</span>`:"";
   return `<figure class="photo" style="margin:0">${it.photo?`<button type="button" class="ver" data-ver="${i}" aria-label="Ver la foto en grande"><img src="${imgSrc(it.photo)}" alt="${esc(pie||it.title||"")}" loading="lazy"></button>`:`<div class="ph">Sin imagen</div>`}
     ${it.socio ? ((S.canEdit||it.socio===S.uid)?`<figcaption class="cap">${pieH}<div class="row-actions"><button class="btn ghost small" data-fs-del="${esc(it.socio)}|${esc(it.fid)}">Quitar</button></div></figcaption>`:(pie?`<figcaption class="cap">${pieH}</figcaption>`:""))
-      : (S.canEdit||pie)?`<figcaption class="cap">${pieH}${S.canEdit?adminRow(it):""}</figcaption>`:""}</figure>`;
+      : (S.canEdit||pie)?`<figcaption class="cap">${pieH}${S.canEdit?`<div class="row-actions"><button type="button" class="btn ghost small" data-pix="${esc(it.id)}">Pixelar</button></div>`+adminRow(it):""}</figcaption>`:""}</figure>`;
 }
 function abrirVisor(i){
   const fotos=S.verList||[]; if(!fotos.length) return;
@@ -824,7 +923,7 @@ const VIEWS = {
         <section class="carpetas" data-filter="fotos">${albs.map(card).join("")}</section>`;
     }
     const list=all.filter(i=>(i.album||"Otros")===f); S.verList=list.filter(i=>i.photo);
-    const trimAll = "";
+    const trimAll = S.canEdit && !SOC_ALBS.includes(f) && list.some(i=>i.photo&&!i.socio) ? `<div class="row-actions"><button type="button" class="btn ghost small" data-pix-all>Pixelar las caras de toda la carpeta</button></div>` : "";
     const puedeSubir = SOC_ALBS.includes(f) && S.uid && !S.canEdit && !S.noDb && (window.subirFotoSocio || S.assets);
     const n=(S.fsElegidas||[]).length;
     const subir = puedeSubir ? `<form class="card" id="fs-form" novalidate><h3>Sube tus fotos</h3><p class="meta">${f===LIBRE?"Esta carpeta es de los socios: cualquier tema vale. Solo las ven los socios.":"Enseña lo que hay que arreglar en el barrio: baches, suciedad, farolas, aceras… Las ven la directiva y los socios."}</p>
@@ -1222,6 +1321,8 @@ $("#main").addEventListener("click", e=>{
   const ed=e.target.closest("[data-edit]"); if(ed){ const it=S.items.find(i=>i.id===ed.dataset.edit); if(it) openForm(it.section,it); return; }
   const dl=e.target.closest("[data-del]"); if(dl){ askDelete(dl.dataset.del); }
   const tr=e.target.closest("[data-trim]"); if(tr){ recortarFotos([tr.dataset.trim], tr); return; }
+  const px=e.target.closest("[data-pix]"); if(px){ editorPixelar(px.dataset.pix); return; }
+  const pa=e.target.closest("[data-pix-all]"); if(pa){ const f=S.filter.fotos; pixelarFotos(S.items.filter(i=>i.section==="fotos"&&!i.socio&&(i.album||"Otros")===f).map(i=>i.id), pa); return; }
   const ta=e.target.closest("[data-trim-all]"); if(ta){ const f=S.filter.fotos; recortarFotos(S.items.filter(i=>i.section==="fotos"&&!i.socio&&(i.album||"Otros")===f).map(i=>i.id), ta); return; }
   const br=e.target.closest("[data-bz-read]"); if(br){ const [u,id]=br.dataset.bzRead.split("|"); bzPatch(u,id,{estado:"leida"}); }
   const bp=e.target.closest("[data-bz-reply]"); if(bp){ const [u,id]=bp.dataset.bzReply.split("|"); bzReplyForm(u,id); }

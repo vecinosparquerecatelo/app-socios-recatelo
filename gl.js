@@ -1,5 +1,16 @@
 /* Traducción al gallego de los textos de la app (castellano -> galego). La usa i18n.js. */
 window.GL_DICT = {
+  "Pixelar": "Pixelar",
+  "Pixelar la foto": "Pixelar a foto",
+  "Arrastra el dedo sobre lo que quieras tapar (una cara, un logo…). También puedes buscar las caras automáticamente.": "Arrastra o dedo sobre o que queiras tapar (unha cara, un logo…). Tamén podes buscar as caras automaticamente.",
+  "Cargando la foto…": "Cargando a foto…",
+  "Buscar caras": "Buscar caras",
+  "Buscando…": "Buscando…",
+  "Deshacer": "Desfacer",
+  "No se ha encontrado ninguna cara. Puedes taparlas a mano arrastrando el dedo.": "Non se atopou ningunha cara. Podes tapalas a man arrastrando o dedo.",
+  "Pixelar caras": "Pixelar caras",
+  "Pixelar las caras de toda la carpeta": "Pixelar as caras de toda a carpeta",
+  "Preparando…": "Preparando…",
   "Memoria completa del programa de adopción de bancos y árboles del Parque Rosalía de Castro, en gallego (original) y en castellano. Se presentó a la Alcaldía del Concello de Lugo en junio de 2026 y también a los diferentes grupos políticos.": "Memoria completa do programa de adopción de bancos e árbores do Parque Rosalía de Castro, en galego (orixinal) e en castelán. Presentouse á Alcaldía do Concello de Lugo en xuño de 2026 e tamén aos diferentes grupos políticos.",
   "En castellano": "En castelán",
   "En galego (original)": "En galego (orixinal)",
