@@ -442,9 +442,19 @@
 
   if("serviceWorker" in navigator){
     window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").then(r => r.update()).catch(() => {}));
-    // Cuando llega una versión nueva de la app, se recarga sola una vez
+    // Aunque el socio deje la app abierta, se busca versión nueva al volver a ella y cada 15 minutos
+    const buscarVersion = () => navigator.serviceWorker.getRegistration().then(r => r && r.update()).catch(() => {});
+    document.addEventListener("visibilitychange", () => { if(document.visibilityState === "visible") buscarVersion(); });
+    setInterval(() => { if(document.visibilityState === "visible") buscarVersion(); }, 15 * 60 * 1000);
+    // Cuando llega una versión nueva de la app, se recarga sola una vez (si está escribiendo, espera a que termine)
     const habia = !!navigator.serviceWorker.controller; let recargada = false;
-    navigator.serviceWorker.addEventListener("controllerchange", () => { if(habia && !recargada){ recargada = true; location.reload(); } });
+    const escribiendoAhora = () => { const a = document.activeElement; return !!(a && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)); };
+    const recargar = () => {
+      if(recargada) return;
+      if(escribiendoAhora() || document.querySelector("#sheet-root .sheet")){ setTimeout(recargar, 5000); return; }
+      recargada = true; location.reload();
+    };
+    navigator.serviceWorker.addEventListener("controllerchange", () => { if(habia) recargar(); });
   }
   if(!configured){
     showLogin("Falta conectar la base de datos (config.js).");
