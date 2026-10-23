@@ -575,9 +575,32 @@ async function registrarLectura(id){
     if(!S.lect){ const snap=await S.db.doc("lecturas/"+S.uid).get(); S.lect=snap.exists?snap.data():{uid:S.uid, vistos:{}}; }
     const v={...(S.lect.vistos||{})}, ahora=new Date().toISOString(), y=v[id]||{primera:ahora, veces:0};
     v[id]={primera:y.primera, ultima:ahora, veces:(y.veces||0)+1};
-    S.lect={uid:S.uid, vistos:v};
+    S.lect={...S.lect, uid:S.uid, vistos:v};
     await S.db.doc("lecturas/"+S.uid).set(S.lect);
   }catch(e){}
+}
+/* cada vez que un socio abre la app se apunta una entrada (una por sesión) */
+async function registrarEntrada(){
+  if(!S.db||!S.uid||S.canEdit) return;
+  try{ if(sessionStorage.getItem("recatelo-entrada")===S.uid) return; sessionStorage.setItem("recatelo-entrada",S.uid); }catch(e){}
+  try{
+    if(!S.lect){ const snap=await S.db.doc("lecturas/"+S.uid).get(); S.lect=snap.exists?snap.data():{uid:S.uid, vistos:{}}; }
+    const ahora=new Date().toISOString(), y=S.lect.app||{primera:ahora, veces:0};
+    S.lect={...S.lect, uid:S.uid, app:{primera:y.primera, ultima:ahora, veces:(y.veces||0)+1}};
+    await S.db.doc("lecturas/"+S.uid).set(S.lect);
+  }catch(e){}
+}
+function fechaHora(x){ return x?new Date(x).toLocaleString("es-ES",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}):""; }
+function actividadSocios(){
+  if(!S.canEdit) return "";
+  const titulo=id=>{ const it=S.items.find(i=>i.id===id); return it?(it.title||"Documento"):"Documento borrado"; };
+  const l=(S.lectAll||[]).map(d=>({uid:d.uid, app:d.app||null, docs:Object.entries(d.vistos||{})})).filter(d=>d.app||d.docs.length)
+    .sort((a,b)=>((b.app&&b.app.ultima)||"").localeCompare((a.app&&a.app.ultima)||""));
+  const total=l.reduce((n,d)=>n+((d.app&&d.app.veces)||0),0);
+  return `<details class="card lectores"><summary><strong>👁 Actividad de los socios</strong> <span class="meta">(solo lo ve la directiva)</span></summary>
+    <p class="meta">${l.length} ${l.length===1?"socio ha":"socios han"} entrado o abierto documentos · ${total} ${total===1?"entrada":"entradas"} en total. Las entradas se cuentan desde el 23 de octubre de 2026.</p>
+    ${l.length?`<ul>${l.map(d=>`<li><strong>${esc(nombreDe(d.uid))}</strong>: ${d.app?`${d.app.veces} ${d.app.veces===1?"entrada":"entradas"}, la última el ${fechaHora(d.app.ultima)}`:"sin entradas contadas"}${d.docs.length?`<br><span class="meta">Ha abierto: ${d.docs.map(([id,x])=>`${esc(titulo(id))}${x.veces>1?" ("+x.veces+" veces)":""}`).join(" · ")}</span>`:`<br><span class="meta">No ha abierto ningún documento.</span>`}</li>`).join("")}</ul>`:`<p>Todavía no hay datos.</p>`}
+  </details>`;
 }
 function startLecturas(){
   if(!S.db||!S.canEdit) return;
@@ -778,7 +801,7 @@ const VIEWS = {
     const avs = bySection("avisos");
     const prox = avs.filter(a=>!a.date||a.date>=t).sort((a,b)=>(a.date||"9").localeCompare(b.date||"9"));
     const pas = sortDesc(avs.filter(a=>a.date&&a.date<t));
-    return `<section class="hero">
+    return `${actividadSocios()}<section class="hero">
         ${S.logo?`<img class="hero-logo" src="${imgSrc(S.logo)}" alt="Logo de la Asociación de Vecinos Parque de Rosalía de Castro-Recatelo">`:""}
         ${S.canEdit&&S.assets?`<div><label class="btn ghost small" style="display:inline-block;cursor:pointer">${S.logo?"Cambiar logo":"Subir el logo de la asociación"}<input type="file" id="logo-in" accept="image/png,image/jpeg,image/webp,image/svg+xml" hidden></label> <span class="meta" id="logo-msg"></span></div>`:""}
         <span class="eyebrow">Parque de Rosalía de Castro · Recatelo · Lugo</span>
@@ -1752,7 +1775,7 @@ function pintarMarca(){
     db.collection("mercadillo").onSnapshot(snap=>{ S.mercAll=snap.docs.map(d=>({uid:d.id,...d.data()})); renderDatos(); },()=>{});
     db.collection("fotosocios").onSnapshot(snap=>{ S.fotoSoc=snap.docs.map(d=>({uid:d.id,...d.data()})); renderDatos(); },()=>{});
     if(compartidas && window.caches) userP.then(recibirCompartidas);
-    startInc(); userP.then(startApoyos); userP.then(startVotos); userP.then(startCuotas); userP.then(startLecturas);
+    startInc(); userP.then(startApoyos); userP.then(startVotos); userP.then(startCuotas); userP.then(startLecturas); userP.then(registrarEntrada);
     userP.then(startBuzon); userP.then(startLot); userP.then(startInsc); userP.then(startFicha); userP.then(startConsent);
   });
 })();

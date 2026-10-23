@@ -1,5 +1,6 @@
 /* Traducción al gallego de los textos de la app (castellano -> galego). La usa i18n.js. */
 window.GL_DICT = {
+"👁 Actividad de los socios":"👁 Actividade dos socios",
   "Curso de cestería tradicional 2025": "Curso de cestaría tradicional 2025",
   "Pixelar": "Pixelar",
   "Pixelar la foto": "Pixelar a foto",
