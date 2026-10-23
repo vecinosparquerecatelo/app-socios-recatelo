@@ -488,7 +488,8 @@ const COLECTIVOS = [
   {id:"michos", name:"Michos", desc:"Ayudamos al cuidado de las colonias felinas del barrio."},
   {id:"aecc", name:"Asociación Española Contra el Cáncer", desc:"Participamos en sus campañas de apoyo y recaudación."}
 ];
-const ALBUMES = ["Festas Recatelo 2023","Festas Recatelo 2024","Festas Recatelo 2025","Festas Recatelo 2026","Día das Letras Galegas 2025","Festa do Día das Letras Galegas 2026","Mercadillo de Navidad 2024","Samaín 2024","Samaín 2025","Curso de cestería tradicional 2025","Cantos de taberna","Foto temática libre socios","Fotos denuncia","Fotos murales zona","Otros"];
+const ALB_MOVER = {"Festas Recatelo 2023":"Festas Recatelo 2024"};
+const ALBUMES = ["Festas Recatelo 2024","Festas Recatelo 2025","Festas Recatelo 2026","Día das Letras Galegas 2025","Festa do Día das Letras Galegas 2026","Mercadillo de Navidad 2024","Samaín 2024","Samaín 2025","Curso de cestería tradicional 2025","Cantos de taberna","Foto temática libre socios","Fotos denuncia","Fotos murales zona","Otros"];
 const ESTADOS = {presentada:["Presentada","p-blue"], tramite:["En trámite","p-amber"], resuelta:["Resuelta","p-green"], rechazada:["Sin respuesta / rechazada","p-red"]};
 const PTABS = ["Bancos y árboles de la memoria","Cesión de la caseta del guarda como local social"];
 const PINTRO = {
@@ -1743,7 +1744,7 @@ function pintarMarca(){
     if(!db){ S.noDb=true; render(); return; }
     S.db=db;
     db.collection("items").onSnapshot(snap=>{
-      const rows = snap.docs.map(d=>({id:d.id, ...d.data()}));
+      const rows = snap.docs.map(d=>{ const r={id:d.id, ...d.data()}; const n=ALB_MOVER[r.album]; if(r.section==="fotos"&&n){ if(r.title===r.album) r.title=n; r.album=n; } return r; });
       S.items = [...rows, ...SEMILLAS.filter(s=>!rows.some(r=>r.id===s.id))].filter(i=>i.section!=="_borrado");
       S.loaded = true; renderDatos();
     }, ()=>{ S.loaded=true; render(); });
