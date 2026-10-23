@@ -746,7 +746,7 @@ async function pixelarFotos(ids, btn){
   if(btn){ btn.disabled=false; btn.textContent=txt; }
   alert(`Listo: ${caras} cara${caras===1?"":"s"} pixelada${caras===1?"":"s"} en ${hechas} foto${hechas===1?"":"s"}${sin?`. En ${sin} no se ha encontrado ninguna cara`:""}${fallos?`. ${fallos} no se ${fallos===1?"ha":"han"} podido arreglar`:""}. Revisa las fotos: con disfraces o caras de perfil puede escaparse alguna.`);
 }
-function pieDe(it){ const t=(it.title||"").trim(); return t && t!=="Foto" && t!==it.album ? t : ""; }
+function pieDe(it){ const t=(it.title||"").replace(/\s*[·\-–,(]?\s*(publicad[ao] (el )?)?(\d{1,2}[\/.\-]\d{1,2}[\/.\-]\d{2,4}|\d{4}-\d{2}-\d{2})\)?/gi,"").trim(); return t && t!=="Foto" && t!==it.album ? t : ""; }
 function photoCard(it, i){
   const pie=pieDe(it), pieH=pie?`<span class="pie">${esc(pie)}</span>`:"";
   return `<figure class="photo" style="margin:0">${it.photo?`<button type="button" class="ver" data-ver="${i}" aria-label="Ver la foto en grande"><img src="${imgSrc(it.photo)}" alt="${esc(pie||it.title||"")}" loading="lazy"></button>`:`<div class="ph">Sin imagen</div>`}
@@ -1096,7 +1096,7 @@ function cartelCard(it){
   const pdf = it.photoType==="application/pdf";
   const src = it.photo ? imgSrc(it.photo) : "";
   const media = !it.photo ? `<div class="ph">Sin cartel</div>` : pdf ? `<a class="ph" href="${src}" target="_blank" rel="noopener">Abrir cartel (PDF)</a>` : `<a href="${src}" target="_blank" rel="noopener"><img src="${src}" alt="Cartel: ${esc(it.title)}" loading="lazy"></a>`;
-  return `<figure class="photo" style="margin:0">${media}<figcaption class="cap"><strong>${esc(it.title)}</strong><span class="meta">${it.date?fmtDate(it.date):""}</span>${adminRow(it)}</figcaption></figure>`;
+  return `<figure class="photo" style="margin:0">${media}<figcaption class="cap"><strong>${esc(it.title)}</strong>${adminRow(it)}</figcaption></figure>`;
 }
 /* ---------- apoyo al BIC ---------- */
 function nombreDe(uid){ const f=S.fichasAll.find(x=>x.uid===uid); return (f&&f.nombre)||S.names[uid]||"Socio/a"; }
