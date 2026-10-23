@@ -398,7 +398,7 @@
         <span style="display:flex;flex-wrap:wrap;gap:6px">${k.activo ? `<button class="btn ghost small" data-wa="${escH(k.codigo)}" data-n="${escH(k.nombre)}">WhatsApp</button><button class="btn ghost small" data-quitar="${escH(k.codigo)}" data-n="${escH(k.nombre)}">Quitar acceso</button>` : ""}<button class="btn ghost small" data-borrar="${escH(k.codigo)}" data-n="${escH(k.nombre)}">Borrar</button></span>
       </li>`).join("");
     sheet(`<h2>Códigos de socios</h2>
-      <p class="body">Cada socio tiene un solo código. Funciona solo en un móvil: el primero en el que se escriba. Si alguien lo reenvía, no le servirá a nadie más. Si un socio cambia de móvil, quítale el acceso y créale uno nuevo.</p>
+      <p class="body">Cada socio tiene un solo código. Sirve en dos sitios como mucho (por ejemplo, el navegador y la app instalada del mismo móvil). Si un socio cambia de móvil, quítale el acceso y créale uno nuevo.</p>
       ${aviso || ""}
       <label for="cod-nombre">Nombre del socio<input id="cod-nombre" autocomplete="off"></label><p class="err" id="cod-err" hidden></p>
       <div class="row-actions"><button class="btn" id="cod-crear">Crear código</button></div>

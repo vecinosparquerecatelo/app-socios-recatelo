@@ -297,7 +297,7 @@ window.GL_DICT = {
 "CAPÍTULO IV. RÉGIMEN ECONÓMICO Y PATRIMONIAL": "CAPÍTULO IV. RÉXIME ECONÓMICO E PATRIMONIAL",
 "CAPÍTULO V. DISOLUCIÓN Y LIQUIDACIÓN DE LA ASOCIACIÓN.": "CAPÍTULO V. DISOLUCIÓN E LIQUIDACIÓN DA ASOCIACIÓN.",
 "CAPÍTULO VI. JUNTA DIRECTIVA": "CAPÍTULO VI. XUNTA DIRECTIVA",
-"Cada socio tiene un solo código. Funciona solo en un móvil: el primero en el que se escriba. Si alguien lo reenvía, no le servirá a nadie más. Si un socio cambia de móvil, quítale el acceso y créale uno nuevo.": "Cada socio ten un só código. Funciona só nun móbil: o primeiro no que se escriba. Se alguén o reenvía, non lle servirá a ninguén máis. Se un socio cambia de móbil, quítalle o acceso e créalle un novo.",
+"Cada socio tiene un solo código. Sirve en dos sitios como mucho (por ejemplo, el navegador y la app instalada del mismo móvil). Si un socio cambia de móvil, quítale el acceso y créale uno nuevo.": "Cada socio ten un só código. Serve en dous sitios como moito (por exemplo, o navegador e a app instalada do mesmo móbil). Se un socio cambia de móbil, quítalle o acceso e créalle un novo.",
   "en uso en su móvil": "en uso no seu móbil",
   "{0} ya tiene su código ({1}). Si ha cambiado de móvil, pulsa «Quitar acceso» en su código y crea uno nuevo.": "{0} xa ten o seu código ({1}). Se cambiou de móbil, preme «Quitar acceso» no seu código e crea un novo.",
 "Cada socio tiene su propio código. Solo hay que ponerlo una vez y no sirve para otras personas.": "Cada socio ten o seu propio código. Só hai que poñelo unha vez e non serve para outras persoas.",
