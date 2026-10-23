@@ -1,5 +1,12 @@
 /* Traducción al gallego de los textos de la app (castellano -> galego). La usa i18n.js. */
 window.GL_DICT = {
+  "Fotos (opcional, hasta 3)": "Fotos (opcional, ata 3)",
+  "{0} foto elegida": "{0} foto escollida",
+  "{0} fotos elegidas": "{0} fotos escollidas",
+  "{0} fotos elegidas (solo se ponen 3)": "{0} fotos escollidas (só se poñen 3)",
+  "No se ha podido subir la foto. Vuelve a intentarlo.": "Non se puido subir a foto. Volve intentalo.",
+  "No se ha podido subir la foto. Vuelve a intentarlo. (Detalle: {0})": "Non se puido subir a foto. Volve intentalo. (Detalle: {0})",
+  "No se ha podido publicar. Vuelve a intentarlo. (Detalle: {0})": "Non se puido publicar. Volve intentalo. (Detalle: {0})",
   "Hoy el parque tiene dos grandes enemigos: el botellón y el vandalismo, que dañan sus jardines, su mobiliario y sus elementos históricos ante la pasividad de las instituciones. La declaración BIC obligaría a protegerlo de verdad.": "Hoxe o parque ten dous grandes inimigos: o botellón e o vandalismo, que danan os seus xardíns, o seu mobiliario e os seus elementos históricos ante a pasividade das institucións. A declaración BIC obrigaría a protexelo de verdade.",
   "Encuestas": "Enquisas",
   "Avisos del barrio": "Avisos do barrio",

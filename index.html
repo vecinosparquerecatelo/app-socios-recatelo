@@ -73,6 +73,7 @@ h3{font-family:var(--display);font-weight:600;font-size:1.12rem;margin:0;text-wr
 .empty strong{color:var(--ink);display:block;margin-bottom:2px}
 .filters{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px}
 .filters[data-filter="mercadillo"]{flex-wrap:wrap}
+.merc-fotos{display:flex;gap:8px;overflow-x:auto;margin:6px 0}.merc-fotos img{height:160px;width:auto;max-width:85%;object-fit:cover;border-radius:10px;flex:0 0 auto}
 .filters button{flex:none;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:6px 12px;font:inherit;font-size:.9rem;cursor:pointer}
 .filters button[aria-pressed="true"]{background:var(--green);border-color:var(--green);color:var(--surface)}
 .cuota{background:var(--green);color:var(--surface);border-radius:var(--r);padding:20px;display:grid;gap:6px}
@@ -494,7 +495,7 @@ const ITIPOS = ["Farola o alumbrado","Bache o acera","Limpieza o basura","Árbol
 const IESTADOS = {pendiente:["Pendiente","p-red"], comunicado:["Comunicado al Concello","p-amber"], arreglado:["Arreglado","p-green"]};
 const DEFAULT_LOGO = "c37727719b16fb206a49359b064fca6d";
 const LOT = {precio:20, donativo:3, sorteo:"Sorteo Extraordinario de Navidad 2026"};
-const S = {apoyo:null, apoyosAll:[], nApoyos:null, votos:null, recVotos:{}, incAll:[], cuota:null, cuotasAll:[], lot:null, lotAll:[], lotBlocked:false, insc:null, inscAll:[], inscBlocked:false, estatutos:null, ficha:null, fichasAll:[], fichaBlocked:false, logo:DEFAULT_LOGO, consent:null, consentAll:[], consentBlocked:false, buzon:null, buzonAll:[], mercAll:[], uid:null, user:null, names:{}, buzonBlocked:false, items:[], loaded:false, canEdit:false, db:null, assets:null, noDb:false, tab:"inicio", filter:{reuniones:"todas", quejas:"todas", fotos:"todas"}};
+const S = {mcFotos:[], apoyo:null, apoyosAll:[], nApoyos:null, votos:null, recVotos:{}, incAll:[], cuota:null, cuotasAll:[], lot:null, lotAll:[], lotBlocked:false, insc:null, inscAll:[], inscBlocked:false, estatutos:null, ficha:null, fichasAll:[], fichaBlocked:false, logo:DEFAULT_LOGO, consent:null, consentAll:[], consentBlocked:false, buzon:null, buzonAll:[], mercAll:[], uid:null, user:null, names:{}, buzonBlocked:false, items:[], loaded:false, canEdit:false, db:null, assets:null, noDb:false, tab:"inicio", filter:{reuniones:"todas", quejas:"todas", fotos:"todas"}};
 
 const $ = s => document.querySelector(s);
 function esc(t){return String(t ?? "").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
@@ -709,7 +710,7 @@ const VIEWS = {
     const f=S.filter.mercadillo;
     list = f==="Empleo" ? list.filter(a=>ETIPOS.includes(a.tipo)) : list.filter(a=>a.tipo===f);
     const card = a => `<article class="card"><div class="meta"><span class="pill ${a.tipo==="Dono"?"p-green":a.tipo==="Compro"?"p-amber":a.tipo==="Trueque"?"p-blue":a.tipo==="Alquilo"?"p-green":a.tipo==="Ofrezco empleo"?"p-blue":a.tipo==="Busco empleo"?"p-amber":"p-red"}">${esc(a.tipo)}</span>${a.precio?`<span><strong>${esc(a.precio)}</strong></span>`:""}<span>${a.at?new Date(a.at).toLocaleDateString("es-ES",{day:"numeric",month:"long"}):""}</span></div>
-      <h3>${esc(a.titulo)}</h3>${a.texto?`<p class="body">${esc(a.texto)}</p>`:""}<p class="body"><strong>Contacto:</strong> ${esc(a.contacto)}${a.nombre?" · "+esc(a.nombre):""}</p>
+      <h3>${esc(a.titulo)}</h3>${a.texto?`<p class="body">${esc(a.texto)}</p>`:""}${(a.fotos||[]).length?`<div class="merc-fotos">${a.fotos.map(f=>`<img src="${imgSrc(f)}" alt="" loading="lazy" onerror="this.remove()">`).join("")}</div>`:""}<p class="body"><strong>Contacto:</strong> ${esc(a.contacto)}${a.nombre?" · "+esc(a.nombre):""}</p>
       ${a.uid!==S.uid?mercContacto(a):""}
       ${(a.uid===S.uid||S.canEdit)?`<div class="row-actions"><button class="btn ghost small" data-merc-del="${esc(a.uid)}|${esc(a.id)}">Quitar anuncio</button></div>`:""}</article>`;
     let form="";
@@ -717,6 +718,7 @@ const VIEWS = {
       <div class="two">${field("mc-tipo","Qué quieres hacer",sel("mc-tipo",[...MTIPOS,...ETIPOS],f==="Empleo"?"Ofrezco empleo":f))}${field("mc-precio","Precio o sueldo (opcional)",`<input id="mc-precio" placeholder="Por ejemplo: 20 € o 50 €/mes">`)}</div>
       ${field("mc-titulo","Título",`<input id="mc-titulo" placeholder="${f==="Empleo"?"Por ejemplo: busco cuidadora por las tardes":"Por ejemplo: bicicleta de niño"}">`)}
       ${field("mc-texto","Descripción (opcional)",`<textarea id="mc-texto"></textarea>`)}
+      ${field("mc-foto","Fotos (opcional, hasta 3)",`<input id="mc-foto" type="file" accept="image/*" multiple><span class="meta" id="mc-foto-n">${S.mcFotos&&S.mcFotos.length?S.mcFotos.length+(S.mcFotos.length===1?" foto elegida":" fotos elegidas"):""}</span>`)}
       <div class="two">${field("mc-contacto","Teléfono o correo para contactar",`<input id="mc-contacto" autocomplete="tel">`)}${field("mc-nombre","Tu nombre (opcional)",`<input id="mc-nombre" autocomplete="name">`)}</div>
       <p class="err" id="mc-err" hidden></p><div class="row-actions"><button class="btn" id="mc-send">Publicar anuncio</button></div></form></details>`;
     return `<div><h2>Mercadiño</h2><p class="lead">Alquila, vende, dona, compra o haz trueque entre vecinos, y ofrece o busca empleo en la pestaña Empleo. Solo los socios ven los anuncios. Si te interesa uno, pulsa “Me interesa” y le escribes directamente a quien lo publicó.</p></div>
@@ -1145,6 +1147,11 @@ $("#main").addEventListener("click", e=>{
   const bp=e.target.closest("[data-bz-reply]"); if(bp){ const [u,id]=bp.dataset.bzReply.split("|"); bzReplyForm(u,id); }
 });
 $("#fab").addEventListener("click", ()=>openForm(S.tab==="inicio"?"avisos":S.tab));
+$("#main").addEventListener("change", e=>{
+  if(e.target.id!=="mc-foto") return;
+  S.mcFotos=[...(e.target.files||[])].filter(f=>/^image\//.test(f.type)||!f.type).slice(0,3);
+  const n=$("#mc-foto-n"); if(n) n.textContent=S.mcFotos.length?S.mcFotos.length+(S.mcFotos.length===1?" foto elegida":" fotos elegidas")+((e.target.files||[]).length>3?" (solo se ponen 3)":""):"";
+});
 $("#main").addEventListener("submit", async e=>{
   if(e.target.id!=="mc-form") return; e.preventDefault();
   const v=id=>($("#"+id).value||"").trim(); const er=$("#mc-err"); er.hidden=true;
@@ -1153,8 +1160,21 @@ $("#main").addEventListener("submit", async e=>{
   if(!a.contacto){ er.textContent="Pon un teléfono o correo para que te contacten."; er.hidden=false; return; }
   const btn=$("#mc-send"); btn.disabled=true; btn.textContent="Publicando…";
   const mine=(S.mercAll.find(d=>d.uid===S.uid)||{}).anuncios||[];
-  try{ await S.db.doc("mercadillo/"+S.uid).set({anuncios:[...mine,a].slice(-20)}); S.filter.mercadillo=ETIPOS.includes(a.tipo)?"Empleo":a.tipo; render(); }
-  catch(x){ er.textContent="No se ha podido publicar. Vuelve a intentarlo."; er.hidden=false; btn.disabled=false; btn.textContent="Publicar anuncio"; }
+  let paso="foto";
+  try{
+    const fotos=[];
+    for(const fl of (S.mcFotos||[]).slice(0,3)){ const pf=await prepararFoto(fl); const up = window.subirFotoSocio ? await window.subirFotoSocio(pf) : await S.assets.upload(pf); fotos.push(up.id); }
+    if(fotos.length) a.fotos=fotos;
+    paso="anuncio";
+    await S.db.doc("mercadillo/"+S.uid).set({anuncios:[...mine,a].slice(-20)});
+    S.mcFotos=[]; S.filter.mercadillo=ETIPOS.includes(a.tipo)?"Empleo":a.tipo;
+    for(const id of ["mc-titulo","mc-texto","mc-precio"]){ const el=$("#"+id); if(el) el.value=""; }
+    render();
+  }catch(x){
+    const det=String((x&&(x.message||x.code))||"").slice(0,160);
+    er.textContent=(paso==="foto"?"No se ha podido subir la foto.":"No se ha podido publicar.")+" Vuelve a intentarlo."+(det?" (Detalle: "+det+")":"");
+    er.hidden=false; btn.disabled=false; btn.textContent="Publicar anuncio";
+  }
 });
 $("#main").addEventListener("click", async e=>{
   const b=e.target.closest("[data-merc-del]"); if(!b) return;
