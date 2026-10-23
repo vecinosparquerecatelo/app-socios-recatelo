@@ -129,6 +129,7 @@
     return { id: name, contentType: type };
   };
 
+  let codigosCache = null;
   const user = {
     isOwner: async () => state.directiva,
     canEdit: async () => state.directiva,
@@ -140,6 +141,17 @@
       if(state.directiva && ids.length){
         const { data } = await sb.from("docs").select("id,data").eq("coll","socios").in("id", ids);
         (data || []).forEach(r => out[r.id] = { id: r.id, name: (r.data && r.data.nombre) || "" });
+      }
+      // Si el socio no rellenó su nombre, se busca por el código con el que entró
+      if(state.directiva && ids.some(id => !(out[id] && out[id].name))){
+        try{
+          if(!codigosCache || Date.now() - codigosCache.t > 60000){
+            const { data } = await sb.rpc("nombres_codigos");
+            const m = {}; (data || []).forEach(r => { m[r.user_id] = r; });
+            codigosCache = { t: Date.now(), m };
+          }
+          ids.forEach(id => { const c = codigosCache.m[id]; if(c && !(out[id] && out[id].name)) out[id] = { id, name: (c.nombre || "") + " (código " + c.codigo + ")" }; });
+        }catch(_){}
       }
       ids.forEach(id => { if(!out[id]) out[id] = { id, name: "" }; });
       return out;

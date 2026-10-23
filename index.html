@@ -713,7 +713,7 @@ const VIEWS = {
       ${a.uid!==S.uid?mercContacto(a):""}
       ${(a.uid===S.uid||S.canEdit)?`<div class="row-actions"><button class="btn ghost small" data-merc-del="${esc(a.uid)}|${esc(a.id)}">Quitar anuncio</button></div>`:""}</article>`;
     let form="";
-    if(S.uid && !S.noDb) form = `<details class="card"><summary><strong>Poner un anuncio</strong></summary><form id="mc-form" novalidate style="display:grid;gap:12px;margin-top:12px">
+    if(S.uid && !S.noDb) form = `<details class="card" id="mc-box"><summary><strong>Poner un anuncio</strong></summary><form id="mc-form" novalidate style="display:grid;gap:12px;margin-top:12px">
       <div class="two">${field("mc-tipo","Qué quieres hacer",sel("mc-tipo",[...MTIPOS,...ETIPOS],f==="Empleo"?"Ofrezco empleo":f))}${field("mc-precio","Precio o sueldo (opcional)",`<input id="mc-precio" placeholder="Por ejemplo: 20 € o 50 €/mes">`)}</div>
       ${field("mc-titulo","Título",`<input id="mc-titulo" placeholder="${f==="Empleo"?"Por ejemplo: busco cuidadora por las tardes":"Por ejemplo: bicicleta de niño"}">`)}
       ${field("mc-texto","Descripción (opcional)",`<textarea id="mc-texto"></textarea>`)}
@@ -941,8 +941,8 @@ async function setApoyo(on){
 }
 async function startApoyos(){
   if(!S.db||!S.uid) return;
-  S.db.doc("apoyos/"+S.uid).onSnapshot(snap=>{ S.apoyo=snap.exists?snap.data():null; render(); },()=>{});
-  if(S.canEdit) S.db.collection("apoyos").onSnapshot(snap=>{ S.apoyosAll=snap.docs.map(d=>({uid:d.id,...d.data()})); S.nApoyos=S.apoyosAll.filter(d=>d.apoyo).length; render(); },()=>{});
+  S.db.doc("apoyos/"+S.uid).onSnapshot(snap=>{ S.apoyo=snap.exists?snap.data():null; renderDatos(); },()=>{});
+  if(S.canEdit) S.db.collection("apoyos").onSnapshot(snap=>{ S.apoyosAll=snap.docs.map(d=>({uid:d.id,...d.data()})); S.nApoyos=S.apoyosAll.filter(d=>d.apoyo).length; renderDatos(); },()=>{});
   else contarApoyos();
 }
 
@@ -968,7 +968,7 @@ async function votar(enc, i){
 }
 async function startVotos(){
   if(!S.db||!S.uid) return;
-  S.db.doc("votos/"+S.uid).onSnapshot(snap=>{ S.votos=snap.exists?snap.data():null; render(); },()=>{});
+  S.db.doc("votos/"+S.uid).onSnapshot(snap=>{ S.votos=snap.exists?snap.data():null; renderDatos(); },()=>{});
   contarVotos(); setInterval(()=>{ if(S.tab==="encuestas"&&document.visibilityState==="visible") contarVotos(); }, 30000);
 }
 
@@ -1008,7 +1008,7 @@ function marcarMio(lat,lng,silencio){
 }
 async function startInc(){
   if(!S.db) return;
-  S.db.collection("incidencias").onSnapshot(snap=>{ S.incAll=snap.docs.map(d=>({uid:d.id,...d.data()})); render(); },()=>{});
+  S.db.collection("incidencias").onSnapshot(snap=>{ S.incAll=snap.docs.map(d=>({uid:d.id,...d.data()})); renderDatos(); },()=>{});
 }
 async function guardarInc(uid, cambiar){
   const d=S.incAll.find(x=>x.uid===uid); const avisos=cambiar(((d&&d.avisos)||[]).slice());
@@ -1018,16 +1018,11 @@ async function guardarInc(uid, cambiar){
 /* ---------- cuotas ---------- */
 function anioCuota(){ return String(new Date().getFullYear()); }
 function cuotaPagada(uid){ const d=S.cuotasAll.find(x=>x.uid===uid); return !!(d&&d.pagadas&&d.pagadas[anioCuota()]); }
-function cuotaSocio(){
-  if(!S.uid || S.canEdit) return "";
-  const pag=!!(S.cuota&&S.cuota.pagadas&&S.cuota.pagadas[anioCuota()]);
-  return pag ? `<section class="card"><h3>Tu cuota de ${anioCuota()}</h3><p><span class="pill p-green">Al día</span> Gracias por tu apoyo a la asociación.</p></section>`
-    : `<section class="card"><h3>Tu cuota de ${anioCuota()}</h3><p><span class="pill p-amber">Pendiente</span> La directiva todavía no tiene apuntado tu pago de este año. Si ya has pagado, no hace falta que hagas nada: lo marcaremos en cuanto lo veamos en el banco.</p><p class="body">Cuota: 35 € al año, en la primera quincena de enero. Transferencia o ingreso en Caixa Rural Galega, a nombre de ASOC DE VECINOS PARQUE DE ROSALIA DE CASTRO-RECA. IBAN: ES15 3070 0001 2563 4625 3229. Concepto: tu nombre y DNI.</p></section>`;
-}
+// El estado de la cuota (pagada o pendiente) solo lo ve la directiva
+function cuotaSocio(){ return ""; }
 async function startCuotas(){
   if(!S.db||!S.uid) return;
-  if(S.canEdit) S.db.collection("cuotas").onSnapshot(snap=>{ S.cuotasAll=snap.docs.map(d=>({uid:d.id,...d.data()})); render(); },()=>{});
-  else S.db.doc("cuotas/"+S.uid).onSnapshot(snap=>{ S.cuota=snap.exists?snap.data():null; render(); },()=>{});
+  if(S.canEdit) S.db.collection("cuotas").onSnapshot(snap=>{ S.cuotasAll=snap.docs.map(d=>({uid:d.id,...d.data()})); renderDatos(); },()=>{});
 }
 async function setCuota(uid,on){
   const d=S.cuotasAll.find(x=>x.uid===uid); const pagadas={...((d&&d.pagadas)||{})};
@@ -1105,7 +1100,14 @@ function colIcon(id){
   return `<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">${p[id]||""}</svg>`;
 }
 
+// Los datos se refrescan cada 30 segundos; mientras alguien escribe en un formulario no se repinta la pantalla
+// (si no, se cierra el teclado y el formulario a mitad de escribir). Se repinta al terminar.
+let RENDER_PEND=false;
+function escribiendo(){ const a=document.activeElement; return !!(a && a.closest && a.closest("#main, #sheet-root") && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)); }
+function renderDatos(){ if(escribiendo()){ RENDER_PEND=true; return; } render(); }
+document.addEventListener("focusout", ()=>{ if(!RENDER_PEND) return; setTimeout(()=>{ if(RENDER_PEND && !escribiendo()){ RENDER_PEND=false; render(); } }, 1500); });
 function render(){
+  RENDER_PEND=false;
   let html = "";
   if(S.noDb) html += `<div class="notice">Abre esta app con tu cuenta de Claude para ver las publicaciones de la asociación.</div>`;
   else if(!S.loaded) html += `<div class="notice">Cargando publicaciones…</div>`;
@@ -1118,7 +1120,9 @@ function render(){
     html += VIEWS[S.tab]();
   }
   const keep = {}; for(const id of ["mc-tipo","mc-precio","mc-titulo","mc-texto","mc-contacto","mc-nombre","bz-texto","bz-contacto","bz-tipo","fi-nombre","fi-dir","fi-email","fi-prio","lt-nombre","lt-dni","lt-n","inc-tipo","inc-texto"]){ const el=document.getElementById(id); if(el) keep[id]=el.value; }
+  const abiertos = [...document.querySelectorAll("#main details[id]")].filter(d=>d.open).map(d=>d.id);
   $("#main").innerHTML = html;
+  for(const id of abiertos){ const d=document.getElementById(id); if(d) d.open=true; }
   for(const id in keep){ const el=document.getElementById(id); if(el) el.value=keep[id]; }
   $("#fab").hidden = !(S.canEdit && ADD_LABEL[S.tab]) || !!gate;
   if(!$("#fab").hidden) $("#fab").textContent = "+ Añadir " + ADD_LABEL[S.tab];
@@ -1223,8 +1227,8 @@ $("#main").addEventListener("click", async e=>{
 });
 async function startFicha(){
   if(!S.db || !S.user) return;
-  if(S.uid) S.db.doc("socios/"+S.uid).onSnapshot(snap=>{ S.ficha=snap.exists?snap.data():null; render(); },()=>{});
-  if(S.canEdit) S.db.collection("socios").onSnapshot(snap=>{ S.fichasAll=snap.docs.map(d=>({uid:d.id,...d.data()})); render(); },()=>{});
+  if(S.uid) S.db.doc("socios/"+S.uid).onSnapshot(snap=>{ S.ficha=snap.exists?snap.data():null; renderDatos(); },()=>{});
+  if(S.canEdit) S.db.collection("socios").onSnapshot(snap=>{ S.fichasAll=snap.docs.map(d=>({uid:d.id,...d.data()})); renderDatos(); },()=>{});
 }
 $("#main").addEventListener("change", async e=>{
   if(e.target.id!=="est-in") return;
@@ -1249,11 +1253,11 @@ $("#main").addEventListener("click", e=>{
 });
 async function startInsc(){
   if(!S.db||!S.user) return;
-  if(S.uid) S.db.doc("inscripciones/"+S.uid).onSnapshot(snap=>{ S.insc=snap.exists?snap.data():null; render(); },()=>{});
+  if(S.uid) S.db.doc("inscripciones/"+S.uid).onSnapshot(snap=>{ S.insc=snap.exists?snap.data():null; renderDatos(); },()=>{});
   if(S.canEdit) S.db.collection("inscripciones").onSnapshot(async snap=>{
     S.inscAll=snap.docs.map(d=>({uid:d.id,...d.data()}));
     try{ const ps=await S.user.profiles(S.inscAll.map(d=>d.uid)); for(const u in ps) S.names[u]=ps[u].name||""; }catch(e){}
-    render();
+    renderDatos();
   },()=>{});
 }
 $("#main").addEventListener("click", async e=>{
@@ -1298,8 +1302,8 @@ $("#main").addEventListener("click", async e=>{
 });
 async function startLot(){
   if(!S.db||!S.user) return;
-  if(S.uid) S.db.doc("loteria/"+S.uid).onSnapshot(snap=>{ S.lot=snap.exists?snap.data():null; render(); },()=>{});
-  if(S.canEdit) S.db.collection("loteria").onSnapshot(snap=>{ S.lotAll=snap.docs.map(d=>({uid:d.id,...d.data()})); render(); },()=>{});
+  if(S.uid) S.db.doc("loteria/"+S.uid).onSnapshot(snap=>{ S.lot=snap.exists?snap.data():null; renderDatos(); },()=>{});
+  if(S.canEdit) S.db.collection("loteria").onSnapshot(snap=>{ S.lotAll=snap.docs.map(d=>({uid:d.id,...d.data()})); renderDatos(); },()=>{});
 }
 $("#ft-priv").addEventListener("click", e=>{ e.preventDefault(); go("privacidad"); });
 async function saveConsent(acepta){
@@ -1318,11 +1322,11 @@ $("#main").addEventListener("submit", e=>{
 $("#main").addEventListener("click", e=>{ if(e.target.id==="cs-retirar") saveConsent(false); });
 async function startConsent(){
   if(!S.db || !S.user) return;
-  if(S.uid) S.db.doc("consentimientos/"+S.uid).onSnapshot(snap=>{ S.consent=snap.exists?snap.data():null; S.consentLoaded=true; render(); },()=>{});
+  if(S.uid) S.db.doc("consentimientos/"+S.uid).onSnapshot(snap=>{ S.consent=snap.exists?snap.data():null; S.consentLoaded=true; renderDatos(); },()=>{});
   if(S.canEdit) S.db.collection("consentimientos").onSnapshot(async snap=>{
     S.consentAll=snap.docs.map(d=>({uid:d.id,...d.data()}));
     try{ const ps=await S.user.profiles(S.consentAll.map(d=>d.uid)); for(const u in ps) S.names[u]=ps[u].name||""; }catch(e){}
-    render();
+    renderDatos();
   },()=>{});
 }
 $("#main").addEventListener("submit", async e=>{
@@ -1354,10 +1358,10 @@ async function startBuzon(){
     S.db.collection("buzon").onSnapshot(async snap=>{
       S.buzonAll=snap.docs.map(d=>({uid:d.id,...d.data()}));
       try{ const ps=await S.user.profiles(S.buzonAll.map(d=>d.uid)); for(const u in ps) S.names[u]=ps[u].name||""; }catch(e){}
-      render();
+      renderDatos();
     },()=>{});
   } else if(S.uid){
-    S.db.doc("buzon/"+S.uid).onSnapshot(snap=>{ S.buzon=snap.exists?snap.data():null; render(); },()=>{});
+    S.db.doc("buzon/"+S.uid).onSnapshot(snap=>{ S.buzon=snap.exists?snap.data():null; renderDatos(); },()=>{});
   }
 }
 
@@ -1537,11 +1541,11 @@ function pintarMarca(){
     db.collection("items").onSnapshot(snap=>{
       const rows = snap.docs.map(d=>({id:d.id, ...d.data()}));
       S.items = [...rows, ...SEMILLAS.filter(s=>!rows.some(r=>r.id===s.id))].filter(i=>i.section!=="_borrado");
-      S.loaded = true; render();
+      S.loaded = true; renderDatos();
     }, ()=>{ S.loaded=true; render(); });
-    db.doc("config/ajustes").onSnapshot(snap=>{ S.logo = snap.exists ? (snap.data().logo||DEFAULT_LOGO) : DEFAULT_LOGO; S.estatutos = snap.exists ? (snap.data().estatutos||null) : null; paintLogo(); render(); },()=>{});
-    db.collection("mercadillo").onSnapshot(snap=>{ S.mercAll=snap.docs.map(d=>({uid:d.id,...d.data()})); render(); },()=>{});
-    db.collection("fotosocios").onSnapshot(snap=>{ S.fotoSoc=snap.docs.map(d=>({uid:d.id,...d.data()})); render(); },()=>{});
+    db.doc("config/ajustes").onSnapshot(snap=>{ S.logo = snap.exists ? (snap.data().logo||DEFAULT_LOGO) : DEFAULT_LOGO; S.estatutos = snap.exists ? (snap.data().estatutos||null) : null; paintLogo(); renderDatos(); },()=>{});
+    db.collection("mercadillo").onSnapshot(snap=>{ S.mercAll=snap.docs.map(d=>({uid:d.id,...d.data()})); renderDatos(); },()=>{});
+    db.collection("fotosocios").onSnapshot(snap=>{ S.fotoSoc=snap.docs.map(d=>({uid:d.id,...d.data()})); renderDatos(); },()=>{});
     if(compartidas && window.caches) userP.then(recibirCompartidas);
     startInc(); userP.then(startApoyos); userP.then(startVotos); userP.then(startCuotas);
     userP.then(startBuzon); userP.then(startLot); userP.then(startInsc); userP.then(startFicha); userP.then(startConsent);
