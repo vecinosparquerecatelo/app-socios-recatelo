@@ -834,7 +834,7 @@ function listaDocs(){
     docs.push({t:it.title||"Documento", donde, tab:proy?"proyectos":it.section, orden:proy?1:it.section==="reuniones"?2:0, date:it.date||""});
   }
   if(!docs.length) return "";
-  docs.sort((a,b)=>a.orden-b.orden||(b.date||"").localeCompare(a.date||""));
+  docs.sort((a,b)=>a.orden-b.orden||(a.orden===0?a.t.localeCompare(b.t,"es",{numeric:true}):(b.date||"").localeCompare(a.date||"")));
   return `<article class="card"><h3>📄 Documentos de la asociación</h3><ul class="docs-lista">${docs.map(d=>`<li><button type="button" class="enlace" data-go="${d.tab}">${esc(d.t)}</button><br><span class="meta">${esc(d.donde)}</span></li>`).join("")}</ul><p class="meta" style="margin:10px 0 0">Seguiremos subiendo más documentos.</p></article>`;
 }
 function avisosConDocs(prox){
