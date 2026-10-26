@@ -1,5 +1,5 @@
 // Guarda la app en el móvil para que abra rápido y funcione aunque falle la conexión un momento.
-const CACHE = "recatelo-v95";
+const CACHE = "recatelo-v96";
 const SHELL = ["./", "index.html", "config.js", "conexion.js", "gl.js", "i18n.js", "vendor/supabase.js", "logo.jpg", "manifest.webmanifest", "icons/icon-192.png", "icons/icon-512.png", "icons/icon-maskable-512.png", "icons/apple-touch-icon.png"];
 self.addEventListener("install", e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL))); self.skipWaiting(); });
 self.addEventListener("activate", e => { e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== CACHE && k !== "recatelo-compartido").map(k => caches.delete(k))))); self.clients.claim(); });

@@ -835,7 +835,7 @@ function listaDocs(){
   }
   if(!docs.length) return "";
   docs.sort((a,b)=>a.orden-b.orden||(b.date||"").localeCompare(a.date||""));
-  return `<article class="card"><h3>📄 Documentos de la asociación</h3><ul class="docs-lista">${docs.map(d=>`<li><button type="button" class="enlace" data-go="${d.tab}">${esc(d.t)}</button><br><span class="meta">${esc(d.donde)}</span></li>`).join("")}</ul></article>`;
+  return `<article class="card"><h3>📄 Documentos de la asociación</h3><ul class="docs-lista">${docs.map(d=>`<li><button type="button" class="enlace" data-go="${d.tab}">${esc(d.t)}</button><br><span class="meta">${esc(d.donde)}</span></li>`).join("")}</ul><p class="meta" style="margin:10px 0 0">Seguiremos subiendo más documentos.</p></article>`;
 }
 function avisosConDocs(prox){
   const i=prox.findIndex(a=>/fiesta|festa|festas/i.test((a.title||"")+" "+(a.body||"")));
