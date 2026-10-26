@@ -59,7 +59,8 @@
         const { error } = await sb.from("docs").upsert({ coll, id, data, updated_at: new Date().toISOString() });
         if(error) throw err("invalid_argument", error.message);
         notify(coll);
-        if(coll === "items" || coll === "mercadillo") sb.functions.invoke("smart-task", { body: { coll, id } }).catch(() => {});
+        // Al móvil solo llegan los anuncios del Mercadiño y los avisos de Inicio
+        if(coll === "mercadillo" || (coll === "items" && data && data.section === "avisos")) sb.functions.invoke("smart-task", { body: { coll, id } }).catch(() => {});
       },
       async update(patch){
         const cur = await fetchDoc(coll, id);
