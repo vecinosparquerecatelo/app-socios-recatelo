@@ -1,5 +1,6 @@
 /* Traducción al gallego de los textos de la app (castellano -> galego). La usa i18n.js. */
 window.GL_DICT = {
+"📄 Documentos de la asociación":"📄 Documentos da asociación",
 "👁 Quién mira las fotos (solo directiva)":"👁 Quen mira as fotos (só directiva)",
 "👁 Quién mira las fotos":"👁 Quen mira as fotos",
 "Solo lo ve la directiva. Cuenta las veces que cada socio abre una carpeta y cuántas fotos amplía. Se cuenta desde el 26 de octubre de 2026.":"Só o ve a directiva. Conta as veces que cada socio abre un cartafol e cantas fotos amplía. Cóntase desde o 26 de outubro de 2026.",

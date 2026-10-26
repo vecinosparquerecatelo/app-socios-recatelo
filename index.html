@@ -66,6 +66,8 @@ h3{font-family:var(--display);font-weight:600;font-size:1.12rem;margin:0;text-wr
 .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px;display:grid;gap:8px;min-width:0}
 .meta{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;color:var(--muted);font-size:.88rem}
 .nuevo-n{display:inline-block;min-width:1.3em;padding:0 5px;border-radius:999px;background:#b3261e;color:#fff;font-size:.75rem;font-weight:700;line-height:1.3em;text-align:center}
+.docs-lista{margin:0;padding-left:18px;display:grid;gap:8px}
+.enlace{background:none;border:0;padding:0;color:inherit;font:inherit;font-weight:600;text-align:left;text-decoration:underline;cursor:pointer}
 .pill{display:inline-block;border-radius:999px;padding:2px 10px;font-size:.8rem;font-weight:700;letter-spacing:.02em}
 .p-green{background:var(--green-soft);color:var(--green)} .p-amber{background:var(--amber-soft);color:var(--amber)}
 .p-red{background:var(--red-soft);color:var(--red)} .p-blue{background:var(--blue-soft);color:var(--blue)}
@@ -820,6 +822,27 @@ function moverFotosForm(){
   };
 }
 function pieDe(it){ const t=(it.title||"").replace(/\s*[·\-–,(]?\s*(publicad[ao] (el )?)?(\d{1,2}[\/.\-]\d{1,2}[\/.\-]\d{2,4}|\d{4}-\d{2}-\d{2})\)?/gi,"").trim(); return t && t!=="Foto" && t!==it.album ? t : ""; }
+/* listado de documentos (proyectos, reuniones y BIC) debajo del aviso de la fiesta */
+function listaDocs(){
+  const docs=[];
+  for(const it of S.items){
+    const proy=it.section==="proyectos"||(it.section==="quejas"&&it.kind==="proyecto");
+    if(!proy&&it.section!=="reuniones"&&it.section!=="bic") continue;
+    if(!it.doc&&!it.photo&&!it.doc2) continue;
+    const ptab=it.ptab==="Banco de la memoria"?PTABS[0]:it.ptab;
+    const donde=proy?"Proyectos"+(PTABS.includes(ptab)?" › "+ptab:""):it.section==="reuniones"?"Reuniones"+(it.entity?" › "+it.entity:""):"Parque Rosalía BIC";
+    docs.push({t:it.title||"Documento", donde, tab:proy?"proyectos":it.section, orden:proy?1:it.section==="reuniones"?2:0, date:it.date||""});
+  }
+  if(!docs.length) return "";
+  docs.sort((a,b)=>a.orden-b.orden||(b.date||"").localeCompare(a.date||""));
+  return `<article class="card"><h3>📄 Documentos de la asociación</h3><ul class="docs-lista">${docs.map(d=>`<li><button type="button" class="enlace" data-go="${d.tab}">${esc(d.t)}</button><br><span class="meta">${esc(d.donde)}</span></li>`).join("")}</ul></article>`;
+}
+function avisosConDocs(prox){
+  const i=prox.findIndex(a=>/fiesta|festa|festas/i.test((a.title||"")+" "+(a.body||"")));
+  const l=listaDocs(), cards=prox.map(avisoCard);
+  if(l) cards.splice(i<0?cards.length:i+1, 0, l);
+  return cards.join("");
+}
 function photoCard(it, i){
   const pie=pieDe(it), pieH=pie?`<span class="pie">${esc(pie)}</span>`:"";
   return `<figure class="photo" style="margin:0">${it.photo?`<button type="button" class="ver" data-ver="${i}" aria-label="Ver la foto en grande"><img src="${imgSrc(it.photo)}" alt="${esc(pie||it.title||"")}" loading="lazy"></button>`:`<div class="ph">Sin imagen</div>`}
@@ -866,7 +889,7 @@ const VIEWS = {
         ${S.uid && !S.canEdit && !S.ficha ? `<div class="notice">¿Eres socio/a? <a href="#misdatos" data-go="misdatos">Déjanos tus datos y tu prioridad para el barrio</a>.</div>` : ""}
         <p>Esta app es de todos los socios: aquí encontrarás los avisos, los cursos, el Mercadiño, las reuniones, las sugerencias y las fotos de lo que vamos haciendo. Y como siempre, quedamos a vuestra disposición para cualquier sugerencia, duda o apunte.</p>
         <p class="firma">Junta Directiva</p></section>
-      <section class="stack"><h2>Avisos</h2>${prox.length?prox.map(avisoCard).join(""):emptyBox("No hay avisos próximos.",S.canEdit?"Pulsa “+ Añadir aviso” para publicar una convocatoria.":"Cuando la directiva publique uno, aparecerá aquí.")}
+      <section class="stack"><h2>Avisos</h2>${prox.length?avisosConDocs(prox):emptyBox("No hay avisos próximos.",S.canEdit?"Pulsa “+ Añadir aviso” para publicar una convocatoria.":"Cuando la directiva publique uno, aparecerá aquí.")}
       ${pas.length?`<details><summary class="meta" style="cursor:pointer">Avisos anteriores (${pas.length})</summary><div class="stack" style="margin-top:10px">${pas.map(avisoCard).join("")}</div></details>`:""}</section>
       <section class="cuota"><span>Cuota de socio</span><div class="big">35 € <span>al año</span></div><p>Con tu cuota sostienes las actividades, las Festas de Recatelo y el apoyo a los colectivos que apadrinamos.</p><p><strong>Cómo pagar:</strong> transferencia o ingreso en Caixa Rural Galega. Titular exacto de la cuenta: <strong>ASOC DE VECINOS PARQUE DE ROSALIA DE CASTRO-RECA</strong>. IBAN: <span class="iban" id="iban">ES15 3070 0001 2563 4625 3229</span>. Concepto: tu nombre y DNI.</p><p><strong>Cuándo:</strong> el pago se hace en la primera quincena de enero de cada año.</p><div><button class="btn" style="background:var(--surface);color:var(--green)" id="copy-iban" type="button">Copiar IBAN</button> <span id="copy-msg"></span></div></section>`;
   },
