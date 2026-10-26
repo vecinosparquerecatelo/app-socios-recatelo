@@ -1,5 +1,7 @@
 /* Traducción al gallego de los textos de la app (castellano -> galego). La usa i18n.js. */
 window.GL_DICT = {
+"La asociación › Estatutos":"A asociación › Estatutos",
+"Estatutos de la asociación":"Estatutos da asociación",
 "Seguiremos subiendo más documentos.":"Seguiremos subindo máis documentos.",
 "Ver el Mercadiño":"Ver o Mercadiño",
 "📄 Documentos de la asociación":"📄 Documentos da asociación",
