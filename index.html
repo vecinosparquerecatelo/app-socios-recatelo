@@ -65,6 +65,7 @@ h3{font-family:var(--display);font-weight:600;font-size:1.12rem;margin:0;text-wr
 .stack{display:grid;gap:12px}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px;display:grid;gap:8px;min-width:0}
 .meta{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;color:var(--muted);font-size:.88rem}
+.nuevo-n{display:inline-block;min-width:1.3em;padding:0 5px;border-radius:999px;background:#b3261e;color:#fff;font-size:.75rem;font-weight:700;line-height:1.3em;text-align:center}
 .pill{display:inline-block;border-radius:999px;padding:2px 10px;font-size:.8rem;font-weight:700;letter-spacing:.02em}
 .p-green{background:var(--green-soft);color:var(--green)} .p-amber{background:var(--amber-soft);color:var(--amber)}
 .p-red{background:var(--red-soft);color:var(--red)} .p-blue{background:var(--blue-soft);color:var(--blue)}
@@ -489,7 +490,7 @@ const COLECTIVOS = [
   {id:"aecc", name:"Asociación Española Contra el Cáncer", desc:"Participamos en sus campañas de apoyo y recaudación."}
 ];
 const ALB_MOVER = {"Festas Recatelo 2023":"Festas Recatelo 2024"};
-const ALBUMES = ["Festas Recatelo 2024","Festas Recatelo 2025","Festas Recatelo 2026","Día das Letras Galegas 2025","Festa do Día das Letras Galegas 2026","Mercadillo de Navidad 2024","Samaín 2024","Samaín 2025","Curso de cestería tradicional 2025","Cantos de taberna","Foto temática libre socios","Fotos denuncia","Fotos murales zona","Otros"];
+const ALBUMES = ["Festas Recatelo 2023","Festas Recatelo 2024","Festas Recatelo 2025","Festas Recatelo 2026","Día das Letras Galegas 2025","Festa do Día das Letras Galegas 2026","Mercadillo de Navidad 2024","Samaín 2024","Samaín 2025","Curso de cestería tradicional 2025","Cantos de taberna","Foto temática libre socios","Fotos denuncia","Fotos murales zona","Otros"];
 const ESTADOS = {presentada:["Presentada","p-blue"], tramite:["En trámite","p-amber"], resuelta:["Resuelta","p-green"], rechazada:["Sin respuesta / rechazada","p-red"]};
 const PTABS = ["Bancos y árboles de la memoria","Cesión de la caseta del guarda como local social"];
 const PINTRO = {
@@ -513,12 +514,15 @@ function bySection(sec){ return S.items.filter(i=>i.section===sec); }
 function imgSrc(id){ return window.blobUrl ? window.blobUrl(id) : "/_blob/"+encodeURIComponent(id); }
 
 /* ---------- navegación ---------- */
+function mercVisto(){ try{ let v=localStorage.getItem("recatelo-merc-visto"); if(!v){ v=new Date().toISOString(); localStorage.setItem("recatelo-merc-visto",v); } return v; }catch(_){ return new Date().toISOString(); } }
+function mercNuevos(){ if(S.tab==="mercadillo") return 0; const v=mercVisto(); let n=0; for(const d of S.mercAll) if(d.uid!==S.uid) for(const a of (d.anuncios||[])) if((a.at||"")>v) n++; return n; }
 function renderTabs(){
-  const cur = groupOf(S.tab);
-  $("#tabs").innerHTML = GROUPS.map(g=>`<button role="tab" data-tab="${g===cur?S.tab:g.subs[0][0]}" aria-selected="${g===cur}">${g.label}</button>`).join("");
+  const cur = groupOf(S.tab), nm = mercNuevos();
+  $("#tabs").innerHTML = GROUPS.map(g=>`<button role="tab" data-tab="${g===cur?S.tab:g.subs[0][0]}" aria-selected="${g===cur}">${g.label}${g.label==="Mercadiño"&&nm?` <span class="nuevo-n" aria-label="${nm} nuevos">${nm}</span>`:""}</button>`).join("");
 }
 $("#tabs").addEventListener("click", e=>{ const b=e.target.closest("[data-tab]"); if(b) go(b.dataset.tab); });
 function go(tab){
+  if(tab!=="mercadillo") S.mercAntes=null;
   S.tab = tab; try{ history.replaceState(null,"","#"+tab) }catch(e){}
   renderTabs(); render(); window.scrollTo({top:0});
   const b=$('#tabs [aria-selected="true"]'); b && b.scrollIntoView({inline:"center",block:"nearest"});
@@ -579,6 +583,28 @@ async function registrarLectura(id){
     await S.db.doc("lecturas/"+S.uid).set(S.lect);
   }catch(e){}
 }
+/* fotos: qué carpetas abre cada socio y cuántas fotos amplía (solo lo ve la directiva) */
+let LECT_COLA=Promise.resolve(); const FOTOS_VISTAS=new Set();
+function registrarFoto(album, fotoId){
+  if(!S.db||!S.uid||S.canEdit||!album) return;
+  const k=(fotoId?"f:":"a:")+album+":"+(fotoId||""); if(FOTOS_VISTAS.has(k)) return; FOTOS_VISTAS.add(k);
+  LECT_COLA=LECT_COLA.then(async()=>{ try{
+    if(!S.lect){ const snap=await S.db.doc("lecturas/"+S.uid).get(); S.lect=snap.exists?snap.data():{uid:S.uid, vistos:{}}; }
+    const fs={...(S.lect.fotos||{})}, ahora=new Date().toISOString(), y=fs[album]||{primera:ahora, veces:0, grandes:0};
+    fs[album]=fotoId?{...y, ultima:ahora, grandes:(y.grandes||0)+1}:{...y, ultima:ahora, veces:(y.veces||0)+1};
+    S.lect={...S.lect, uid:S.uid, fotos:fs};
+    await S.db.doc("lecturas/"+S.uid).set(S.lect);
+  }catch(e){} });
+}
+function quienMiraFotos(){
+  const filas=[]; for(const d of (S.lectAll||[])) for(const [alb,x] of Object.entries(d.fotos||{})) filas.push({uid:d.uid, alb, ...x});
+  const albs=[...new Set(filas.map(f=>f.alb))].sort((a,b)=>{ const ia=ALBUMES.indexOf(a), ib=ALBUMES.indexOf(b); return (ia<0?99:ia)-(ib<0?99:ib); });
+  return `<div class="filters" data-filter="fotos"><button data-f="todas">← Todas las carpetas</button></div>
+    <div><h2>👁 Quién mira las fotos</h2><p class="lead">Solo lo ve la directiva. Cuenta las veces que cada socio abre una carpeta y cuántas fotos amplía. Se cuenta desde el 26 de octubre de 2026.</p></div>
+    ${albs.length?albs.map(a=>{ const l=filas.filter(f=>f.alb===a).sort((x,y)=>(y.ultima||"").localeCompare(x.ultima||""));
+      return `<details class="card lectores"><summary><strong>${esc(a)}</strong> <span class="meta">· ${l.length} ${l.length===1?"socio":"socios"}</span></summary><ul>${l.map(f=>`<li>${esc(nombreDe(f.uid))}: abrió la carpeta ${f.veces||0} ${(f.veces||0)===1?"vez":"veces"}${f.grandes?`, amplió ${f.grandes} foto${f.grandes===1?"":"s"}`:""} · última vez el ${fechaHora(f.ultima)}</li>`).join("")}</ul></details>`; }).join("")
+      :`<div class="empty"><strong>Todavía no hay datos.</strong>Cuando los socios abran carpetas de fotos, aparecerán aquí.</div>`}`;
+}
 /* cada vez que un socio abre la app se apunta una entrada (una por sesión) */
 async function registrarEntrada(){
   if(!S.db||!S.uid||S.canEdit) return;
@@ -594,12 +620,12 @@ function fechaHora(x){ return x?new Date(x).toLocaleString("es-ES",{day:"numeric
 function actividadSocios(){
   if(!S.canEdit) return "";
   const titulo=id=>{ const it=S.items.find(i=>i.id===id); return it?(it.title||"Documento"):"Documento borrado"; };
-  const l=(S.lectAll||[]).map(d=>({uid:d.uid, app:d.app||null, docs:Object.entries(d.vistos||{})})).filter(d=>d.app||d.docs.length)
+  const l=(S.lectAll||[]).map(d=>({uid:d.uid, app:d.app||null, docs:Object.entries(d.vistos||{}), fotos:d.fotos||{}})).filter(d=>d.app||d.docs.length||Object.keys(d.fotos||{}).length)
     .sort((a,b)=>((b.app&&b.app.ultima)||"").localeCompare((a.app&&a.app.ultima)||""));
   const total=l.reduce((n,d)=>n+((d.app&&d.app.veces)||0),0);
   return `<details class="card lectores"><summary><strong>👁 Actividad de los socios</strong> <span class="meta">(solo lo ve la directiva)</span></summary>
     <p class="meta">${l.length} ${l.length===1?"socio ha":"socios han"} entrado o abierto documentos · ${total} ${total===1?"entrada":"entradas"} en total. Las entradas se cuentan desde el 23 de octubre de 2026.</p>
-    ${l.length?`<ul>${l.map(d=>`<li><strong>${esc(nombreDe(d.uid))}</strong>: ${d.app?`${d.app.veces} ${d.app.veces===1?"entrada":"entradas"}, la última el ${fechaHora(d.app.ultima)}`:"sin entradas contadas"}${d.docs.length?`<br><span class="meta">Ha abierto: ${d.docs.map(([id,x])=>`${esc(titulo(id))}${x.veces>1?" ("+x.veces+" veces)":""}`).join(" · ")}</span>`:`<br><span class="meta">No ha abierto ningún documento.</span>`}</li>`).join("")}</ul>`:`<p>Todavía no hay datos.</p>`}
+    ${l.length?`<ul>${l.map(d=>`<li><strong>${esc(nombreDe(d.uid))}</strong>: ${d.app?`${d.app.veces} ${d.app.veces===1?"entrada":"entradas"}, la última el ${fechaHora(d.app.ultima)}`:"sin entradas contadas"}${d.docs.length?`<br><span class="meta">Ha abierto: ${d.docs.map(([id,x])=>`${esc(titulo(id))}${x.veces>1?" ("+x.veces+" veces)":""}`).join(" · ")}</span>`:`<br><span class="meta">No ha abierto ningún documento.</span>`}${Object.keys(d.fotos).length?`<br><span class="meta">Fotos: ${Object.entries(d.fotos).map(([a,x])=>`${esc(a)} (${x.veces||0})`).join(" · ")}</span>`:""}</li>`).join("")}</ul>`:`<p>Todavía no hay datos.</p>`}
   </details>`;
 }
 function startLecturas(){
@@ -770,6 +796,29 @@ async function pixelarFotos(ids, btn){
   if(btn){ btn.disabled=false; btn.textContent=txt; }
   alert(`Listo: ${caras} cara${caras===1?"":"s"} pixelada${caras===1?"":"s"} en ${hechas} foto${hechas===1?"":"s"}${sin?`. En ${sin} no se ha encontrado ninguna cara`:""}${fallos?`. ${fallos} no se ${fallos===1?"ha":"han"} podido arreglar`:""}. Revisa las fotos: con disfraces o caras de perfil puede escaparse alguna.`);
 }
+function moverFotosForm(){
+  const f=S.filter.fotos, list=(S.verList&&S.verList.length?S.verList:[]).filter(i=>(i.album||"Otros")===f);
+  if(!list.length) return alert("No hay fotos en esta carpeta.");
+  const destinos=ALBUMES.filter(a=>a!==f);
+  $("#sheet-root").innerHTML=`<div class="sheet-bg" id="sheet-bg"><form class="sheet" id="mv-f" novalidate><h2>Mover fotos</h2>
+    <p class="meta">La carpeta «<span>${esc(f)}</span>» tiene ${list.length} foto${list.length===1?"":"s"}. Se mueven las primeras, en el orden en que salen en pantalla.</p>
+    ${field("mv-n","¿Cuántas fotos?",`<input id="mv-n" type="number" min="1" max="${list.length}" value="${list.length}">`)}
+    ${field("mv-a","Llevarlas a la carpeta",sel("mv-a",destinos,destinos.includes("Festas Recatelo 2024")?"Festas Recatelo 2024":destinos[0]))}
+    <p class="err" id="mv-err" hidden></p><div class="row-actions"><button type="button" class="btn ghost" id="mv-x">Cancelar</button><button class="btn" id="mv-ok">Mover</button></div></form></div>`;
+  const cerrar=()=>{ $("#sheet-root").innerHTML=""; };
+  $("#mv-x").onclick=cerrar; $("#sheet-bg").addEventListener("click",e=>{ if(e.target.id==="sheet-bg") cerrar(); });
+  $("#mv-f").onsubmit=async e=>{ e.preventDefault();
+    const n=Math.max(1,Math.min(list.length,parseInt($("#mv-n").value,10)||0)), dest=$("#mv-a").value, btn=$("#mv-ok");
+    if(!confirm(`¿Mover las primeras ${n} fotos de «${f}» a «${dest}»?`)) return;
+    btn.disabled=true; let ok=0, mal=0; const elegidas=list.slice(0,n);
+    for(const it of elegidas.filter(i=>!i.socio)){ btn.textContent=`Moviendo ${ok+mal+1} de ${n}…`;
+      try{ const {id,...resto}=it; await S.db.collection("items").doc(id).set({...resto, album:dest, title:resto.title===f?dest:resto.title, updatedAt:new Date().toISOString()}); ok++; }catch(_){ mal++; } }
+    const porSocio={}; for(const it of elegidas.filter(i=>i.socio)) (porSocio[it.socio]=porSocio[it.socio]||new Set()).add(it.fid);
+    for(const u in porSocio){ const d=(S.fotoSoc||[]).find(x=>x.uid===u); if(!d) { mal+=porSocio[u].size; continue; }
+      try{ const {uid:_u,...dd}=d; await S.db.doc("fotosocios/"+u).set({...dd, fotos:(d.fotos||[]).map(x=>porSocio[u].has(x.id)?{...x, album:dest}:x)}); ok+=porSocio[u].size; }catch(_){ mal+=porSocio[u].size; } }
+    cerrar(); alert(`Listo: ${ok} foto${ok===1?"":"s"} movida${ok===1?"":"s"} a «${dest}»${mal?`. ${mal} no se ${mal===1?"ha":"han"} podido mover`:""}.`);
+  };
+}
 function pieDe(it){ const t=(it.title||"").replace(/\s*[·\-–,(]?\s*(publicad[ao] (el )?)?(\d{1,2}[\/.\-]\d{1,2}[\/.\-]\d{2,4}|\d{4}-\d{2}-\d{2})\)?/gi,"").trim(); return t && t!=="Foto" && t!==it.album ? t : ""; }
 function photoCard(it, i){
   const pie=pieDe(it), pieH=pie?`<span class="pie">${esc(pie)}</span>`:"";
@@ -781,7 +830,7 @@ function abrirVisor(i){
   const fotos=S.verList||[]; if(!fotos.length) return;
   let n=i; const v=document.createElement("div"); v.className="visor"; v.setAttribute("role","dialog"); v.setAttribute("aria-label","Foto en grande");
   v.innerHTML=`<img alt=""><button type="button" class="vx" aria-label="Cerrar">✕</button>${fotos.length>1?`<button type="button" class="vp" aria-label="Anterior">‹</button><button type="button" class="vn" aria-label="Siguiente">›</button>`:""}<span class="vpie"></span><span class="vc"></span>`;
-  const img=v.querySelector("img"), pinta=()=>{ img.src=imgSrc(fotos[n].photo); img.alt=fotos[n].title||""; v.querySelector(".vpie").textContent=pieDe(fotos[n]); v.querySelector(".vc").textContent=fotos.length>1?`${n+1} de ${fotos.length}`:""; };
+  const img=v.querySelector("img"), pinta=()=>{ img.src=imgSrc(fotos[n].photo); img.alt=fotos[n].title||""; v.querySelector(".vpie").textContent=pieDe(fotos[n]); registrarFoto(fotos[n].album||"Otros", fotos[n].id); v.querySelector(".vc").textContent=fotos.length>1?`${n+1} de ${fotos.length}`:""; };
   const mover=d=>{ n=(n+d+fotos.length)%fotos.length; pinta(); };
   const cerrar=()=>{ v.remove(); document.removeEventListener("keydown",tecla); document.body.style.overflow=""; };
   const tecla=e=>{ if(e.key==="Escape") cerrar(); if(e.key==="ArrowLeft") mover(-1); if(e.key==="ArrowRight") mover(1); };
@@ -876,9 +925,12 @@ const VIEWS = {
         <div class="row-actions">${a.lat!=null?`<button type="button" class="btn ghost small" data-inc-ver="${esc(a.id)}">Ver en el mapa</button>`:""}
         ${S.canEdit?sel("inc-est-"+a.id,Object.entries(IESTADOS).map(([k,x])=>[k,x[0]]),a.estado||"pendiente").replace("<select ",`<select data-inc-est="${esc(a.uid)}|${esc(a.id)}" `):""}
         ${S.canEdit||a.uid===S.uid?`<button type="button" class="btn ghost small" data-inc-del="${esc(a.uid)}|${esc(a.id)}">Borrar</button>`:""}</div></article>`; };
+    if(!["Ver avisos","Añadir aviso"].includes(S.filter.incidencias)) S.filter.incidencias="Ver avisos";
+    const anadir=S.filter.incidencias==="Añadir aviso";
     return `<div><h2>Avisos del barrio</h2><p class="lead">¿Una farola apagada, un bache o basura acumulada? Avisa con una foto y marca el sitio en el mapa. La directiva lo comunica al Concello y aquí verás cómo va.</p></div>
-      ${form}<div id="mapa-slot" class="card" style="padding:6px"></div>
-      <section class="stack">${list.length?list.map(card).join(""):`<div class="empty"><strong>No hay avisos todavía.</strong>Cuando un socio avise de un problema, saldrá aquí.</div>`}</section>`;
+      ${filterBar("incidencias",["Ver avisos","Añadir aviso"],true)}
+      ${anadir?form:""}<div id="mapa-slot" class="card" style="padding:6px"></div>
+      ${anadir?"":`<section class="stack">${list.length?list.map(card).join(""):`<div class="empty"><strong>No hay avisos todavía.</strong>Cuando un socio avise de un problema, saldrá aquí.</div>`}</section>`}`;
   },
   proyectos(){
     let list=sortDesc(S.items.filter(i=>i.section==="proyectos"||(i.section==="quejas"&&i.kind==="proyecto"))).map(i=>i.ptab==="Banco de la memoria"?{...i,ptab:PTABS[0]}:i);
@@ -902,15 +954,18 @@ const VIEWS = {
     };
     let list=[]; for(const d of S.mercAll) for(const a of (d.anuncios||[])) list.push({...a, uid:d.uid});
     list.sort((x,y)=>(y.at||"").localeCompare(x.at||""));
+    if(S.mercAntes==null) S.mercAntes=mercVisto();
+    try{ localStorage.setItem("recatelo-merc-visto",new Date().toISOString()); }catch(_){}
+    const nuevoEn = t => list.some(a=>a.uid!==S.uid&&(a.at||"")>S.mercAntes&&(t==="Empleo"?ETIPOS.includes(a.tipo):a.tipo===t));
     // Sin pestaña "Todas": se abre en la pestaña del anuncio más reciente
     const pestMerc = t => ETIPOS.includes(t) ? "Empleo" : t;
     if(![...MTIPOS,"Empleo"].includes(S.filter.mercadillo)) S.filter.mercadillo = list.length ? pestMerc(list[0].tipo) : MTIPOS[0];
     const f=S.filter.mercadillo;
     list = f==="Empleo" ? list.filter(a=>ETIPOS.includes(a.tipo)) : list.filter(a=>a.tipo===f);
-    const card = a => `<article class="card"><div class="meta"><span class="pill ${a.tipo==="Dono"?"p-green":a.tipo==="Compro"?"p-amber":a.tipo==="Trueque"?"p-blue":a.tipo==="Alquilo"?"p-green":a.tipo==="Ofrezco empleo"?"p-blue":a.tipo==="Busco empleo"?"p-amber":"p-red"}">${esc(a.tipo)}</span>${a.precio?`<span><strong>${esc(a.precio)}</strong></span>`:""}<span>${a.at?new Date(a.at).toLocaleDateString("es-ES",{day:"numeric",month:"long"}):""}</span></div>
+    const card = a => `<article class="card"><div class="meta">${a.uid!==S.uid&&(a.at||"")>S.mercAntes?`<span class="pill p-red">Nuevo</span>`:""}<span class="pill ${a.tipo==="Dono"?"p-green":a.tipo==="Compro"?"p-amber":a.tipo==="Trueque"?"p-blue":a.tipo==="Alquilo"?"p-green":a.tipo==="Ofrezco empleo"?"p-blue":a.tipo==="Busco empleo"?"p-amber":"p-red"}">${esc(a.tipo)}</span>${a.precio?`<span><strong>${esc(a.precio)}</strong></span>`:""}<span>${a.at?new Date(a.at).toLocaleDateString("es-ES",{day:"numeric",month:"long"}):""}</span>${a.editado?`<span>(corregido)</span>`:""}</div>
       <h3>${esc(a.titulo)}</h3>${a.texto?`<p class="body">${esc(a.texto)}</p>`:""}${(a.fotos||[]).length?`<div class="merc-fotos">${a.fotos.map(f=>`<img src="${imgSrc(f)}" alt="" loading="lazy" onerror="this.remove()">`).join("")}</div>`:""}<p class="body"><strong>Contacto:</strong> ${esc(a.contacto)}${a.nombre?" · "+esc(a.nombre):""}</p>
       ${a.uid!==S.uid?mercContacto(a):""}
-      ${(a.uid===S.uid||S.canEdit)?`<div class="row-actions"><button class="btn ghost small" data-merc-del="${esc(a.uid)}|${esc(a.id)}">Quitar anuncio</button></div>`:""}</article>`;
+      ${(a.uid===S.uid||S.canEdit)?`<div class="row-actions"><button class="btn ghost small" data-merc-edit="${esc(a.uid)}|${esc(a.id)}">Editar anuncio</button><button class="btn ghost small" data-merc-del="${esc(a.uid)}|${esc(a.id)}">Quitar anuncio</button></div>`:""}</article>`;
     let form="";
     if(S.uid && !S.noDb) form = `<details class="card" id="mc-box"><summary><strong>Poner un anuncio</strong></summary><form id="mc-form" novalidate style="display:grid;gap:12px;margin-top:12px">
       <div class="two">${field("mc-tipo","Qué quieres hacer",sel("mc-tipo",[...MTIPOS,...ETIPOS],f==="Empleo"?"Ofrezco empleo":f))}${field("mc-precio","Precio o sueldo (opcional)",`<input id="mc-precio" placeholder="Por ejemplo: 20 € o 50 €/mes">`)}</div>
@@ -920,7 +975,7 @@ const VIEWS = {
       <div class="two">${field("mc-contacto","Teléfono o correo para contactar",`<input id="mc-contacto" autocomplete="tel">`)}${field("mc-nombre","Tu nombre (opcional)",`<input id="mc-nombre" autocomplete="name">`)}</div>
       <p class="err" id="mc-err" hidden></p><div class="row-actions"><button class="btn" id="mc-send">Publicar anuncio</button></div></form></details>`;
     return `<div><h2>Mercadiño</h2><p class="lead">Alquila, vende, dona, compra o haz trueque entre vecinos, y ofrece o busca empleo en la pestaña Empleo. Solo los socios ven los anuncios. Si te interesa uno, pulsa “Me interesa” y le escribes directamente a quien lo publicó.</p></div>
-      ${form}${filterBar("mercadillo",[...MTIPOS,"Empleo"],true)}
+      ${form}${filterBar("mercadillo",[...MTIPOS,"Empleo"],true).replace(/<button data-f="([^"]+)"([^>]*)>([^<]*)<\/button>/g,(m,v,r,l)=>nuevoEn(v)?`<button data-f="${v}"${r}>${l} 🔴</button>`:m)}
       <section class="stack">${list.length?list.map(card).join(""):emptyBox(f==="Empleo"?"No hay ofertas ni demandas de empleo todavía.":"No hay anuncios todavía.","Pon el primero con “Poner un anuncio”.")}</section>`;
   },
   sugerencias(){
@@ -937,17 +992,18 @@ const VIEWS = {
   },
   fotos(){
     const LIBRE="Foto temática libre socios", soc=[];
-    for(const d of S.fotoSoc||[]) for(const x of (d.fotos||[])) soc.push({id:"s:"+d.uid+":"+x.id, section:"fotos", album:SOC_ALBS.includes(x.album)?x.album:LIBRE, photo:x.photo, photoType:x.photoType, title:"Foto de un socio", date:(x.at||"").slice(0,10), socio:d.uid, fid:x.id});
+    for(const d of S.fotoSoc||[]) for(const x of (d.fotos||[])) soc.push({id:"s:"+d.uid+":"+x.id, section:"fotos", album:ALBUMES.includes(x.album)?x.album:LIBRE, photo:x.photo, photoType:x.photoType, title:"Foto de un socio", date:(x.at||"").slice(0,10), socio:d.uid, fid:x.id});
     const all=sortDesc([...bySection("fotos"), ...soc]); const f=S.filter.fotos;
+    if(f==="__vistas") return S.canEdit ? quienMiraFotos() : (S.filter.fotos="todas", VIEWS.fotos());
     const albs=[...ALBUMES.filter(a=>a!=="Otros"), ...new Set(all.map(i=>i.album||"Otros").filter(a=>!ALBUMES.includes(a))), "Otros"];
     if(f==="todas"){
       const card=a=>{ const ps=all.filter(i=>(i.album||"Otros")===a); if(a==="Otros"&&!ps.length) return ""; const c=ps.find(i=>i.photo&&!/pdf/.test(i.photoType||""));
         return `<button class="carpeta" data-f="${esc(a)}"><span class="cov">${c?`<img src="${imgSrc(c.photo)}" alt="" loading="lazy">`:"📁"}</span><strong>${esc(a)}</strong><span class="meta">${ps.length} foto${ps.length===1?"":"s"}</span></button>`; };
-      return `<div><h2>Fotos</h2><p class="lead">Las fotos de las Festas de Recatelo y de las demás actividades del barrio, por carpetas.</p></div>
+      return `<div><h2>Fotos</h2><p class="lead">Las fotos de las Festas de Recatelo y de las demás actividades del barrio, por carpetas.</p></div>${S.canEdit?`<div class="filters" data-filter="fotos"><button data-f="__vistas">👁 Quién mira las fotos (solo directiva)</button></div>`:""}
         <section class="carpetas" data-filter="fotos">${albs.map(card).join("")}</section>`;
     }
-    const list=all.filter(i=>(i.album||"Otros")===f); S.verList=list.filter(i=>i.photo);
-    const trimAll = S.canEdit && !SOC_ALBS.includes(f) && list.some(i=>i.photo&&!i.socio) ? `<div class="row-actions"><button type="button" class="btn ghost small" data-pix-all>Pixelar las caras de toda la carpeta</button></div>` : "";
+    const list=all.filter(i=>(i.album||"Otros")===f); S.verList=list.filter(i=>i.photo); registrarFoto(f);
+    const trimAll = S.canEdit && list.length ? `<div class="row-actions">${!SOC_ALBS.includes(f)&&list.some(i=>i.photo&&!i.socio)?`<button type="button" class="btn ghost small" data-pix-all>Pixelar las caras de toda la carpeta</button>`:""}<button type="button" class="btn ghost small" data-mover-fotos>Mover fotos a otra carpeta</button></div>` : "";
     const puedeSubir = SOC_ALBS.includes(f) && S.uid && !S.canEdit && !S.noDb && (window.subirFotoSocio || S.assets);
     const n=(S.fsElegidas||[]).length;
     const subir = puedeSubir ? `<form class="card" id="fs-form" novalidate><h3>Sube tus fotos</h3><p class="meta">${f===LIBRE?"Esta carpeta es de los socios: cualquier tema vale. Solo las ven los socios.":"Enseña lo que hay que arreglar en el barrio: baches, suciedad, farolas, aceras… Las ven la directiva y los socios."}</p>
@@ -1106,7 +1162,7 @@ function bzCard(m, admin, uid){
   const who = admin ? `<span>De: ${esc(S.names[uid]||"Socio")}${m.contacto?" · "+esc(m.contacto):""}</span>` : "";
   const when = m.at ? new Date(m.at).toLocaleDateString("es-ES",{day:"numeric",month:"long",year:"numeric"}) : "";
   let foot = m.respuesta ? `<div class="notice"><strong>Respuesta de la directiva:</strong> <span class="body">${esc(m.respuesta)}</span></div>` : "";
-  if(admin) foot += `<div class="row-actions">${m.estado==="nueva"||!m.estado?`<button class="btn ghost small" data-bz-read="${esc(uid)}|${esc(m.id)}">Marcar leído</button>`:""}<button class="btn ghost small" data-bz-reply="${esc(uid)}|${esc(m.id)}">${m.respuesta?"Cambiar respuesta":"Responder"}</button></div>`;
+  if(admin) foot += `<div class="row-actions">${m.estado==="nueva"||!m.estado?`<button class="btn ghost small" data-bz-read="${esc(uid)}|${esc(m.id)}">Marcar leído</button>`:""}<button class="btn ghost small" data-bz-reply="${esc(uid)}|${esc(m.id)}">${m.respuesta?"Cambiar respuesta":"Responder"}</button><button class="btn ghost small" data-bz-del="${esc(uid)}|${esc(m.id)}">Borrar</button></div>`;
   return `<article class="card"><div class="meta"><span class="pill ${m.tipo==="Sugerencia"?"p-blue":"p-red"}">${esc(m.tipo||"Mensaje")}</span><span class="pill ${st[1]}">${st[0]}</span><span>${when}</span>${who}</div><p class="body">${esc(m.texto)}</p>${foot}</article>`;
 }
 function buzonAdmin(){
@@ -1269,6 +1325,7 @@ $("#main").addEventListener("submit", async e=>{
     await guardarInc(S.uid, l=>[...l, a].slice(-30));
     S.incPos=null; if(MAPA_MIO){ MAPA_MIO.remove(); MAPA_MIO=null; }
     $("#inc-texto").value=""; $("#inc-foto").value="";
+    S.filter.incidencias="Ver avisos"; render(); return;
   }catch(x){ err.textContent="No se ha podido enviar. Vuelve a intentarlo."; err.hidden=false; }
   btn.disabled=false; btn.textContent="Enviar aviso";
 });
@@ -1346,9 +1403,11 @@ $("#main").addEventListener("click", e=>{
   const dl=e.target.closest("[data-del]"); if(dl){ askDelete(dl.dataset.del); }
   const tr=e.target.closest("[data-trim]"); if(tr){ recortarFotos([tr.dataset.trim], tr); return; }
   const px=e.target.closest("[data-pix]"); if(px){ editorPixelar(px.dataset.pix); return; }
+  if(e.target.closest("[data-mover-fotos]")){ moverFotosForm(); return; }
   const pa=e.target.closest("[data-pix-all]"); if(pa){ const f=S.filter.fotos; pixelarFotos(S.items.filter(i=>i.section==="fotos"&&!i.socio&&(i.album||"Otros")===f).map(i=>i.id), pa); return; }
   const ta=e.target.closest("[data-trim-all]"); if(ta){ const f=S.filter.fotos; recortarFotos(S.items.filter(i=>i.section==="fotos"&&!i.socio&&(i.album||"Otros")===f).map(i=>i.id), ta); return; }
   const br=e.target.closest("[data-bz-read]"); if(br){ const [u,id]=br.dataset.bzRead.split("|"); bzPatch(u,id,{estado:"leida"}); }
+  const bd=e.target.closest("[data-bz-del]"); if(bd){ const [u,id]=bd.dataset.bzDel.split("|"); const d=S.buzonAll.find(x=>x.uid===u); if(d&&confirm("¿Borrar este mensaje? No se puede recuperar.")){ S.db.doc("buzon/"+u).update({msgs:(d.msgs||[]).filter(m=>m.id!==id)}).catch(()=>alert("No se ha podido borrar el mensaje.")); } return; }
   const bp=e.target.closest("[data-bz-reply]"); if(bp){ const [u,id]=bp.dataset.bzReply.split("|"); bzReplyForm(u,id); }
 });
 $("#fab").addEventListener("click", ()=>openForm(S.tab==="inicio"?"avisos":S.tab));
@@ -1363,6 +1422,8 @@ $("#main").addEventListener("submit", async e=>{
   const a={id:Date.now().toString(36)+Math.random().toString(36).slice(2,6), tipo:v("mc-tipo"), titulo:v("mc-titulo").slice(0,120), texto:v("mc-texto").slice(0,1500), precio:v("mc-precio").slice(0,40), contacto:v("mc-contacto").slice(0,120), nombre:v("mc-nombre").slice(0,80), at:new Date().toISOString()};
   if(!a.titulo){ er.textContent="Escribe un título."; er.hidden=false; return; }
   if(!a.contacto){ er.textContent="Pon un teléfono o correo para que te contacten."; er.hidden=false; return; }
+  if(!S.mcRevisado){ mercPrevia(a); return; }
+  S.mcRevisado=false;
   const btn=$("#mc-send"); btn.disabled=true; btn.textContent="Publicando…";
   const mine=(S.mercAll.find(d=>d.uid===S.uid)||{}).anuncios||[];
   let paso="foto";
@@ -1382,12 +1443,44 @@ $("#main").addEventListener("submit", async e=>{
   }
 });
 $("#main").addEventListener("click", async e=>{
+  const me=e.target.closest("[data-merc-edit]"); if(me){ const [u,id]=me.dataset.mercEdit.split("|"); mercEditar(u,id); return; }
   const b=e.target.closest("[data-merc-del]"); if(!b) return;
   const [u,id]=b.dataset.mercDel.split("|");
   if(!confirm("¿Quitar este anuncio?")) return;
   const d=S.mercAll.find(x=>x.uid===u); if(!d) return;
   try{ await S.db.doc("mercadillo/"+u).set({anuncios:(d.anuncios||[]).filter(a=>a.id!==id)}); }catch(x){ alert("No se ha podido quitar. Vuelve a intentarlo."); }
 });
+function mercPrevia(a){
+  const fotos=(S.mcFotos||[]).slice(0,3).map(f=>{ try{ return URL.createObjectURL(f); }catch(_){ return ""; } }).filter(Boolean);
+  $("#sheet-root").innerHTML=`<div class="sheet-bg" id="sheet-bg"><div class="sheet"><h2>Revisa tu anuncio</h2><p class="meta">Así lo verán los demás socios. Si algo no está bien, pulsa «Corregir».</p>
+    <article class="card"><div class="meta"><span class="pill p-blue">${esc(a.tipo)}</span>${a.precio?`<span><strong>${esc(a.precio)}</strong></span>`:""}</div><h3>${esc(a.titulo)}</h3>${a.texto?`<p class="body">${esc(a.texto)}</p>`:""}${fotos.length?`<div class="merc-fotos">${fotos.map(u=>`<img src="${u}" alt="">`).join("")}</div>`:""}<p class="body"><strong>Contacto:</strong> ${esc(a.contacto)}${a.nombre?" · "+esc(a.nombre):""}</p></article>
+    <div class="row-actions"><button type="button" class="btn ghost" id="mp-x">Corregir</button><button type="button" class="btn" id="mp-ok">Publicar</button></div></div></div>`;
+  const cerrar=()=>{ $("#sheet-root").innerHTML=""; fotos.forEach(u=>{ try{ URL.revokeObjectURL(u); }catch(_){} }); };
+  $("#mp-x").onclick=()=>{ cerrar(); const t=$("#mc-titulo"); t&&t.focus(); };
+  $("#mp-ok").onclick=()=>{ cerrar(); S.mcRevisado=true; const f=$("#mc-form"); if(f) f.requestSubmit(); };
+}
+function mercEditar(u,id){
+  const d=S.mercAll.find(x=>x.uid===u), a=d&&(d.anuncios||[]).find(x=>x.id===id); if(!a) return;
+  $("#sheet-root").innerHTML=`<div class="sheet-bg" id="sheet-bg"><form class="sheet" id="me-f" novalidate><h2>Editar anuncio</h2>
+    <div class="two">${field("me-tipo","Qué quieres hacer",sel("me-tipo",[...MTIPOS,...ETIPOS],a.tipo))}${field("me-precio","Precio o sueldo (opcional)",`<input id="me-precio" value="${esc(a.precio||"")}">`)}</div>
+    ${field("me-titulo","Título",`<input id="me-titulo" value="${esc(a.titulo||"")}">`)}
+    ${field("me-texto","Descripción (opcional)",`<textarea id="me-texto">${esc(a.texto||"")}</textarea>`)}
+    <div class="two">${field("me-contacto","Teléfono o correo para contactar",`<input id="me-contacto" value="${esc(a.contacto||"")}">`)}${field("me-nombre","Tu nombre (opcional)",`<input id="me-nombre" value="${esc(a.nombre||"")}">`)}</div>
+    ${(a.fotos||[]).length?`<label class="check"><input type="checkbox" id="me-sinfotos"> Quitar las fotos del anuncio</label>`:""}
+    <p class="err" id="me-err" hidden></p><div class="row-actions"><button type="button" class="btn ghost" id="me-x">Cancelar</button><button class="btn" id="me-ok">Guardar cambios</button></div></form></div>`;
+  const cerrar=()=>{ $("#sheet-root").innerHTML=""; };
+  $("#me-x").onclick=cerrar;
+  $("#me-f").onsubmit=async e=>{ e.preventDefault();
+    const v=k=>($("#"+k).value||"").trim(), er=$("#me-err"); er.hidden=true;
+    const n={...a, tipo:v("me-tipo"), titulo:v("me-titulo").slice(0,120), texto:v("me-texto").slice(0,1500), precio:v("me-precio").slice(0,40), contacto:v("me-contacto").slice(0,120), nombre:v("me-nombre").slice(0,80), editado:new Date().toISOString()};
+    if($("#me-sinfotos")&&$("#me-sinfotos").checked) delete n.fotos;
+    if(!n.titulo){ er.textContent="Escribe un título."; er.hidden=false; return; }
+    if(!n.contacto){ er.textContent="Pon un teléfono o correo para que te contacten."; er.hidden=false; return; }
+    const b=$("#me-ok"); b.disabled=true; b.textContent="Guardando…";
+    try{ const cur=S.mercAll.find(x=>x.uid===u)||d; await S.db.doc("mercadillo/"+u).set({anuncios:(cur.anuncios||[]).map(x=>x.id===id?n:x)}); cerrar(); }
+    catch(x){ er.textContent="No se ha podido guardar. Vuelve a intentarlo."; er.hidden=false; b.disabled=false; b.textContent="Guardar cambios"; }
+  };
+}
 function paintLogo(){ const b=$("#brand-logo"); if(!b) return; if(S.logo){ b.innerHTML=`<img src="${imgSrc(S.logo)}" alt="">`; } }
 $("#main").addEventListener("change", async e=>{
   if(e.target.id!=="logo-in") return;
@@ -1767,12 +1860,12 @@ function pintarMarca(){
     if(!db){ S.noDb=true; render(); return; }
     S.db=db;
     db.collection("items").onSnapshot(snap=>{
-      const rows = snap.docs.map(d=>{ const r={id:d.id, ...d.data()}; const n=ALB_MOVER[r.album]; if(r.section==="fotos"&&n){ if(r.title===r.album) r.title=n; r.album=n; } return r; });
+      const rows = snap.docs.map(d=>{ const r={id:d.id, ...d.data()}; const n=ALB_MOVER[r.album]; if(r.section==="fotos"&&n&&!((r.createdAt||"")>"2026-10-23T10:00")&&!((r.updatedAt||"")>"2026-10-23T10:00")){ if(r.title===r.album) r.title=n; r.album=n; } return r; });
       S.items = [...rows, ...SEMILLAS.filter(s=>!rows.some(r=>r.id===s.id))].filter(i=>i.section!=="_borrado");
       S.loaded = true; renderDatos();
     }, ()=>{ S.loaded=true; render(); });
     db.doc("config/ajustes").onSnapshot(snap=>{ S.logo = snap.exists ? (snap.data().logo||DEFAULT_LOGO) : DEFAULT_LOGO; S.estatutos = snap.exists ? (snap.data().estatutos||null) : null; paintLogo(); renderDatos(); },()=>{});
-    db.collection("mercadillo").onSnapshot(snap=>{ S.mercAll=snap.docs.map(d=>({uid:d.id,...d.data()})); renderDatos(); },()=>{});
+    db.collection("mercadillo").onSnapshot(snap=>{ S.mercAll=snap.docs.map(d=>({uid:d.id,...d.data()})); renderTabs(); renderDatos(); },()=>{});
     db.collection("fotosocios").onSnapshot(snap=>{ S.fotoSoc=snap.docs.map(d=>({uid:d.id,...d.data()})); renderDatos(); },()=>{});
     if(compartidas && window.caches) userP.then(recibirCompartidas);
     startInc(); userP.then(startApoyos); userP.then(startVotos); userP.then(startCuotas); userP.then(startLecturas); userP.then(registrarEntrada);
