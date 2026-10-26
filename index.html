@@ -840,7 +840,11 @@ function listaDocs(){
 function avisosConDocs(prox){
   const i=prox.findIndex(a=>/fiesta|festa|festas/i.test((a.title||"")+" "+(a.body||"")));
   const l=listaDocs(), cards=prox.map(avisoCard);
-  if(l) cards.splice(i<0?cards.length:i+1, 0, l);
+  let nm=0; for(const d of S.mercAll) nm+=(d.anuncios||[]).length;
+  const nn=mercNuevos();
+  const m=nm?`<article class="card"><p style="margin:0">🛍️ <strong>Hay ${nm} ${nm===1?"anuncio":"anuncios"} en el Mercadiño</strong>${nn?` <span class="pill p-red">${nn} ${nn===1?"nuevo":"nuevos"}</span>`:""}</p><div class="row-actions" style="justify-content:flex-start"><button type="button" class="btn ghost small" data-go="mercadillo">Ver el Mercadiño</button></div></article>`:"";
+  const pos=i<0?cards.length:i+1;
+  cards.splice(pos, 0, ...[l,m].filter(Boolean));
   return cards.join("");
 }
 function photoCard(it, i){

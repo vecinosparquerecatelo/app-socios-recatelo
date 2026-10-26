@@ -1,5 +1,6 @@
 /* Traducción al gallego de los textos de la app (castellano -> galego). La usa i18n.js. */
 window.GL_DICT = {
+"Ver el Mercadiño":"Ver o Mercadiño",
 "📄 Documentos de la asociación":"📄 Documentos da asociación",
 "👁 Quién mira las fotos (solo directiva)":"👁 Quen mira as fotos (só directiva)",
 "👁 Quién mira las fotos":"👁 Quen mira as fotos",
