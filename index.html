@@ -1092,6 +1092,42 @@ function exportarTextos(){
   const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="textos-app-socios.json"; document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); },2000);
 }
 document.addEventListener("click", e=>{ if(e.target.closest("[data-export-gl]")) exportarTextos(); });
+/* subir de una vez los PDF en gallego (solo directiva) */
+const GL_PISTAS=[[/alcalde/i,"Reunion-alcalde-3-xuno-2025-galego.pdf"],[/polic/i,"Reunion-Policia-Local-10-outubro-2023-galego.pdf"],[/subdelegaci/i,"Reunions-Subdelegacion-Goberno-galego.pdf"],[/ducha/i,"Queixa-duchas-parque-galego.pdf"],[/medio ?ambiente/i,"Peticions-medio-ambiente-galego.pdf"],[/movilidad|tr[aá]fico/i,"Queixa-mobilidade-galego.pdf"]];
+function filaGl(it){
+  const pista=(GL_PISTAS.find(([r])=>r.test((it.title||"")+" "+(it.docName||"")))||[])[1];
+  return `<div class="card" style="padding:10px 12px;margin:8px 0"><strong>${esc(it.title||"(sin título)")}</strong>
+    <p class="meta">${esc(SECCION_NOMBRE(it))}${pista?` · archivo: ${esc(pista)}`:""}</p>
+    ${it.docGl?`<p class="meta" style="color:var(--ok,#2e7d32)">✓ Ya tiene PDF en galego</p>`:""}
+    <label class="btn ghost small" style="display:inline-block;cursor:pointer">${it.docGl?"Cambiar PDF en galego":"Elegir PDF en galego"}<input type="file" accept="application/pdf" data-gl-file="${esc(it.id)}" hidden></label>
+    <span class="meta" data-gl-est="${esc(it.id)}"></span></div>`;
+}
+function SECCION_NOMBRE(it){ const n={reuniones:"Reuniones",proyectos:"Proyectos",bic:"Parque Rosalía BIC",avisos:"Avisos",inicio:"Inicio",quejas:"Quejas",colectivos:"Colectivos",cursos:"Cursos"}[it.section]||it.section; return n+(it.entity?" › "+it.entity:""); }
+function abrirSubirGl(){
+  const l=S.items.filter(i=>i.doc&&!i.doc2&&i.section!=="fotos"&&i.section!=="carteles"&&i.section!=="bic");
+  l.sort((a,b)=>(!!a.docGl-!!b.docGl)||SECCION_NOMBRE(a).localeCompare(SECCION_NOMBRE(b)));
+  $("#sheet-root").innerHTML=`<div class="sheet-bg" id="sheet-bg"><div class="sheet" role="dialog" aria-label="Subir PDF en galego">
+    <h2>Subir PDF en galego</h2><p class="body">Al lado de cada documento pulsa «Elegir PDF en galego» y escoge el archivo. Se sube solo. Los socios que eligen Galego verán ese PDF; en Castellano sigue el de siempre.</p>
+    ${l.length?l.map(filaGl).join(""):`<p class="meta">No hay documentos con PDF.</p>`}
+    <div class="row-actions"><button class="btn" id="gl-cerrar">Cerrar</button></div></div></div>`;
+  $("#gl-cerrar").onclick=closeSheet;
+}
+document.addEventListener("click", e=>{ if(e.target.closest("[data-subir-gl]")) abrirSubirGl(); });
+document.addEventListener("change", async e=>{
+  const inp=e.target.closest("[data-gl-file]"); if(!inp||!inp.files[0]) return;
+  const id=inp.dataset.glFile, f=inp.files[0], est=document.querySelector(`[data-gl-est="${CSS.escape(id)}"]`);
+  const it=S.items.find(i=>i.id===id); if(!it) return;
+  if(f.type && !/pdf|octet-stream/i.test(f.type) && !/\.pdf$/i.test(f.name||"")){ est.textContent=" Tiene que ser un PDF."; return; }
+  if(f.size>20*1024*1024){ est.textContent=" El archivo pesa más de 20 MB."; return; }
+  est.textContent=" Subiendo…";
+  try{
+    const up=await S.assets.upload(f,{type:"application/pdf"});
+    const patch={docGl:up.id, updatedAt:new Date().toISOString()};
+    if(SEMILLAS.some(s=>s.id===id)){ const {id:_x,...resto}=it; await S.db.collection("items").doc(id).set({...resto,...patch}); }
+    else await S.db.collection("items").doc(id).update(patch);
+    it.docGl=up.id; est.textContent=" ✓ Subido";
+  }catch(x){ est.textContent=" No se ha podido subir. Vuelve a probar."+((x&&(x.message||x.code))?" ("+String(x.message||x.code).slice(0,100)+")":""); }
+});
 function attach(it){ return (it.photo ? `<img class="att" src="${imgSrc(it.photo)}" alt="${esc(T(it))}" loading="lazy" onerror="this.remove()">` : "")
   + (it.doc ? `<div><a class="btn ghost small" href="${esc(docHref(GLX()&&(it.docGl||it.doc2)||it.doc))}" target="_blank" rel="noopener" data-lee="${esc(it.id)}">📄 Abrir documento${it.docName&&!it.doc2&&!(GLX()&&it.docGl)?": "+esc(it.docName):""}</a></div>${lectoresDe(it.id)}` : ""); }
 /* ---------- quién ha abierto cada documento (solo lo ve la directiva) ---------- */
@@ -1414,7 +1450,7 @@ const VIEWS = {
     const avs = bySection("avisos");
     const prox = avs.filter(a=>!a.date||a.date>=t).sort((a,b)=>(a.date||"9").localeCompare(b.date||"9"));
     const pas = sortDesc(avs.filter(a=>a.date&&a.date<t));
-    return `${actividadSocios()}${S.canEdit?`<div class="row-actions" style="justify-content:flex-start"><button type="button" class="btn ghost small" data-export-gl>Descargar textos para traducir al gallego</button></div>`:""}<section class="hero">
+    return `${actividadSocios()}${S.canEdit?`<div class="row-actions" style="justify-content:flex-start"><button type="button" class="btn ghost small" data-subir-gl>Subir PDF en galego</button></div>`:""}<section class="hero">
         ${S.logo?`<img class="hero-logo" src="${imgSrc(S.logo)}" alt="Logo de la Asociación de Vecinos Parque de Rosalía de Castro-Recatelo">`:""}
         ${S.canEdit&&S.assets?`<div><label class="btn ghost small" style="display:inline-block;cursor:pointer">${S.logo?"Cambiar logo":"Subir el logo de la asociación"}<input type="file" id="logo-in" accept="image/png,image/jpeg,image/webp,image/svg+xml" hidden></label> <span class="meta" id="logo-msg"></span></div>`:""}
         <span class="eyebrow">Parque de Rosalía de Castro · Recatelo · Lugo</span>
