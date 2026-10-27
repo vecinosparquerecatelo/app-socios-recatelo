@@ -1,5 +1,11 @@
 /* Traducción al gallego de los textos de la app (castellano -> galego). La usa i18n.js. */
 window.GL_DICT = {
+"Descargar textos para traducir al gallego":"Descargar textos para traducir ao galego",
+"Ya tiene documento en galego; elige otro solo si quieres cambiarlo.":"Xa ten documento en galego; escolle outro só se o queres cambiar.",
+"Documento en galego (PDF)":"Documento en galego (PDF)",
+"Texto en galego":"Texto en galego",
+"Título en galego":"Título en galego",
+"En galego (opcional): lo verán los socios que elijan Galego":"En galego (opcional): verano os socios que escollan Galego",
 "Para cualquier duda, sugerencia o apunte, escríbenos a nuestro correo:":"Para calquera dúbida, consello ou apunte, escríbenos ao noso correo:",
 "✉️ Escribe a la directiva":"✉️ Escríbelle á directiva",
 "La asociación › Estatutos":"A asociación › Estatutos",

@@ -546,7 +546,7 @@ function resultadosBusqueda(q){
     const txt=[it.title,it.body,it.docName,it.entity,it.place,it.time,it.cuando,it.album].filter(Boolean).join(" · ");
     if(!casa(txt)) continue;
     const [tab,label]=nombreSec(it.section);
-    out.push({at:it.date||"", html:`<article class="card"><div class="meta"><span class="pill p-blue">${esc(label)}</span>${it.date?`<span>${fmtDate(it.date)}</span>`:""}</div><h3>${esc(it.title||"")}</h3>${it.body?`<p class="body">${esc(trozo(it.body))}</p>`:""}${attach(it)}<div class="row-actions"><button type="button" class="btn ghost small" data-go="${tab}">Ver en ${esc(label)}</button></div></article>`});
+    out.push({at:it.date||"", html:`<article class="card"><div class="meta"><span class="pill p-blue">${esc(label)}</span>${it.date?`<span>${fmtDate(it.date)}</span>`:""}</div><h3>${esc(it.title||"")}</h3>${it.body?`<p class="body">${esc(trozo(B(it)))}</p>`:""}${attach(it)}<div class="row-actions"><button type="button" class="btn ghost small" data-go="${tab}">Ver en ${esc(label)}</button></div></article>`});
   }
   for(const d of S.mercAll) for(const a of (d.anuncios||[])){
     if(!casa([a.tipo,a.titulo,a.texto,a.precio].join(" · "))) continue;
@@ -568,8 +568,20 @@ function adminRow(it){
   if(!S.canEdit) return "";
   return `<div class="row-actions"><button class="btn ghost small" data-edit="${esc(it.id)}">Editar</button><button class="btn ghost small" data-del="${esc(it.id)}">Borrar</button></div>`;
 }
-function attach(it){ return (it.photo ? `<img class="att" src="${imgSrc(it.photo)}" alt="${esc(it.title)}" loading="lazy" onerror="this.remove()">` : "")
-  + (it.doc ? `<div><a class="btn ghost small" href="${it.doc2&&window.IDIOMA==="gl"?esc(it.doc2):/^docs\//.test(it.doc)?it.doc:imgSrc(it.doc)}" target="_blank" rel="noopener" data-lee="${esc(it.id)}">📄 Abrir documento${it.docName&&!it.doc2?": "+esc(it.docName):""}</a></div>${lectoresDe(it.id)}` : ""); }
+/* textos y documentos en gallego: si el socio eligió Galego y hay versión en gallego, se enseña esa */
+const GLX = () => window.IDIOMA==="gl";
+function T(it){ return (GLX()&&it.titleGl)||it.title||""; }
+function B(it){ return (GLX()&&it.bodyGl)||it.body||""; }
+function docHref(d){ return /^docs\//.test(d)?d:imgSrc(d); }
+function exportarTextos(){
+  const secs=["avisos","reuniones","proyectos","quejas","sugerencias","bic","cursos","colectivos","encuestas","carteles"];
+  const l=S.items.filter(i=>secs.includes(i.section)).map(i=>({id:i.id, section:i.section, entity:i.entity||"", title:i.title||"", body:i.body||"", opciones:i.opciones||undefined, docName:i.docName||"", tieneDoc:!!i.doc, tieneDocGl:!!i.docGl, titleGl:i.titleGl||"", bodyGl:i.bodyGl||""}));
+  const blob=new Blob([JSON.stringify({exportado:new Date().toISOString(), items:l},null,1)],{type:"application/json"});
+  const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="textos-app-socios.json"; document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); },2000);
+}
+document.addEventListener("click", e=>{ if(e.target.closest("[data-export-gl]")) exportarTextos(); });
+function attach(it){ return (it.photo ? `<img class="att" src="${imgSrc(it.photo)}" alt="${esc(T(it))}" loading="lazy" onerror="this.remove()">` : "")
+  + (it.doc ? `<div><a class="btn ghost small" href="${esc(docHref(GLX()&&(it.docGl||it.doc2)||it.doc))}" target="_blank" rel="noopener" data-lee="${esc(it.id)}">📄 Abrir documento${it.docName&&!it.doc2&&!(GLX()&&it.docGl)?": "+esc(it.docName):""}</a></div>${lectoresDe(it.id)}` : ""); }
 /* ---------- quién ha abierto cada documento (solo lo ve la directiva) ---------- */
 function lectoresDe(id){
   if(!S.canEdit) return "";
@@ -657,20 +669,20 @@ document.addEventListener("click", e=>{ const a=e.target.closest("[data-lee]"); 
 function avisoCard(it){
   const tipo = it.kind==="reunion" ? `<span class="pill p-amber">Reunión de socios</span>` : `<span class="pill p-blue">Aviso</span>`;
   return `<article class="card"><div class="meta">${tipo}${it.date?`<span>${fmtDate(it.date)}${it.time?" · "+esc(it.time):""}</span>`:""}</div>
-    <h3>${esc(it.title)}</h3>${it.place?`<div class="meta">📍 ${esc(it.place)}</div>`:""}
-    ${it.body?`<p class="body">${esc(it.body)}</p>`:""}${attach(it)}${adminRow(it)}</article>`;
+    <h3>${esc(T(it))}</h3>${it.place?`<div class="meta">📍 ${esc(it.place)}</div>`:""}
+    ${it.body?`<p class="body">${esc(B(it))}</p>`:""}${attach(it)}${adminRow(it)}</article>`;
 }
 function regLine(it){ return it.regDate ? `<div class="meta">📮 Registrado en el Concello el ${fmtDate(it.regDate)}${it.regNum?` (nº ${esc(it.regNum)})`:""}</div>` : ""; }
 function reunionCard(it){
   return `<article class="card"><div class="meta"><span class="pill p-green">${esc(it.entity||"Reunión")}</span><span>${fmtDate(it.date)}</span></div>
-    <h3>${esc(it.title)}</h3>${regLine(it)}${it.body?`<p class="body">${esc(it.body)}</p>`:""}${attach(it)}${adminRow(it)}</article>`;
+    <h3>${esc(T(it))}</h3>${regLine(it)}${it.body?`<p class="body">${esc(B(it))}</p>`:""}${attach(it)}${adminRow(it)}</article>`;
 }
 function quejaCard(it){
   const st = ESTADOS[it.status] || ESTADOS.presentada;
   const k = it.section==="proyectos"||it.kind==="proyecto" ? `<span class="pill p-green">Proyecto</span>` : it.section==="sugerencias" ? `<span class="pill p-amber">Sugerencia</span>` : `<span class="pill p-red">Queja</span>`;
   const meta = it.noticia ? `<span class="pill p-blue">Noticia</span>` : `${k}<span class="pill ${st[1]}">${st[0]}</span>${it.entity?`<span>Ante: ${esc(it.entity)}</span>`:""}`;
   return `<article class="card"><div class="meta">${meta}<span>${fmtDate(it.date)}</span></div>
-    <h3>${esc(it.title)}</h3>${regLine(it)}${it.body?`<p class="body">${esc(it.body)}</p>`:""}${attach(it)}${adminRow(it)}</article>`;
+    <h3>${esc(T(it))}</h3>${regLine(it)}${it.body?`<p class="body">${esc(B(it))}</p>`:""}${attach(it)}${adminRow(it)}</article>`;
 }
 /* Quita las franjas negras (o casi negras) de los bordes de una foto. Devuelve null si no hay nada que quitar. */
 async function sinBordes(blob){
@@ -890,7 +902,7 @@ const VIEWS = {
     const avs = bySection("avisos");
     const prox = avs.filter(a=>!a.date||a.date>=t).sort((a,b)=>(a.date||"9").localeCompare(b.date||"9"));
     const pas = sortDesc(avs.filter(a=>a.date&&a.date<t));
-    return `${actividadSocios()}<section class="hero">
+    return `${actividadSocios()}${S.canEdit?`<div class="row-actions" style="justify-content:flex-start"><button type="button" class="btn ghost small" data-export-gl>Descargar textos para traducir al gallego</button></div>`:""}<section class="hero">
         ${S.logo?`<img class="hero-logo" src="${imgSrc(S.logo)}" alt="Logo de la Asociación de Vecinos Parque de Rosalía de Castro-Recatelo">`:""}
         ${S.canEdit&&S.assets?`<div><label class="btn ghost small" style="display:inline-block;cursor:pointer">${S.logo?"Cambiar logo":"Subir el logo de la asociación"}<input type="file" id="logo-in" accept="image/png,image/jpeg,image/webp,image/svg+xml" hidden></label> <span class="meta" id="logo-msg"></span></div>`:""}
         <span class="eyebrow">Parque de Rosalía de Castro · Recatelo · Lugo</span>
@@ -938,7 +950,7 @@ const VIEWS = {
   },
   bic(){
     const list=sortDesc(bySection("bic"));
-    const card=it=>`<article class="card">${it.date?`<div class="meta"><span>${fmtDate(it.date)}</span></div>`:""}<h3>${esc(it.title)}</h3>${it.body?`<p class="body">${esc(it.body)}</p>`:""}${attach(it)}${adminRow(it)}</article>`;
+    const card=it=>`<article class="card">${it.date?`<div class="meta"><span>${fmtDate(it.date)}</span></div>`:""}<h3>${esc(T(it))}</h3>${it.body?`<p class="body">${esc(B(it))}</p>`:""}${attach(it)}${adminRow(it)}</article>`;
     return `<div><h2>Parque Rosalía BIC</h2><p class="lead">El Parque de Rosalía de Castro es mucho más que un parque. Es un jardín histórico con cien años de vida y un auténtico jardín botánico en el corazón de Lugo: árboles centenarios de muchas especies, flores que cambian con cada estación y una fauna propia que vive en él todo el año, sobre todo aves, que anidan en sus copas y llenan el parque de cantos.</p><p class="lead">Nació en 1921, cuando el Concello decidió crear un gran parque para que los niños jugasen al aire libre y los mayores tuviesen dónde pasear y descansar. La gente enseguida lo llamó «Bella Vista» por su mirador sobre el valle del Miño. En 1927 recibió el nombre de Alfonso XIII y desde el 21 de abril de 1931 lleva el de Rosalía de Castro.</p><p class="lead">Desde entonces, varias generaciones de lucenses han jugado, paseado y se han enamorado bajo sus árboles, y muchas familias guardan aquí sus mejores recuerdos. Ese cariño es lo que nos mueve: queremos que nuestros hijos y nietos lo reciban tal y como lo conocimos.</p><p class="lead">El parque y Recatelo nacieron juntos: las primeras obras se hicieron en las tierras junto al barrio. Por eso nuestra asociación lleva los dos nombres y defiende la zona como un todo.</p><p class="lead">Hoy el parque sufre mucho. El botellón deja basura, cristales y destrozos cada fin de semana, y el vandalismo daña sus bancos, sus fuentes y sus elementos históricos. Las grandes fiestas que se celebran dentro, como el Arde Lucus o el San Froilán, llenan el parque de miles de personas, escenarios y puestos que pisotean el césped, aprietan la tierra sobre las raíces de los árboles y castigan sus muros, sus caminos y sus estructuras. Todo ello ante la pasividad de las instituciones.</p><p class="lead">Por eso insistimos ante el Concello y la Xunta en que lo protejan de verdad, empezando por declararlo Bien de Interés Cultural (BIC), la máxima protección que reconoce la Ley 5/2016 del patrimonio cultural de Galicia.</p></div>
       ${apoyoBIC()}
       <section class="card legal"><p>Un BIC no se puede alterar sin control de Patrimonio: protege su trazado, sus árboles centenarios, su fauna, sus elementos históricos y su entorno, junto a la Muralla romana. Es la garantía de que el gran pulmón verde de Lugo llegue intacto a las próximas generaciones.</p><p>Aquí reunimos la auditoría del parque y los documentos que lo justifican.</p></section>
@@ -1216,8 +1228,8 @@ function buzonAdmin(){
 function cartelCard(it){
   const pdf = it.photoType==="application/pdf";
   const src = it.photo ? imgSrc(it.photo) : "";
-  const media = !it.photo ? `<div class="ph">Sin cartel</div>` : pdf ? `<a class="ph" href="${src}" target="_blank" rel="noopener">Abrir cartel (PDF)</a>` : `<a href="${src}" target="_blank" rel="noopener"><img src="${src}" alt="Cartel: ${esc(it.title)}" loading="lazy"></a>`;
-  return `<figure class="photo" style="margin:0">${media}<figcaption class="cap"><strong>${esc(it.title)}</strong>${adminRow(it)}</figcaption></figure>`;
+  const media = !it.photo ? `<div class="ph">Sin cartel</div>` : pdf ? `<a class="ph" href="${src}" target="_blank" rel="noopener">Abrir cartel (PDF)</a>` : `<a href="${src}" target="_blank" rel="noopener"><img src="${src}" alt="Cartel: ${esc(T(it))}" loading="lazy"></a>`;
+  return `<figure class="photo" style="margin:0">${media}<figcaption class="cap"><strong>${esc(T(it))}</strong>${adminRow(it)}</figcaption></figure>`;
 }
 /* ---------- apoyo al BIC ---------- */
 function nombreDe(uid){ const f=S.fichasAll.find(x=>x.uid===uid); return (f&&f.nombre)||S.names[uid]||"Socio/a"; }
@@ -1255,7 +1267,7 @@ function encuestaCard(it){
     : "";
   const botones = !cerrada && S.uid ? `<div class="opc">${ops.map((o,i)=>`<button type="button" class="btn ${votado?"ghost small":""}" data-voto="${esc(it.id)}|${i}">${esc(o)}</button>`).join("")}</div>` : "";
   return `<article class="card"><div class="meta"><span class="pill ${cerrada?"p-amber":"p-green"}">${cerrada?"Cerrada":"Abierta"}</span>${it.cierre?`<span>${cerrada?"Cerró el":"Se puede votar hasta el"} ${fmtDate(it.cierre)}</span>`:""}</div>
-    <h3>${esc(it.title)}</h3>${it.body?`<p class="body">${esc(it.body)}</p>`:""}${cuerpo}${botones}${adminRow(it)}</article>`;
+    <h3>${esc(T(it))}</h3>${it.body?`<p class="body">${esc(B(it))}</p>`:""}${cuerpo}${botones}${adminRow(it)}</article>`;
 }
 async function contarVotos(){ if(!window.rpcApp) return; try{ const r=await rpcApp("recuento_votos"); if(r&&typeof r==="object"){ S.recVotos=r; render(); } }catch(e){} }
 async function votar(enc, i){
@@ -1381,14 +1393,14 @@ function cursoCard(it, past){
   let admin="";
   if(S.canEdit){ const n=inscritosDe(it.id); admin=`<details class="insc"><summary>${n.length} apuntado${n.length===1?"":"s"}${it.plazas?" de "+esc(it.plazas)+" plazas":""}</summary>${n.length?`<ol>${n.map(x=>`<li>${esc(x)}</li>`).join("")}</ol>`:`<p class="meta">Nadie se ha apuntado todavía.</p>`}</details>`; }
   return `<article class="card"><div class="meta"><span class="pill p-blue">Curso</span>${it.date?`<span>${past?"":"Empieza el "}${fmtDate(it.date)}</span>`:`<span class="pill p-amber">${esc(it.cuando||"Fecha por determinar")}</span>`}${it.plazas&&!S.canEdit?`<span>${esc(it.plazas)} plazas</span>`:""}</div>
-    <h3>${esc(it.title)}</h3>${it.time||it.place?`<div class="meta">${it.time?"🕒 "+esc(it.time):""}${it.time&&it.place?" · ":""}${it.place?"📍 "+esc(it.place):""}</div>`:""}
-    ${it.body?`<p class="body">${esc(it.body)}</p>`:""}${attach(it)}${action}${admin}${adminRow(it)}</article>`;
+    <h3>${esc(T(it))}</h3>${it.time||it.place?`<div class="meta">${it.time?"🕒 "+esc(it.time):""}${it.time&&it.place?" · ":""}${it.place?"📍 "+esc(it.place):""}</div>`:""}
+    ${it.body?`<p class="body">${esc(B(it))}</p>`:""}${attach(it)}${action}${admin}${adminRow(it)}</article>`;
 }
 function estLabel(t){ if(window.trGL) t=trGL(t); const parts=t.split(/[.:]\s*/); let l=(parts.length>1?parts.slice(1).join(" "):t).trim().replace(/\.$/,"")||t; l=l.toLowerCase(); return l.charAt(0).toUpperCase()+l.slice(1); }
 function colNews(it){
   const lot = it.link==="loteria";
-  const body = lot ? (it.body||"").replace("en la pestaña Lotería","aquí abajo") : it.body;
-  return `<article class="card"><div class="meta"><span class="pill p-amber">${esc(it.entity||"Colectivo")}</span><span>${fmtDate(it.date)}</span></div><h3>${esc(it.title)}</h3>${body?`<p class="body">${esc(body)}</p>`:""}${attach(it)}${lot?`<div class="stack" style="margin-top:12px">${VIEWS.loteria(true)}</div>`:""}${adminRow(it)}</article>`;
+  const body = lot ? B(it).replace("en la pestaña Lotería","aquí abajo") : B(it);
+  return `<article class="card"><div class="meta"><span class="pill p-amber">${esc(it.entity||"Colectivo")}</span><span>${fmtDate(it.date)}</span></div><h3>${esc(T(it))}</h3>${body?`<p class="body">${esc(body)}</p>`:""}${attach(it)}${lot?`<div class="stack" style="margin-top:12px">${VIEWS.loteria(true)}</div>`:""}${adminRow(it)}</article>`;
 }
 function colIcon(id){
   const p={protectora:'<path d="M7 14c-1.5 0-2.5-1.2-2.5-2.6S5.6 9 7 9s2.5 1 2.5 2.4S8.5 14 7 14zm10 0c-1.5 0-2.5-1.2-2.5-2.6S15.6 9 17 9s2.5 1 2.5 2.4S18.5 14 17 14zM9.5 8C8.2 8 7.5 6.8 7.5 5.5S8.3 3 9.5 3s2 1.2 2 2.5S10.8 8 9.5 8zm5 0c-1.2 0-2-1.2-2-2.5s.8-2.5 2-2.5 2 1.2 2 2.5S15.8 8 14.5 8zM12 12c3 0 5.5 3.5 5.5 6 0 1.6-1.3 2.5-2.8 2.5-1.2 0-1.8-.6-2.7-.6s-1.5.6-2.7.6c-1.5 0-2.8-.9-2.8-2.5 0-2.5 2.5-6 5.5-6z"/>',
@@ -1758,6 +1770,7 @@ function openForm(section, it){
     ${field("f-date","Fecha",`<input id="f-date" type="date" value="${esc(v.date||"")}">`)}
     ${extra}
     ${isFoto?"":field("f-body", section==="reuniones"?"Resumen":section==="cursos"?"Explicación del curso":"Texto", `<textarea id="f-body">${esc(v.body||"")}</textarea>`)}
+    ${isFoto?"":`<details class="gl-box"${v.titleGl||v.bodyGl||v.docGl?" open":""}><summary class="meta">En galego (opcional): lo verán los socios que elijan Galego</summary>${field("f-titlegl","Título en galego",`<input id="f-titlegl" value="${esc(v.titleGl||"")}">`)}${field("f-bodygl","Texto en galego",`<textarea id="f-bodygl">${esc(v.bodyGl||"")}</textarea>`)}${canPhoto?field("f-docgl","Documento en galego (PDF)",`<input id="f-docgl" type="file" accept="application/pdf">`)+(v.docGl?`<span class="meta">Ya tiene documento en galego; elige otro solo si quieres cambiarlo.</span>`:""):""}</details>`}
     ${canPhoto?field("f-photo", isCartel?"Cartel (imagen o PDF)":isFoto?(section==="fotos"&&!it?"Fotos (puedes elegir varias a la vez)":"Foto"):"Foto (opcional)", `<input id="f-photo" type="file" accept="image/*,.jpg,.jpeg,.png,.webp,.gif${isCartel?",application/pdf":""}"${section==="fotos"&&!it?" multiple":""}>`) + (v.photo?`<span class="meta">Ya tiene una foto; elige otra solo si quieres cambiarla.</span>`:"")
               :(isFoto?`<p class="err">Solo quien tenga permiso de edición puede subir fotos.</p>`:"")}
     ${canPhoto&&!isFoto?field("f-doc","Documento en PDF (opcional)",`<input id="f-doc" type="file" accept="application/pdf">`) + (v.doc?`<span class="meta">Ya tiene un documento${v.docName?" ("+esc(v.docName)+")":""}; elige otro solo si quieres cambiarlo.</span>`:""):""}
@@ -1779,7 +1792,7 @@ function openForm(section, it){
     const err=$("#f-err"); err.hidden=true;
     const val=id=>{const el=$("#"+id);return el?el.value.trim():undefined};
     const data = {section, title:val("f-title"), date:val("f-date")||"", updatedAt:new Date().toISOString()};
-    for(const [k,id] of [["body","f-body"],["kind","f-kind"],["time","f-time"],["place","f-place"],["entity","f-entity"],["status","f-status"],["album","f-album"],["ptab","f-ptab"],["plazas","f-plazas"],["regDate","f-regdate"],["regNum","f-regnum"]]){ const x=val(id); if(x!==undefined) data[k]=x; }
+    for(const [k,id] of [["body","f-body"],["kind","f-kind"],["time","f-time"],["place","f-place"],["entity","f-entity"],["status","f-status"],["album","f-album"],["ptab","f-ptab"],["plazas","f-plazas"],["regDate","f-regdate"],["regNum","f-regnum"],["titleGl","f-titlegl"],["bodyGl","f-bodygl"]]){ const x=val(id); if(x!==undefined) data[k]=x; }
     if(!data.title && section==="fotos") data.title = data.album || "Foto";
     if(section==="encuestas"){ data.opciones=(val("f-opciones")||"").split("\n").map(x=>x.trim()).filter(Boolean); data.cierre=val("f-cierre")||"";
       if(data.opciones.length<2){ err.textContent="Escribe al menos dos opciones, una en cada línea."; err.hidden=false; return; } }
@@ -1818,6 +1831,14 @@ function openForm(section, it){
         const upd = await S.assets.upload(doc, {type:"application/pdf"});
         data.doc = upd.id; data.docName = doc.name.slice(0,120);
       } else if(v.doc){ data.doc = v.doc; if(v.docName) data.docName = v.docName; }
+      const docgl = $("#f-docgl") && $("#f-docgl").files[0];
+      if(docgl){
+        if(docgl.type && !/pdf|octet-stream/i.test(docgl.type) && !/\.pdf$/i.test(docgl.name||"")) throw {code:"bad_type"};
+        if(docgl.size>20*1024*1024) throw {code:"too_large"};
+        const upg = await S.assets.upload(docgl, {type:"application/pdf"});
+        data.docGl = upg.id;
+      } else if(v.docGl){ data.docGl = v.docGl; }
+      for(const k of ["doc2","doc2Name","noticia"]) if(v[k]!==undefined&&data[k]===undefined) data[k]=v[k];
       if(it && it.cuando && !data.date) data.cuando = it.cuando;
       const ref = it ? S.db.collection("items").doc(it.id) : S.db.collection("items").doc();
       if(!it) data.createdAt = data.updatedAt;
@@ -1834,7 +1855,7 @@ function openForm(section, it){
 function askDelete(id){
   const it=S.items.find(i=>i.id===id); if(!it) return;
   $("#sheet-root").innerHTML = `<div class="sheet-bg" id="sheet-bg"><div class="sheet" role="dialog" aria-label="Borrar publicación">
-    <h2>¿Borrar “${esc(it.title)}”?</h2><p class="body">Desaparecerá de la app para todos los socios. No se puede deshacer.</p>
+    <h2>¿Borrar “${esc(T(it))}”?</h2><p class="body">Desaparecerá de la app para todos los socios. No se puede deshacer.</p>
     <p class="err" id="d-err" hidden></p>
     <div class="row-actions"><button class="btn ghost" id="d-no">Cancelar</button><button class="btn danger" id="d-yes">Borrar</button></div></div></div>`;
   $("#d-no").onclick=closeSheet;
