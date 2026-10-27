@@ -1,5 +1,7 @@
 /* Traducción al gallego de los textos de la app (castellano -> galego). La usa i18n.js. */
 window.GL_DICT = {
+"Para cualquier duda, sugerencia o apunte, escríbenos a nuestro correo:":"Para calquera dúbida, consello ou apunte, escríbenos ao noso correo:",
+"✉️ Escribe a la directiva":"✉️ Escríbelle á directiva",
 "La asociación › Estatutos":"A asociación › Estatutos",
 "Estatutos de la asociación":"Estatutos da asociación",
 "Seguiremos subiendo más documentos.":"Seguiremos subindo máis documentos.",
