@@ -265,6 +265,7 @@ window.GL_DICT = {
   "Escribir por WhatsApp": "Escribir por WhatsApp",
   "Escribir correo": "Escribir correo",
   "Llamar": "Chamar",
+  "Me interesa: llamar": "Interésame: chamar",
   "Todavía no hay comercios ni profesionales del barrio.": "Aínda non hai comercios nin profesionais do barrio.",
   "Por ejemplo: peluquería, fontanería, frutería": "Por exemplo: perruquería, fontanería, froitaría",
 "(el cuadrado con la flecha hacia arriba), arriba en la barra.": "(o cadrado coa frecha cara arriba), arriba na barra.",
