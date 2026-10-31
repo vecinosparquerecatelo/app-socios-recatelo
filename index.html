@@ -1560,7 +1560,7 @@ const VIEWS = {
       ${field("mc-titulo","Título",`<input id="mc-titulo" placeholder="${f==="Empleo"?"Por ejemplo: busco cuidadora por las tardes":f===CTIPO?"Por ejemplo: peluquería, fontanería, frutería":"Por ejemplo: bicicleta de niño"}">`)}
       ${field("mc-texto","Descripción (opcional)",`<textarea id="mc-texto"></textarea>`)}
       ${field("mc-foto","Fotos (opcional, hasta 3)",`<input id="mc-foto" type="file" accept="image/*" multiple><span class="meta" id="mc-foto-n">${S.mcFotos&&S.mcFotos.length?S.mcFotos.length+(S.mcFotos.length===1?" foto elegida":" fotos elegidas"):""}</span>`)}
-      <div class="two">${field("mc-contacto","Teléfono y/o correo para contactar",`<input id="mc-contacto" autocomplete="tel">`)}${field("mc-nombre","Tu nombre (opcional)",`<input id="mc-nombre" autocomplete="name">`)}</div>
+      <div class="two">${field("mc-contacto","Teléfono y/o correo para contactar (obligatorio)",`<input id="mc-contacto" autocomplete="tel">`)}${field("mc-nombre","Tu nombre (opcional)",`<input id="mc-nombre" autocomplete="name">`)}</div>
       <p class="err" id="mc-err" hidden></p><div class="row-actions"><button class="btn" id="mc-send">Publicar anuncio</button></div></form></details>`;
     return `<div><h2>Mercadiño</h2><p class="lead">Alquila, vende, dona, compra o haz trueque entre vecinos, ofrece o busca empleo en la pestaña Empleo, y da a conocer tu comercio o tu oficio en «Comercio y profesionales del barrio». Solo los socios ven los anuncios. Si te interesa uno, pulsa “Me interesa” y le escribes directamente a quien lo publicó.</p></div>
       ${form}${filterBar("mercadillo",[...MTIPOS,"Empleo",CTIPO],true).replace(/<button data-f="([^"]+)"([^>]*)>([^<]*)<\/button>/g,(m,v,r,l)=>nuevoEn(v)?`<button data-f="${v}"${r}>${l} 🔴</button>`:m)}
@@ -2043,11 +2043,13 @@ $("#main").addEventListener("change", e=>{
   S.mcFotos=[...(e.target.files||[])].filter(f=>/^image\//.test(f.type)||!f.type).slice(0,3);
   const n=$("#mc-foto-n"); if(n) n.textContent=S.mcFotos.length?S.mcFotos.length+(S.mcFotos.length===1?" foto elegida":" fotos elegidas")+((e.target.files||[]).length>3?" (solo se ponen 3)":""):"";
 });
+const contactoOk = c => /[^\s,;\/]+@[^\s,;\/]+\.[a-z]{2,}/i.test(c) || /\+?\d[\d .\-]{7,}\d/.test(c);
 $("#main").addEventListener("submit", async e=>{
   if(e.target.id!=="mc-form") return; e.preventDefault();
   const v=id=>($("#"+id).value||"").trim(); const er=$("#mc-err"); er.hidden=true;
   const a={id:Date.now().toString(36)+Math.random().toString(36).slice(2,6), tipo:v("mc-tipo"), titulo:v("mc-titulo").slice(0,120), texto:v("mc-texto").slice(0,1500), precio:v("mc-precio").slice(0,40), contacto:v("mc-contacto").slice(0,120), nombre:v("mc-nombre").slice(0,80), at:new Date().toISOString()};
   if(!a.titulo){ er.textContent="Escribe un título."; er.hidden=false; return; }
+  if(!contactoOk(a.contacto)){ er.textContent="Pon un teléfono o un correo para que puedan contactar contigo."; er.hidden=false; return; }
   if(!a.contacto){ er.textContent="Pon un teléfono o correo para que te contacten."; er.hidden=false; return; }
   if(!S.mcRevisado){ mercPrevia(a); return; }
   S.mcRevisado=false;
@@ -2092,7 +2094,7 @@ function mercEditar(u,id){
     <div class="two">${field("me-tipo","Qué quieres hacer",sel("me-tipo",[...MTIPOS,...ETIPOS,CTIPO],a.tipo))}${field("me-precio","Precio o sueldo (opcional)",`<input id="me-precio" value="${esc(a.precio||"")}">`)}</div>
     ${field("me-titulo","Título",`<input id="me-titulo" value="${esc(a.titulo||"")}">`)}
     ${field("me-texto","Descripción (opcional)",`<textarea id="me-texto">${esc(a.texto||"")}</textarea>`)}
-    <div class="two">${field("me-contacto","Teléfono y/o correo para contactar",`<input id="me-contacto" value="${esc(a.contacto||"")}">`)}${field("me-nombre","Tu nombre (opcional)",`<input id="me-nombre" value="${esc(a.nombre||"")}">`)}</div>
+    <div class="two">${field("me-contacto","Teléfono y/o correo para contactar (obligatorio)",`<input id="me-contacto" value="${esc(a.contacto||"")}">`)}${field("me-nombre","Tu nombre (opcional)",`<input id="me-nombre" value="${esc(a.nombre||"")}">`)}</div>
     ${(a.fotos||[]).length?`<label class="check"><input type="checkbox" id="me-sinfotos"> Quitar las fotos del anuncio</label>`:""}
     <p class="err" id="me-err" hidden></p><div class="row-actions"><button type="button" class="btn ghost" id="me-x">Cancelar</button><button class="btn" id="me-ok">Guardar cambios</button></div></form></div>`;
   const cerrar=()=>{ $("#sheet-root").innerHTML=""; };
@@ -2102,6 +2104,7 @@ function mercEditar(u,id){
     const n={...a, tipo:v("me-tipo"), titulo:v("me-titulo").slice(0,120), texto:v("me-texto").slice(0,1500), precio:v("me-precio").slice(0,40), contacto:v("me-contacto").slice(0,120), nombre:v("me-nombre").slice(0,80), editado:new Date().toISOString()};
     if($("#me-sinfotos")&&$("#me-sinfotos").checked) delete n.fotos;
     if(!n.titulo){ er.textContent="Escribe un título."; er.hidden=false; return; }
+    if(!contactoOk(n.contacto)){ er.textContent="Pon un teléfono o un correo para que puedan contactar contigo."; er.hidden=false; return; }
     if(!n.contacto){ er.textContent="Pon un teléfono o correo para que te contacten."; er.hidden=false; return; }
     const b=$("#me-ok"); b.disabled=true; b.textContent="Guardando…";
     try{ const cur=S.mercAll.find(x=>x.uid===u)||d; await S.db.doc("mercadillo/"+u).set({anuncios:(cur.anuncios||[]).map(x=>x.id===id?n:x)}); cerrar(); }
