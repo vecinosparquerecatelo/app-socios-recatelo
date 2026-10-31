@@ -1533,7 +1533,7 @@ const VIEWS = {
   },
   mercadillo(){
     const mercContacto = a => {
-      const c=(a.contacto||"").trim(), com=a.tipo===CTIPO, msg=`Hola${a.nombre?" "+a.nombre:""}, soy socio/a de la Asociación de Vecinos Parque de Rosalía-Recatelo. ${com?"Te escribo por tu anuncio en «Comercio y profesionales del barrio» del Mercadiño":"Me interesa tu anuncio del Mercadiño"}: «${a.titulo}».`;
+      const c0=(a.contacto||"").trim(), hayC=x=>/[^\s,;\/]+@[^\s,;\/]+\.[a-z]{2,}/i.test(x)||/\+?\d[\d .\-]{7,}\d/.test(x), c=hayC(c0)?c0:[c0,a.texto||"",a.titulo||""].join(" "), com=a.tipo===CTIPO, msg=`Hola${a.nombre?" "+a.nombre:""}, soy socio/a de la Asociación de Vecinos Parque de Rosalía-Recatelo. ${com?"Te escribo por tu anuncio en «Comercio y profesionales del barrio» del Mercadiño":"Me interesa tu anuncio del Mercadiño"}: «${a.titulo}».`;
       const b=[], mail=(c.match(/[^\s,;\/]+@[^\s,;\/]+\.[a-z]{2,}/i)||[])[0];
       let d=((c.replace(mail||"","").match(/\+?\d[\d .\-]{7,}\d/)||[""])[0]).replace(/\D/g,""); if(d.length===9) d="34"+d; else if(d.startsWith("0034")) d=d.slice(2);
       if(d.length>=11){ b.push(`<a class="btn small" target="_blank" rel="noopener" href="https://wa.me/${d}?text=${encodeURIComponent(msg)}">${com?"Escribir por WhatsApp":"Me interesa: WhatsApp"}</a>`); b.push(`<a class="btn ghost small" href="tel:+${d}">Llamar</a>`); }
