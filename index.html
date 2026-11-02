@@ -64,6 +64,10 @@ h3{font-family:var(--display);font-weight:600;font-size:1.12rem;margin:0;text-wr
 .lead{color:var(--muted);margin:4px 0 0;max-width:62ch}
 .stack{display:grid;gap:12px}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px;display:grid;gap:8px;min-width:0}
+.card.con-sello{position:relative;overflow:hidden}
+.sello-sol{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:2;font-weight:800;font-size:clamp(1.7rem,9vw,2.8rem);letter-spacing:.06em;color:rgba(21,150,60,.72);background:rgba(34,197,94,.12);text-shadow:0 1px 0 rgba(255,255,255,.4)}
+.sello-sol span{display:inline-block;padding:.15em .6em;border:5px solid rgba(21,150,60,.7);border-radius:14px;transform:rotate(-8deg)}
+.btn.sol{background:#16a34a;border-color:#16a34a;color:#fff}
 .meta{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;color:var(--muted);font-size:.88rem}
 .nuevo-n{display:inline-block;min-width:1.3em;padding:0 5px;border-radius:999px;background:#b3261e;color:#fff;font-size:.75rem;font-weight:700;line-height:1.3em;text-align:center}
 .docs-lista{margin:0;padding:0;list-style:none;display:grid;gap:8px}
@@ -1201,9 +1205,11 @@ function gestAvisos(avs){
 }
 function avisoCard(it){
   const tipo = it.kind==="reunion" ? `<span class="pill p-amber">Reunión de socios</span>` : `<span class="pill p-blue">Aviso</span>`;
-  return `<article class="card"><div class="meta">${tipo}${it.date?`<span>${fmtDate(it.date)}${it.time?" · "+esc(it.time):""}</span>`:""}</div>
+  const sol = it.solucionado ? `<div class="sello-sol" aria-label="Solucionado"><span>✔ SOLUCIONADO</span></div>` : "";
+  const bSol = S.canEdit ? `<div class="row-actions"><button type="button" class="btn small ${it.solucionado?"ghost":"sol"}" data-sol="${esc(it.id)}">${it.solucionado?"Quitar «Solucionado»":"✔ Marcar como solucionado"}</button></div>` : "";
+  return `<article class="card${it.solucionado?" con-sello":""}">${sol}<div class="meta">${tipo}${it.date?`<span>${fmtDate(it.date)}${it.time?" · "+esc(it.time):""}</span>`:""}</div>
     <h3>${esc(T(it))}</h3>${it.place?`<div class="meta">📍 ${esc(it.place)}</div>`:""}
-    ${it.body?`<p class="body">${esc(B(it))}</p>`:""}${attach(it)}${adminRow(it)}</article>`;
+    ${it.body?`<p class="body">${esc(B(it))}</p>`:""}${attach(it)}${bSol}${adminRow(it)}</article>`;
 }
 function regLine(it){ return it.regDate ? `<div class="meta">📮 Registrado en el Concello el ${fmtDate(it.regDate)}${it.regNum?` (nº ${esc(it.regNum)})`:""}</div>` : ""; }
 function reunionCard(it){
@@ -2028,6 +2034,7 @@ $("#main").addEventListener("click", e=>{
     return; }
   const ed=e.target.closest("[data-edit]"); if(ed){ const it=S.items.find(i=>i.id===ed.dataset.edit); if(it) openForm(it.section,it); return; }
   const dl=e.target.closest("[data-del]"); if(dl){ askDelete(dl.dataset.del); }
+  const so=e.target.closest("[data-sol]"); if(so){ marcarSolucionado(so.dataset.sol, so); return; }
   const tr=e.target.closest("[data-trim]"); if(tr){ recortarFotos([tr.dataset.trim], tr); return; }
   const px=e.target.closest("[data-pix]"); if(px){ editorPixelar(px.dataset.pix); return; }
   if(e.target.closest("[data-mover-fotos]")){ moverFotosForm(); return; }
@@ -2429,6 +2436,13 @@ function openForm(section, it){
   });
 }
 
+async function marcarSolucionado(id, btn){
+  const it=S.items.find(i=>i.id===id); if(!it) return;
+  btn.disabled=true;
+  const {id:_, ...data}=it;
+  try{ await S.db.collection("items").doc(id).set({...data, solucionado:!it.solucionado, updatedAt:new Date().toISOString()}); it.solucionado=!it.solucionado; render(); }
+  catch(e){ btn.disabled=false; alert("No se ha podido guardar. Vuelve a intentarlo."); }
+}
 function askDelete(id){
   const it=S.items.find(i=>i.id===id); if(!it) return;
   $("#sheet-root").innerHTML = `<div class="sheet-bg" id="sheet-bg"><div class="sheet" role="dialog" aria-label="Borrar publicación">
