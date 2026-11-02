@@ -2527,5 +2527,25 @@ function pintarMarca(){
 })();
 </script>
 
+<script>
+/* Otoño: hojas que caen unos segundos al abrir la app (hasta el 21 de diciembre) */
+(function(){
+  try{
+    const hoy=new Date(), m=hoy.getMonth()+1, d=hoy.getDate();
+    const otono=(m===9&&d>=22)||m===10||m===11||(m===12&&d<=21);
+    if(!otono || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    try{ if(sessionStorage.getItem("hojas")) return; sessionStorage.setItem("hojas","1"); }catch(_){}
+    const COLS=["#c8642a","#d99a2b","#a5452b","#b87a2a","#8f5a24"];
+    const hoja=c=>`<svg viewBox="0 0 40 60" width="100%" height="100%"><path d="M20 2 C30 12 36 24 33 38 C31 48 25 55 20 58 C15 55 9 48 7 38 C4 24 10 12 20 2Z" fill="${c}"/><path d="M20 6 L20 58" stroke="rgba(0,0,0,.25)" stroke-width="1.4" fill="none"/><path d="M20 20 L29 14 M20 30 L31 24 M20 40 L29 35 M20 20 L11 14 M20 30 L9 24 M20 40 L11 35" stroke="rgba(0,0,0,.18)" stroke-width="1" fill="none"/></svg>`;
+    const st=document.createElement("style");
+    st.textContent="@keyframes caer{0%{transform:translate(0,-12vh) rotate(var(--r0));opacity:0}10%{opacity:.85}85%{opacity:.85}100%{transform:translate(var(--dx),108vh) rotate(var(--r1));opacity:0}}.hoja-cae{position:fixed;top:0;pointer-events:none;z-index:2147483000;animation:caer var(--t) ease-in forwards}";
+    document.head.appendChild(st);
+    const lanzar=()=>{ for(let i=0;i<12;i++){ const e=document.createElement("span"), w=16+Math.random()*12;
+      e.className="hoja-cae"; e.style.cssText=`left:${Math.random()*95}vw;width:${w}px;height:${w*1.5}px;--t:${5+Math.random()*3}s;--dx:${(Math.random()*30-15)}vw;--r0:${Math.random()*360}deg;--r1:${Math.random()*720-360}deg;animation-delay:${Math.random()*2.5}s`;
+      e.innerHTML=hoja(COLS[i%COLS.length]); document.body.appendChild(e); e.addEventListener("animationend",()=>e.remove()); } };
+    if(document.readyState==="complete") setTimeout(lanzar,600); else addEventListener("load",()=>setTimeout(lanzar,600));
+  }catch(_){}
+})();
+</script>
 </body>
 </html>
