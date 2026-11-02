@@ -310,7 +310,7 @@
     const t = document.createElement("div"); t.id = "tools"; t.style.cssText = "display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:10px";
     t.innerHTML = `${standalone ? "" : `<button class="btn ghost small" id="btn-instalar">Instalar la app en el móvil</button>`}
       <button class="btn ghost small" id="btn-avisos" hidden>Activar notificaciones</button>
-      ${state.directiva ? `<button class="btn ghost small" id="btn-codigo">Códigos de socios</button><button class="btn ghost small" id="btn-clave">Cambiar contraseña</button>` : ""}
+      ${state.directiva ? `<button class="btn ghost small" id="btn-codigo">Códigos de socios</button><button class="btn ghost small" id="btn-sinact">Socios sin activar la app</button><button class="btn ghost small" id="btn-clave">Cambiar contraseña</button>` : ""}
       <button class="btn ghost small" id="btn-buscar">🔍 Buscar</button>
       <button class="btn ghost small" id="btn-salir">Cerrar sesión</button>`;
     f.appendChild(t);
@@ -327,6 +327,7 @@
         location.reload();
       }
       if(e.target.id === "btn-codigo") codigos();
+      if(e.target.id === "btn-sinact") sinActivar();
       if(e.target.id === "btn-avisos") cambiarAvisos(e.target);
       if(e.target.id === "btn-clave") cambiarClave();
     });
@@ -397,6 +398,19 @@
   const escH = v => String(v == null ? "" : v).replace(/[&<>"]/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;" })[c]);
   const appUrl = () => location.origin + location.pathname.replace(/index\.html$/, "");
   const mensaje = (nombre, codigo) => `Hola, ${nombre}. Este es tu acceso personal a la app de socios de la Asociación de Vecinos Parque de Rosalía de Castro-Recatelo.\n\n1. Abre: ${appUrl()}\n2. Pulsa "Soy socio/a" y escribe tu código: ${codigo}\n\nEl código es solo para ti y no sirve para otras personas.`;
+  async function sinActivar(){
+    const { data: lista } = await sb.rpc("listar_codigos");
+    const clave = v => String(v || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+    const faltan = (lista || []).filter(k => k.activo && !k.usos).sort((a, b) => clave(a.nombre).localeCompare(clave(b.nombre)));
+    const filas = faltan.map(k => `<li style="display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;justify-content:space-between;border-top:1px solid var(--line);padding:8px 0">
+        <span><strong>${escH(k.nombre)}</strong><br><span class="acc-small">Código ${escH(k.codigo)}</span></span>
+        <button class="btn ghost small" data-wa="${escH(k.codigo)}" data-n="${escH(k.nombre)}">Reenviar por WhatsApp</button></li>`).join("");
+    sheet(`<h2>Socios sin activar la app (${faltan.length})</h2>
+      <p class="body">Solo lo ve la directiva. Son los socios que tienen código pero todavía no han entrado en la app.</p>
+      <ul style="list-style:none;margin:0;padding:0">${filas || `<li class="acc-small">Todos los socios con código han activado la app.</li>`}</ul>`, root => {
+      root.querySelectorAll("[data-wa]").forEach(b => b.onclick = () => window.open("https://wa.me/?text=" + encodeURIComponent(mensaje(b.dataset.n, b.dataset.wa)), "_blank", "noopener"));
+    });
+  }
   async function codigos(aviso){
     const { data: lista } = await sb.rpc("listar_codigos");
     const filas = (lista || []).map(k => `<li style="display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;justify-content:space-between;border-top:1px solid var(--line);padding:8px 0">
