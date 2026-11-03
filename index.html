@@ -1047,7 +1047,7 @@ function go(tab){
   if(tab!=="mercadillo") S.mercAntes=null;
   registrarPestana(tab);
   S.tab = tab; try{ history.replaceState(null,"","#"+tab) }catch(e){}
-  renderTabs(); render(); window.scrollTo({top:0}); if(window.hojasOtono && (tab==="inicio"||tab==="mercadillo")) window.hojasOtono();
+  renderTabs(); render(); window.scrollTo({top:0}); if(window.hojasOtono && (tab==="inicio"||tab==="mercadillo"||tab==="bic")) window.hojasOtono();
   const b=$('#tabs [aria-selected="true"]'); b && b.scrollIntoView({inline:"center",block:"nearest"});
 }
 
@@ -2564,7 +2564,7 @@ function pintarMarca(){
     };
     let ultima=0;
     window.hojasOtono=()=>{ const t=Date.now(); if(t-ultima<15000) return; ultima=t; setTimeout(lanzar,300); };
-    const alCargar=()=>{ try{ if(typeof S!=="undefined" && S.uid && !["inicio","mercadillo"].includes(S.tab)) return; }catch(_){} window.hojasOtono(); };
+    const alCargar=()=>{ try{ if(typeof S!=="undefined" && S.uid && !["inicio","mercadillo","bic"].includes(S.tab)) return; }catch(_){} window.hojasOtono(); };
     if(document.readyState==="complete") alCargar(); else addEventListener("load",alCargar);
   }catch(_){}
 })();
