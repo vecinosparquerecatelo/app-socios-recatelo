@@ -398,6 +398,18 @@
   const escH = v => String(v == null ? "" : v).replace(/[&<>"]/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;" })[c]);
   const appUrl = () => location.origin + location.pathname.replace(/index\.html$/, "");
   const mensaje = (nombre, codigo) => `Hola, ${nombre}. Este es tu acceso personal a la app de socios de la Asociación de Vecinos Parque de Rosalía de Castro-Recatelo.\n\n1. Abre: ${appUrl()}\n2. Pulsa "Soy socio/a" y escribe tu código: ${codigo}\n\nEl código es solo para ti y no sirve para otras personas.`;
+  window.cargarAvisosActivados = async (el) => {
+    const { data, error } = await sb.rpc("avisos_activados");
+    if(!el.isConnected) return;
+    if(error){ el.innerHTML = `<p class="body">No se puede mostrar todavía. Falta ejecutar en Supabase el archivo supabase-avisos-activados.sql.</p>`; return; }
+    const clave = v => String(v || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+    const lista = (Array.isArray(data) ? data : []).slice().sort((a, b) => clave(a.nombre).localeCompare(clave(b.nombre)));
+    const con = lista.filter(k => k.moviles > 0), sin = lista.filter(k => !k.moviles);
+    const fecha = d => d ? new Date(d).toLocaleDateString("es-ES", { day: "numeric", month: "long", year: "numeric" }) : "";
+    const fila = (k, extra) => `<li style="border-top:1px solid var(--line);padding:8px 0"><strong>${escH(k.nombre)}</strong><br><span class="acc-small">${extra}</span></li>`;
+    el.innerHTML = `<section class="card"><h3>Con los avisos activados (${con.length})</h3><ul style="list-style:none;margin:0;padding:0">${con.map(k => fila(k, (k.moviles > 1 ? k.moviles + " móviles" : "1 móvil") + (k.desde ? " · desde el " + fecha(k.desde) : ""))).join("") || `<li class="acc-small">Nadie todavía.</li>`}</ul></section>
+      <section class="card"><h3>Sin activar los avisos (${sin.length})</h3><ul style="list-style:none;margin:0;padding:0">${sin.map(k => fila(k, "Código " + escH(k.codigo))).join("") || `<li class="acc-small">Todos los socios los tienen activados.</li>`}</ul></section>`;
+  };
   async function sinActivar(){
     const { data: lista } = await sb.rpc("listar_codigos");
     const clave = v => String(v || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
