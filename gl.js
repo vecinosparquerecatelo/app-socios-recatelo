@@ -1,5 +1,6 @@
 /* Traducción al gallego de los textos de la app (castellano -> galego). La usa i18n.js. */
 window.GL_DICT = {
+"Darme de baja":"Darme de baixa",
 "Descargar textos para traducir al gallego":"Descargar textos para traducir ao galego",
 "Ya tiene documento en galego; elige otro solo si quieres cambiarlo.":"Xa ten documento en galego; escolle outro só se o queres cambiar.",
 "Documento en galego (PDF)":"Documento en galego (PDF)",

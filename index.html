@@ -171,6 +171,8 @@ a.btn{text-decoration:none;display:inline-block}
 .btn.danger{background:var(--red);color:var(--surface)}
 .btn.small{padding:5px 10px;font-size:.85rem}
 .fab{position:fixed;right:calc(18px + env(safe-area-inset-right,0px));bottom:calc(18px + env(safe-area-inset-bottom,0px));z-index:6;border-radius:999px;padding:14px 20px;box-shadow:0 6px 20px rgba(0,0,0,.25);font-size:1rem}
+.fab{transition:transform .25s ease,opacity .25s ease}
+.fab.oculto{transform:translateY(calc(100% + 40px));opacity:0;pointer-events:none}
 .pix{color:transparent;user-select:none;border-radius:3px;background-color:#8c9590;background-image:linear-gradient(45deg,#6f7873 25%,transparent 25%,transparent 75%,#6f7873 75%),linear-gradient(45deg,#6f7873 25%,transparent 25%,transparent 75%,#6f7873 75%);background-size:8px 8px;background-position:0 0,4px 4px}
 .notice{background:var(--blue-soft);color:var(--blue);border-radius:12px;padding:10px 14px;font-size:.92rem}
 .sheet-bg{position:fixed;inset:0;background:rgba(10,15,12,.55);z-index:20;display:flex;align-items:flex-end;justify-content:center}
@@ -1973,7 +1975,7 @@ function cursoCard(it, past){
   const yo = !!(S.insc&&S.insc.cursos&&S.insc.cursos[it.id]);
   let action="";
   if(!past && S.uid && !S.inscBlocked) action = yo
-    ? `<div class="row-actions"><span class="pill p-green" style="align-self:center">Estás apuntado/a</span><button class="btn ghost small" data-baja="${esc(it.id)}">Borrarme</button></div>`
+    ? `<div class="row-actions"><span class="pill p-green" style="align-self:center">Estás apuntado/a</span><button class="btn ghost small" data-baja="${esc(it.id)}">Darme de baja</button></div>`
     : `<div class="row-actions"><button class="btn" data-alta="${esc(it.id)}">Apuntarme</button></div>`;
   let admin="";
   if(S.canEdit){ const n=inscritosDe(it.id); admin=`<details class="insc"><summary>${n.length} apuntado${n.length===1?"":"s"}${it.plazas?" de "+esc(it.plazas)+" plazas":""}</summary>${n.length?`<ol>${n.map(x=>`<li>${esc(x)}</li>`).join("")}</ol>`:`<p class="meta">Nadie se ha apuntado todavía.</p>`}</details>`; }
@@ -2050,6 +2052,14 @@ $("#main").addEventListener("click", e=>{
   const bd=e.target.closest("[data-bz-del]"); if(bd){ const [u,id]=bd.dataset.bzDel.split("|"); const d=S.buzonAll.find(x=>x.uid===u); if(d&&confirm("¿Borrar este mensaje? No se puede recuperar.")){ S.db.doc("buzon/"+u).update({msgs:(d.msgs||[]).filter(m=>m.id!==id)}).catch(()=>alert("No se ha podido borrar el mensaje.")); } return; }
   const bp=e.target.closest("[data-bz-reply]"); if(bp){ const [u,id]=bp.dataset.bzReply.split("|"); bzReplyForm(u,id); }
 });
+// El botón de añadir se esconde al bajar por la lista (para no tapar las tarjetas) y vuelve al subir o al llegar al final
+(()=>{ let y0=window.scrollY, tick=false;
+  addEventListener("scroll", ()=>{ if(tick) return; tick=true; requestAnimationFrame(()=>{
+    const y=window.scrollY, fin = innerHeight + y >= document.documentElement.scrollHeight - 40;
+    if(Math.abs(y-y0)>8){ $("#fab").classList.toggle("oculto", y>y0 && y>120 && !fin); y0=y; }
+    if(fin) $("#fab").classList.remove("oculto");
+    tick=false; }); }, {passive:true});
+})();
 $("#fab").addEventListener("click", ()=>openForm(S.tab==="inicio"?"avisos":S.tab));
 $("#main").addEventListener("change", e=>{
   if(e.target.id!=="mc-foto") return;
