@@ -888,5 +888,8 @@ window.GL_DICT = {
 "¿Quitar el acceso a {0}? Dejará de poder entrar en la app.": "¿Quitar o acceso a {0}? Deixará de poder entrar na app.",
 "¿Quitar esta foto de la carpeta?": "¿Quitar esta foto do cartafol?",
 "← Todas las carpetas": "← Todos os cartafoles",
-"🔔 Notificaciones activadas": "🔔 Notificacións activadas"
+"🔔 Notificaciones activadas": "🔔 Notificacións activadas",
+"Sábado, 21 de noviembre de 2026": "Sábado, 21 de novembro de 2026",
+"De 11:00 a 14:00": "De 11:00 a 14:00",
+"Novedad en Cursos": "Novidade en Cursos"
 };
