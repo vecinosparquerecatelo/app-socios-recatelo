@@ -1209,8 +1209,9 @@ function gestAvisos(avs){
 }
 function avisoCard(it){
   const tipo = it.kind==="reunion" ? `<span class="pill p-amber">Reunión de socios</span>` : `<span class="pill p-blue">Aviso</span>`;
-  const sol = it.solucionado ? `<div class="sello-sol" aria-label="Solucionado"><span>✔ SOLUCIONADO</span></div>` : "";
-  const bSol = S.canEdit ? `<div class="row-actions"><button type="button" class="btn small ${it.solucionado?"ghost":"sol"}" data-sol="${esc(it.id)}">${it.solucionado?"Quitar «Solucionado»":"✔ Marcar como solucionado"}</button></div>` : "";
+  const reuAlc = /alcald/i.test(it.title||"");
+  const sol = it.solucionado ? (reuAlc ? `<div class="sello-sol" aria-label="Realizada"><span>✔ REALIZADA</span></div>` : `<div class="sello-sol" aria-label="Solucionado"><span>✔ SOLUCIONADO</span></div>`) : "";
+  const bSol = S.canEdit ? `<div class="row-actions"><button type="button" class="btn small ${it.solucionado?"ghost":"sol"}" data-sol="${esc(it.id)}">${reuAlc ? (it.solucionado?"Quitar «Realizada»":"✔ Marcar como realizada") : (it.solucionado?"Quitar «Solucionado»":"✔ Marcar como solucionado")}</button></div>` : "";
   return `<article class="card${it.solucionado?" con-sello":""}">${sol}<div class="meta">${tipo}${it.date?`<span>${fmtDate(it.date)}${it.time?" · "+esc(it.time):""}</span>`:""}</div>
     <h3>${esc(T(it))}</h3>${it.place?`<div class="meta">📍 ${esc(it.place)}</div>`:""}
     ${it.body?`<p class="body">${esc(B(it))}</p>`:""}${attach(it)}${bSol}${adminRow(it)}</article>`;
