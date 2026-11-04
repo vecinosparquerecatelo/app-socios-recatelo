@@ -2532,7 +2532,8 @@ function pintarMarca(){
     S.db=db;
     db.collection("items").onSnapshot(snap=>{
       const rows = snap.docs.map(d=>{ const r={id:d.id, ...d.data()}; const n=ALB_MOVER[r.album]; if(r.section==="fotos"&&n&&!((r.createdAt||"")>"2026-10-23T10:00")&&!((r.updatedAt||"")>"2026-10-23T10:00")){ if(r.title===r.album) r.title=n; r.album=n; } return r; });
-      S.items = [...rows, ...SEMILLAS.filter(s=>!rows.some(r=>r.id===s.id))].filter(i=>i.section!=="_borrado");
+      const rows2 = rows.map(r=>{ const s=SEMILLAS.find(x=>x.id===r.id); return (s && r.section!=="_borrado" && (s.updatedAt||"")>(r.updatedAt||"")) ? {...r, ...s} : r; });
+      S.items = [...rows2, ...SEMILLAS.filter(s=>!rows.some(r=>r.id===s.id))].filter(i=>i.section!=="_borrado");
       S.loaded = true; renderDatos();
     }, ()=>{ S.loaded=true; render(); });
     db.doc("config/ajustes").onSnapshot(snap=>{ S.logo = snap.exists ? (snap.data().logo||DEFAULT_LOGO) : DEFAULT_LOGO; S.estatutos = snap.exists ? (snap.data().estatutos||null) : null; paintLogo(); renderDatos(); },()=>{});
