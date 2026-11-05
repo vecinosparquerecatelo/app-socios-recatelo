@@ -1207,6 +1207,8 @@ function gestAvisos(avs){
     ${l.length?`<ul style="list-style:none;padding:0;margin:0" class="stack">${l.map(a=>`<li style="display:flex;gap:10px;align-items:center;justify-content:space-between;border-top:1px solid var(--line,#ddd);padding-top:8px"><div><strong>${esc(a.title||"")}</strong><div class="meta">${dias(a)}${a.date?` · Fecha del aviso: ${fmtDate(a.date)}`:""}</div></div><button type="button" class="btn ghost small" data-del="${esc(a.id)}">Borrar</button></li>`).join("")}</ul>`:`<p class="meta">No hay avisos publicados.</p>`}
   </details>`;
 }
+/* El aviso de una reunión con Alcaldía sigue arriba, con su sello, 30 días después de la fecha. */
+function esReuAlcReciente(a,t){ if(!a||!a.date||!/alcald/i.test(a.title||"")||a.id==="aviso-reunion-alcaldia-4-nov") return false; const lim=new Date(new Date(t+"T12:00:00").getTime()-30*864e5).toISOString().slice(0,10); return a.date>=lim; }
 function avisoCard(it){
   const tipo = it.kind==="reunion" ? `<span class="pill p-amber">Reunión de socios</span>` : `<span class="pill p-blue">Aviso</span>`;
   const reuAlc = /alcald/i.test(it.title||"") && it.id!=="aviso-reunion-alcaldia-4-nov";
@@ -1449,8 +1451,8 @@ const VIEWS = {
   inicio(){
     const t = today();
     const avs = bySection("avisos");
-    const prox = avs.filter(a=>!a.date||a.date>=t).sort((a,b)=>(a.date||a.sortDate||"9").localeCompare(b.date||b.sortDate||"9"));
-    const pas = sortDesc(avs.filter(a=>a.date&&a.date<t));
+    const prox = avs.filter(a=>!a.date||a.date>=t||esReuAlcReciente(a,t)).sort((a,b)=>(a.date||a.sortDate||"9").localeCompare(b.date||b.sortDate||"9"));
+    const pas = sortDesc(avs.filter(a=>a.date&&a.date<t&&!esReuAlcReciente(a,t)));
     return `${actividadSocios()}${S.canEdit?`<div class="row-actions" style="justify-content:flex-start"></div>`:""}<section class="hero">
         ${S.logo?`<img class="hero-logo" src="${imgSrc(S.logo)}" alt="Logo de la Asociación de Vecinos Parque de Rosalía de Castro-Recatelo">`:""}
         ${S.canEdit&&S.assets?`<div><label class="btn ghost small" style="display:inline-block;cursor:pointer">${S.logo?"Cambiar logo":"Subir el logo de la asociación"}<input type="file" id="logo-in" accept="image/png,image/jpeg,image/webp,image/svg+xml" hidden></label> <span class="meta" id="logo-msg"></span></div>`:""}
@@ -1475,8 +1477,8 @@ const VIEWS = {
   },
   avisos(){
     const t=today(); const all=bySection("avisos");
-    const prox=all.filter(a=>!a.date||a.date>=t).sort((a,b)=>(a.date||a.sortDate||"9").localeCompare(b.date||b.sortDate||"9"));
-    const pas=sortDesc(all.filter(a=>a.date&&a.date<t));
+    const prox=all.filter(a=>!a.date||a.date>=t||esReuAlcReciente(a,t)).sort((a,b)=>(a.date||a.sortDate||"9").localeCompare(b.date||b.sortDate||"9"));
+    const pas=sortDesc(all.filter(a=>a.date&&a.date<t&&!esReuAlcReciente(a,t)));
     return `<div><h2>Avisos y reuniones de socios</h2><p class="lead">Convocatorias de asambleas y avisos importantes para el barrio.</p></div>
       <section class="stack"><h3>Próximos</h3>${prox.length?prox.map(avisoCard).join(""):emptyBox("No hay avisos próximos.","Añade una convocatoria con fecha, hora y lugar.")}</section>
       ${pas.length?`<section class="stack"><h3>Anteriores</h3>${pas.map(avisoCard).join("")}</section>`:""}`;
