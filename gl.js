@@ -907,5 +907,20 @@ window.GL_DICT = {
 "Es la ley de Galicia. Prohíbe el maltrato y el abandono, establece el sacrificio cero en los centros de acogida, obliga a identificar y registrar a perros, gatos y hurones, y dice qué deben hacer los concellos con los animales perdidos o abandonados.": "É a lei de Galicia. Prohibe o maltrato e o abandono, establece o sacrificio cero nos centros de acollida, obriga a identificar e rexistrar cans, gatos e furóns, e indica que deben facer os concellos cos animais perdidos ou abandonados.",
 "📄 Leer la ley en el BOE": "📄 Ler a lei no BOE",
 "📄 Leer la ley en el DOG": "📄 Ler a lei no DOG",
-"Si ves un animal maltratado o abandonado, puedes avisar al 112.": "Se ves un animal maltratado ou abandonado, podes avisar ao 112."
+"Si ves un animal maltratado o abandonado, puedes avisar al 112.": "Se ves un animal maltratado ou abandonado, podes avisar ao 112.",
+"Árboles y plantas": "Árbores e plantas",
+"Artículo 2º.- Fines. Punto 11º": "Artigo 2º.- Fins. Punto 11º",
+"En el punto 6º también se recoge la «Mejora de la situación actual de parques y jardines».": "No punto 6º tamén se recolle a «Mellora da situación actual de parques e xardíns».",
+"Leyes que protegen árboles y plantas": "Leis que protexen árbores e plantas",
+"Ley 5/2019, de 2 de agosto, del patrimonio natural y de la biodiversidad de Galicia": "Lei 5/2019, do 2 de agosto, do patrimonio natural e da biodiversidade de Galicia",
+"Ley gallega · BOE": "Lei galega · BOE",
+"Es la ley de Galicia que protege la naturaleza: los espacios naturales, las plantas y los animales. Considera monumentos naturales los árboles singulares y monumentales y regula el Catálogo gallego de árboles singulares.": "É a lei de Galicia que protexe a natureza: os espazos naturais, as plantas e os animais. Considera monumentos naturais as árbores senlleiras e monumentais e regula o Catálogo galego de árbores senlleiras.",
+"Decreto 67/2007, de 22 de marzo, por el que se regula el Catálogo gallego de árboles singulares": "Decreto 67/2007, do 22 de marzo, polo que se regula o Catálogo galego de árbores senlleiras",
+"Decreto gallego · DOG del 17 de abril de 2007": "Decreto galego · DOG do 17 de abril de 2007",
+"Es la lista oficial de los árboles más valiosos de Galicia por su tamaño, su edad, su historia o su belleza. Los árboles del catálogo están protegidos y se puede pedir que se incluya un árbol nuevo.": "É a lista oficial das árbores máis valiosas de Galicia polo seu tamaño, a súa idade, a súa historia ou a súa beleza. As árbores do catálogo están protexidas e pódese pedir que se inclúa unha árbore nova.",
+"📄 Leer el decreto en el DOG": "📄 Ler o decreto no DOG",
+"Ley 5/2016, de 4 de mayo, del patrimonio cultural de Galicia": "Lei 5/2016, do 4 de maio, do patrimonio cultural de Galicia",
+"Protege el patrimonio cultural de Galicia. Incluye la figura de jardín histórico, que puede declararse Bien de Interés Cultural (BIC). Es la ley en la que se apoya la petición de BIC para el Parque Rosalía.": "Protexe o patrimonio cultural de Galicia. Inclúe a figura de xardín histórico, que pode declararse Ben de Interese Cultural (BIC). É a lei na que se apoia a petición de BIC para o Parque Rosalía.",
+"Ley 42/2007, de 13 de diciembre, del Patrimonio Natural y de la Biodiversidad": "Lei 42/2007, do 13 de decembro, do Patrimonio Natural e da Biodiversidade",
+"Es la ley para toda España que protege la naturaleza, los espacios naturales y las especies de plantas y animales.": "É a lei para toda España que protexe a natureza, os espazos naturais e as especies de plantas e animais."
 };
