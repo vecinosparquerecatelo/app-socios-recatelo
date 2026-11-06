@@ -894,5 +894,18 @@ window.GL_DICT = {
 "🔔 Notificaciones activadas": "🔔 Notificacións activadas",
 "Sábado, 21 de noviembre de 2026": "Sábado, 21 de novembro de 2026",
 "De 11:00 a 14:00": "De 11:00 a 14:00",
-"Novedad en Cursos": "Novidade en Cursos"
+"Novedad en Cursos": "Novidade en Cursos",
+"Bienestar animal": "Benestar animal",
+"Leyes de bienestar animal": "Leis de benestar animal",
+"Lo que dicen nuestros Estatutos": "O que din os nosos Estatutos",
+"Artículo 2º.- Fines. Punto 16º": "Artigo 2º.- Fins. Punto 16º",
+"Ley 7/2023, de 28 de marzo, de protección de los derechos y el bienestar de los animales": "Lei 7/2023, do 28 de marzo, de protección dos dereitos e o benestar dos animais",
+"Ley estatal · BOE · en vigor desde el 29 de septiembre de 2023": "Lei estatal · BOE · en vigor desde o 29 de setembro de 2023",
+"Es la ley para toda España. Reconoce a los animales como seres sintientes, prohíbe el maltrato y el abandono, obliga a identificarlos con microchip y encarga a los ayuntamientos cuidar de las colonias de gatos.": "É a lei para toda España. Recoñece os animais como seres sentintes, prohibe o maltrato e o abandono, obriga a identificalos con microchip e encarga aos concellos coidar das colonias de gatos.",
+"Ley 4/2017, de 3 de octubre, de protección y bienestar de los animales de compañía en Galicia": "Lei 4/2017, do 3 de outubro, de protección e benestar dos animais de compañía en Galicia",
+"Ley gallega · DOG del 11 de octubre de 2017": "Lei galega · DOG do 11 de outubro de 2017",
+"Es la ley de Galicia. Prohíbe el maltrato y el abandono, establece el sacrificio cero en los centros de acogida, obliga a identificar y registrar a perros, gatos y hurones, y dice qué deben hacer los concellos con los animales perdidos o abandonados.": "É a lei de Galicia. Prohibe o maltrato e o abandono, establece o sacrificio cero nos centros de acollida, obriga a identificar e rexistrar cans, gatos e furóns, e indica que deben facer os concellos cos animais perdidos ou abandonados.",
+"📄 Leer la ley en el BOE": "📄 Ler a lei no BOE",
+"📄 Leer la ley en el DOG": "📄 Ler a lei no DOG",
+"Si ves un animal maltratado o abandonado, puedes avisar al 112.": "Se ves un animal maltratado ou abandonado, podes avisar ao 112."
 };
