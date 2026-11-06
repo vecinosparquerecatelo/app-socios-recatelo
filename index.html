@@ -1042,9 +1042,12 @@ function mercVisto(){ try{ let v=localStorage.getItem("recatelo-merc-visto"); if
 function cursosVisto(){ try{ let v=localStorage.getItem("recatelo-cursos-visto"); if(!v){ v="2026-11-01T00:00:00Z"; localStorage.setItem("recatelo-cursos-visto",v); } return v; }catch(_){ return new Date().toISOString(); } }
 function cursosNuevos(){ if(S.tab==="cursos"){ try{ localStorage.setItem("recatelo-cursos-visto",new Date().toISOString()); }catch(_){} return false; } const v=cursosVisto(); return (S.items||[]).some(i=>i.section==="cursos" && (i.updatedAt||i.createdAt||"")>v); }
 function mercNuevos(){ if(S.tab==="mercadillo") return 0; const v=mercVisto(); let n=0; for(const d of S.mercAll) if(d.uid!==S.uid) for(const a of (d.anuncios||[])) if((a.at||"")>v) n++; return n; }
+// Pestañas nuevas con punto rojo hasta que cada socio las abre (se recuerda en este móvil)
+const PEST_NUEVAS=["bienestar","arboles"];
+function pestNueva(id){ if(!PEST_NUEVAS.includes(id)) return false; if(S.tab===id){ try{ localStorage.setItem("recatelo-visto-"+id,"1"); }catch(_){} return false; } try{ return !localStorage.getItem("recatelo-visto-"+id); }catch(_){ return false; } }
 function renderTabs(){
-  const cur = groupOf(S.tab), nm = mercNuevos(), cn = cursosNuevos();
-  $("#tabs").innerHTML = GROUPS.map(g=>`<button role="tab" data-tab="${g===cur?S.tab:g.subs[0][0]}" aria-selected="${g===cur}">${g.label}${g.label==="Cursos"&&cn?` <span class="punto-rojo" aria-label="Novedad en Cursos"></span>`:""}${g.label==="Mercadiño"&&nm?` <span class="nuevo-n" aria-label="${nm} nuevos">${nm}</span>`:""}</button>`).join("");
+  const cur = groupOf(S.tab), nm = mercNuevos(), cn = cursosNuevos(), an = PEST_NUEVAS.filter(pestNueva).length>0;
+  $("#tabs").innerHTML = GROUPS.map(g=>`<button role="tab" data-tab="${g===cur?S.tab:g.subs[0][0]}" aria-selected="${g===cur}">${g.label}${g.label==="Cursos"&&cn?` <span class="punto-rojo" aria-label="Novedad en Cursos"></span>`:""}${g.label==="La asociación"&&an?` <span class="punto-rojo" aria-label="Novedad"></span>`:""}${g.label==="Mercadiño"&&nm?` <span class="nuevo-n" aria-label="${nm} nuevos">${nm}</span>`:""}</button>`).join("");
 }
 $("#tabs").addEventListener("click", e=>{ const b=e.target.closest("[data-tab]"); if(b) go(b.dataset.tab); });
 function go(tab){
@@ -2060,7 +2063,7 @@ function render(){
   else {
     const g = groupOf(S.tab);
     const gsubs=g.subs.filter(([id])=>id!=="avisosact"||S.canEdit);
-    if(gsubs.length>1) html += `<div class="filters" role="tablist" aria-label="${esc(g.label)}">${gsubs.map(([id,l])=>`<button data-go="${id}" aria-pressed="${S.tab===id}">${l}</button>`).join("")}</div>`;
+    if(gsubs.length>1) html += `<div class="filters" role="tablist" aria-label="${esc(g.label)}">${gsubs.map(([id,l])=>`<button data-go="${id}" aria-pressed="${S.tab===id}">${l}${pestNueva(id)?` <span class="punto-rojo" aria-label="Novedad"></span>`:""}</button>`).join("")}</div>`;
     html += VIEWS[S.tab]();
   }
   const keep = {}; for(const id of ["ns-nombre","ns-tel","mc-tipo","mc-precio","mc-titulo","mc-texto","mc-contacto","mc-nombre","bz-texto","bz-contacto","bz-tipo","fi-nombre","fi-dir","fi-tel","fi-email","fi-prio","lt-nombre","lt-dni","lt-n","inc-tipo","inc-texto","bq"]){ const el=document.getElementById(id); if(el) keep[id]=el.value; }

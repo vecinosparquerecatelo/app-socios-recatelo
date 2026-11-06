@@ -897,6 +897,7 @@ window.GL_DICT = {
 "Sábado, 21 de noviembre de 2026": "Sábado, 21 de novembro de 2026",
 "De 11:00 a 14:00": "De 11:00 a 14:00",
 "Novedad en Cursos": "Novidade en Cursos",
+"Novedad": "Novidade",
 "Bienestar animal": "Benestar animal",
 "Leyes de bienestar animal": "Leis de benestar animal",
 "Lo que dicen nuestros Estatutos": "O que din os nosos Estatutos",
