@@ -1,6 +1,7 @@
 /* Traducción al gallego de los textos de la app (castellano -> galego). La usa i18n.js. */
 window.GL_DICT = {
 "Solo directiva:":"Só directiva:",
+"Familiares y amigos":"Familiares e amigos",
 "✔ Botón «Apuntarme»: activado":"✔ Botón «Apuntarme»: activado",
 "Botón «Apuntarme»: desactivado":"Botón «Apuntarme»: desactivado",
 "✔ Familiares y amigos: activado":"✔ Familiares e amigos: activado",

@@ -2053,7 +2053,7 @@ function invitadosTodos(id){ return S.inscAll.filter(d=>d.invitados&&Array.isArr
 function listaInsc(it){
   if(!S.canEdit) return "";
   const n=inscritosDe(it.id), fam=invitadosTodos(it.id), nf=fam.reduce((a,x)=>a+x.nombres.length,0), tot=n.length+nf;
-  return `<details class="insc"><summary>${tot} apuntado${tot===1?"":"s"}${it.plazas?" de "+esc(it.plazas)+" plazas":""}</summary>${n.length?`<ol>${n.map(x=>`<li>${esc(x)}</li>`).join("")}</ol>`:`<p class="meta">Nadie se ha apuntado todavía.</p>`}${nf?`<p class="meta" style="margin-top:8px"><b>Familiares y amigos (${nf})</b></p><ol>${fam.map(x=>x.nombres.map(nm=>`<li><span data-noi18n>${esc(nm)}</span> <span class="meta">· de parte de <span data-noi18n>${esc(x.socio)}</span></span></li>`).join("")).join("")}</ol>`:""}</details>`;
+  return `<details class="insc"><summary>${tot} apuntado${tot===1?"":"s"}${it.plazas?" de "+esc(it.plazas)+" plazas":""}</summary>${n.length?`<ol>${n.map(x=>`<li>${esc(x)}</li>`).join("")}</ol>`:`<p class="meta">Nadie se ha apuntado todavía.</p>`}${nf?`<p class="meta" style="margin-top:8px"><b>Familiares y amigos</b></p><ol>${fam.map(x=>x.nombres.map(nm=>`<li><span data-noi18n>${esc(nm)}</span> <span class="meta">· de parte de <span data-noi18n>${esc(x.socio)}</span></span></li>`).join("")).join("")}</ol>`:""}</details>`;
 }
 /* Interruptores que solo ve la directiva: activar o quitar «Apuntarme» y «Familiares y amigos» desde el móvil */
 function opcionesDir(it, curso){
@@ -2073,7 +2073,7 @@ async function cambiarOpcion(btn){
 $("#main").addEventListener("click", e=>{ const b=e.target.closest("[data-opc]"); if(b) cambiarOpcion(b); });
 function famBox(it){
   const inv=invitadosDe(it.id);
-  return `<details class="fam" data-fam="${esc(it.id)}"${S.famOpen===it.id?" open":""}><summary>👨‍👩‍👧 Familiares y amigos${inv.length?` (${inv.length})`:""}</summary>
+  return `<details class="fam" data-fam="${esc(it.id)}"${S.famOpen===it.id?" open":""}><summary>👨‍👩‍👧 Familiares y amigos</summary>
     <p class="meta">Si quieres traer a algún familiar o amigo, escribe su nombre y apellidos y pulsa «Añadir». Uno por uno.</p>
     ${inv.length?`<ul class="fam-list">${inv.map((n,i)=>`<li><span data-noi18n>${esc(n)}</span><button class="btn ghost small" data-inv-del="${esc(it.id)}" data-inv-i="${i}" aria-label="Quitar">Quitar</button></li>`).join("")}</ul>`:""}
     <form class="fam-form" data-inv-form="${esc(it.id)}"><input type="text" maxlength="80" autocomplete="off" placeholder="Nombre y apellidos"><button class="btn small" type="submit">Añadir</button></form>
