@@ -908,7 +908,7 @@ window.GL_DICT = {
 "📄 Leer la ley en el BOE": "📄 Ler a lei no BOE",
 "📄 Leer la ley en el DOG": "📄 Ler a lei no DOG",
 "Si ves un animal maltratado o abandonado, puedes avisar al 112.": "Se ves un animal maltratado ou abandonado, podes avisar ao 112.",
-"Protección arboleda": "Protección do arboredo",
+"Protección arboleda": "Protección da arboreda",
 "Artículo 2º.- Fines. Punto 11º": "Artigo 2º.- Fins. Punto 11º",
 "En el punto 6º también se recoge la «Mejora de la situación actual de parques y jardines».": "No punto 6º tamén se recolle a «Mellora da situación actual de parques e xardíns».",
 "Leyes que protegen árboles y plantas": "Leis que protexen árbores e plantas",
