@@ -1,5 +1,8 @@
 /* Traducción al gallego de los textos de la app (castellano -> galego). La usa i18n.js. */
 window.GL_DICT = {
+"Añadir foto de la galería":"Engadir foto da galería",
+"Cambiar la foto":"Cambiar a foto",
+"Subiendo la foto…":"Subindo a foto…",
 "📍 Local social del BNG":"📍 Local social do BNG",
 "Local social del BNG":"Local social do BNG",
 "Darme de baja":"Darme de baixa",

@@ -1221,7 +1221,27 @@ function avisoCard(it){
   const bSol = S.canEdit ? `<div class="row-actions"><button type="button" class="btn small ${it.solucionado?"ghost":"sol"}" data-sol="${esc(it.id)}">${reuAlc ? (it.solucionado?"Quitar «Realizada»":"✔ Marcar como realizada") : (it.solucionado?"Quitar «Solucionado»":"✔ Marcar como solucionado")}</button></div>` : "";
   return `<article class="card${it.solucionado?" con-sello":""}">${sol}<div class="meta">${tipo}${it.date?`<span>${fmtDate(it.date)}${it.time?" · "+esc(it.time):""}</span>`:""}</div>
     <h3>${esc(T(it))}</h3>${it.place?`<div class="meta">📍 ${esc(it.place)}</div>`:""}
-    ${it.body?`<p class="body">${esc(B(it))}</p>`:""}${attach(it)}${it.apuntarse?inscAviso(it):""}${bSol}${adminRow(it)}</article>`;
+    ${it.body?`<p class="body">${esc(B(it))}</p>`:""}${attach(it)}${fotoAviso(it)}${it.apuntarse?inscAviso(it):""}${bSol}${adminRow(it)}</article>`;
+}
+/* Botón para colgar una foto de la galería del móvil en el aviso (solo directiva). Marta, 6-nov: aviso de la enredadera. */
+const AVISOS_CON_FOTO = ["aviso-desbroce-villalba-mourelo"];
+function fotoAviso(it){
+  if(!S.canEdit || !S.assets || !AVISOS_CON_FOTO.includes(it.id)) return "";
+  return `<div class="row-actions"><label class="btn small" style="display:inline-block;cursor:pointer">📷 ${it.photo?"Cambiar la foto":"Añadir foto de la galería"}<input type="file" accept="image/*" data-foto-aviso="${esc(it.id)}" hidden></label><span class="meta" data-foto-aviso-msg="${esc(it.id)}"></span></div>`;
+}
+async function subirFotoAviso(inp){
+  const id=inp.dataset.fotoAviso, it=S.items.find(i=>i.id===id), fl=inp.files&&inp.files[0];
+  const msg=document.querySelector(`[data-foto-aviso-msg="${id}"]`), di=t=>{ if(msg) msg.textContent=t; };
+  if(!it||!fl) return;
+  if(fl.size>20*1024*1024){ inp.value=""; return di("La foto pesa más de 20 MB. Prueba con otra."); }
+  di("Subiendo la foto…");
+  try{
+    const up = await S.assets.upload(await prepararFoto(fl));
+    const {id:_, ...data}=it;
+    const nuevo={...data, photo:up.id, photoType:up.contentType||"image/jpeg", updatedAt:new Date().toISOString()};
+    await S.db.collection("items").doc(id).set(nuevo);
+    Object.assign(it, nuevo); render();
+  }catch(_){ inp.value=""; di("No se ha podido subir la foto. Vuelve a intentarlo."); }
 }
 /* Avisos con botón «Apuntarme» (usa las mismas inscripciones que los cursos). Tras la fecha ya no se puede apuntar nadie. */
 function inscAviso(it){
@@ -1990,6 +2010,7 @@ $("#main").addEventListener("click", async e=>{
     try{ await guardarInc(u, l=>l.filter(a=>a.id!==id)); }catch(x){ alert("No se ha podido borrar. Vuelve a intentarlo."); }
   }
 });
+$("#main").addEventListener("change", e=>{ if(e.target.dataset&&e.target.dataset.fotoAviso) subirFotoAviso(e.target); });
 $("#main").addEventListener("change", async e=>{
   const s=e.target.closest("[data-inc-est]"); if(!s) return;
   const [u,id]=s.dataset.incEst.split("|");
