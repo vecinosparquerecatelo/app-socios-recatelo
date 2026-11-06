@@ -155,6 +155,14 @@ img{-webkit-user-drag:none;user-drag:none;-webkit-touch-callout:none}
 footer a{color:inherit}
 .insc summary{cursor:pointer;font-weight:700;color:var(--green)}
 .insc ol{margin:6px 0 0;padding-left:22px}
+.opc-dir{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:10px}.opc-dir .meta{margin:0}
+.fam{margin-top:12px;border:1px solid #c9d8cd;border-radius:12px;padding:10px 12px;background:#f4f8f5}
+.fam summary{cursor:pointer;font-weight:700;color:var(--green)}
+.fam .meta{margin:8px 0}
+.fam-list{list-style:none;margin:6px 0;padding:0}
+.fam-list li{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 0;border-bottom:1px solid #dde7e0}
+.fam-form{display:flex;gap:8px;margin-top:8px}
+.fam-form input{flex:1;min-width:0}
 .iban{font-variant-numeric:tabular-nums;font-weight:700;letter-spacing:.03em;user-select:all}
 .legaltext{gap:0;line-height:1.6}
 .legaltext h3{scroll-margin-top:130px;font-size:1.05rem;color:var(--green);margin:22px 0 6px;text-transform:none}
@@ -1222,7 +1230,7 @@ function avisoCard(it){
   const bSol = S.canEdit ? `<div class="row-actions"><button type="button" class="btn small ${it.solucionado?"ghost":"sol"}" data-sol="${esc(it.id)}">${reuAlc ? (it.solucionado?"Quitar «Realizada»":"✔ Marcar como realizada") : (it.solucionado?"Quitar «Solucionado»":"✔ Marcar como solucionado")}</button></div>` : "";
   return `<article class="card${it.solucionado?" con-sello":""}">${sol}<div class="meta">${tipo}${it.date?`<span>${fmtDate(it.date)}${it.time?" · "+esc(it.time):""}</span>`:""}</div>
     <h3>${esc(T(it))}</h3>${it.place?`<div class="meta">📍 ${esc(it.place)}</div>`:""}
-    ${it.body?`<p class="body">${esc(B(it))}</p>`:""}${attach(it)}${fotoAviso(it)}${it.apuntarse?inscAviso(it):""}${bSol}${adminRow(it)}</article>`;
+    ${it.body?`<p class="body">${esc(B(it))}</p>`:""}${attach(it)}${fotoAviso(it)}${it.apuntarse?inscAviso(it):""}${opcionesDir(it,false)}${bSol}${adminRow(it)}</article>`;
 }
 /* Botón para colgar una foto de la galería del móvil en el aviso (solo directiva). Marta, 6-nov: aviso de la enredadera. */
 const AVISOS_CON_FOTO = ["aviso-desbroce-villalba-mourelo"];
@@ -1252,9 +1260,8 @@ function inscAviso(it){
   if(!past && S.uid && !S.inscBlocked) action = yo
     ? `<div class="row-actions"><span class="pill p-green" style="align-self:center">Estás apuntado/a</span><button class="btn ghost small" data-baja="${esc(it.id)}">Darme de baja</button></div>`
     : `<div class="row-actions"><button class="btn" data-alta="${esc(it.id)}">Apuntarme</button></div>`;
-  let admin="";
-  if(S.canEdit){ const n=inscritosDe(it.id); admin=`<details class="insc"><summary>${n.length} apuntado${n.length===1?"":"s"}</summary>${n.length?`<ol>${n.map(x=>`<li>${esc(x)}</li>`).join("")}</ol>`:`<p class="meta">Nadie se ha apuntado todavía.</p>`}</details>`; }
-  return action+admin;
+  if(!past && S.uid && !S.inscBlocked && it.familiares) action+=famBox(it);
+  return action+listaInsc(it);
 }
 function regLine(it){ return it.regDate ? `<div class="meta">📮 Registrado en el Concello el ${fmtDate(it.regDate)}${it.regNum?` (nº ${esc(it.regNum)})`:""}</div>` : ""; }
 function reunionCard(it){
@@ -2037,6 +2044,38 @@ $("#main").addEventListener("submit", async e=>{
 });
 
 function inscritosDe(id){ return S.inscAll.filter(d=>d.cursos&&d.cursos[id]).map(d=>{ const f=S.fichasAll.find(x=>x.uid===d.uid); return (f&&f.nombre)||S.names[d.uid]||"Socio/a"; }); }
+/* Familiares y amigos que cada socio apunta a un curso (se guardan en su propia inscripción: invitados[idCurso] = [nombres]) */
+function invitadosDe(id){ const l=S.insc&&S.insc.invitados&&S.insc.invitados[id]; return Array.isArray(l)?l:[]; }
+function invitadosTodos(id){ return S.inscAll.filter(d=>d.invitados&&Array.isArray(d.invitados[id])&&d.invitados[id].length).map(d=>{ const f=S.fichasAll.find(x=>x.uid===d.uid); return {socio:(f&&f.nombre)||S.names[d.uid]||"Socio/a", nombres:d.invitados[id]}; }); }
+/* Lista de apuntados que ve la directiva (socios y, aparte, sus familiares y amigos) */
+function listaInsc(it){
+  if(!S.canEdit) return "";
+  const n=inscritosDe(it.id), fam=invitadosTodos(it.id), nf=fam.reduce((a,x)=>a+x.nombres.length,0), tot=n.length+nf;
+  return `<details class="insc"><summary>${tot} apuntado${tot===1?"":"s"}${it.plazas?" de "+esc(it.plazas)+" plazas":""}</summary>${n.length?`<ol>${n.map(x=>`<li>${esc(x)}</li>`).join("")}</ol>`:`<p class="meta">Nadie se ha apuntado todavía.</p>`}${nf?`<p class="meta" style="margin-top:8px"><b>Familiares y amigos (${nf})</b></p><ol>${fam.map(x=>x.nombres.map(nm=>`<li><span data-noi18n>${esc(nm)}</span> <span class="meta">· de parte de <span data-noi18n>${esc(x.socio)}</span></span></li>`).join("")).join("")}</ol>`:""}</details>`;
+}
+/* Interruptores que solo ve la directiva: activar o quitar «Apuntarme» y «Familiares y amigos» desde el móvil */
+function opcionesDir(it, curso){
+  if(!S.canEdit) return "";
+  const apu = curso || !!it.apuntarse, fam = curso ? it.familiares!==false : !!it.familiares;
+  const bt=(campo,on,txt)=>`<button type="button" class="btn small ${on?"":"ghost"}" data-opc="${esc(it.id)}" data-campo="${campo}" data-val="${on?"0":"1"}">${on?"✔ ":""}${txt}: ${on?"activado":"desactivado"}</button>`;
+  return `<div class="opc-dir"><span class="meta">Solo directiva:</span>${curso?"":bt("apuntarse",apu,"Botón «Apuntarme»")}${apu?bt("familiares",fam,"Familiares y amigos"):""}</div>`;
+}
+async function cambiarOpcion(btn){
+  const id=btn.dataset.opc, campo=btn.dataset.campo, val=btn.dataset.val==="1", it=S.items.find(i=>i.id===id); if(!it) return;
+  btn.disabled=true;
+  const {id:_, ...data}=it, nuevo={...data, [campo]:val, updatedAt:new Date().toISOString()};
+  try{ await S.db.collection("items").doc(id).set(nuevo); Object.assign(it, nuevo); render(); }
+  catch(e){ btn.disabled=false; alert("No se ha podido guardar. Vuelve a intentarlo."); }
+}
+$("#main").addEventListener("click", e=>{ const b=e.target.closest("[data-opc]"); if(b) cambiarOpcion(b); });
+function famBox(it){
+  const inv=invitadosDe(it.id);
+  return `<details class="fam" data-fam="${esc(it.id)}"${S.famOpen===it.id?" open":""}><summary>👨‍👩‍👧 Familiares y amigos${inv.length?` (${inv.length})`:""}</summary>
+    <p class="meta">Si quieres traer a algún familiar o amigo, escribe su nombre y apellidos y pulsa «Añadir». Uno por uno.</p>
+    ${inv.length?`<ul class="fam-list">${inv.map((n,i)=>`<li><span data-noi18n>${esc(n)}</span><button class="btn ghost small" data-inv-del="${esc(it.id)}" data-inv-i="${i}" aria-label="Quitar">Quitar</button></li>`).join("")}</ul>`:""}
+    <form class="fam-form" data-inv-form="${esc(it.id)}"><input type="text" maxlength="80" autocomplete="off" placeholder="Nombre y apellidos"><button class="btn small" type="submit">Añadir</button></form>
+    <p class="meta fam-err" hidden></p></details>`;
+}
 function cursoCard(it, past){
   const yo = !!(S.insc&&S.insc.cursos&&S.insc.cursos[it.id]);
   let action="";
@@ -2044,7 +2083,8 @@ function cursoCard(it, past){
     ? `<div class="row-actions"><span class="pill p-green" style="align-self:center">Estás apuntado/a</span><button class="btn ghost small" data-baja="${esc(it.id)}">Darme de baja</button></div>`
     : `<div class="row-actions"><button class="btn" data-alta="${esc(it.id)}">Apuntarme</button></div>`;
   let admin="";
-  if(S.canEdit){ const n=inscritosDe(it.id); admin=`<details class="insc"><summary>${n.length} apuntado${n.length===1?"":"s"}${it.plazas?" de "+esc(it.plazas)+" plazas":""}</summary>${n.length?`<ol>${n.map(x=>`<li>${esc(x)}</li>`).join("")}</ol>`:`<p class="meta">Nadie se ha apuntado todavía.</p>`}</details>`; }
+  if(!past && S.uid && !S.inscBlocked && it.familiares!==false) action+=famBox(it);
+  admin=listaInsc(it)+opcionesDir(it,true);
   return `<article class="card"><div class="meta"><span class="pill p-blue">Curso</span>${it.date?`<span>${past?"":"Empieza el "}${fmtDate(it.date)}</span>`:`<span class="pill p-amber">${esc(it.cuando||"Fecha por determinar")}</span>`}${it.plazas&&!S.canEdit?`<span>${esc(it.plazas)} plazas</span>`:""}</div>
     <h3>${esc(T(it))}</h3>${it.time||it.place?`<div class="meta">${it.time?"🕒 "+esc(it.time):""}${it.time&&it.place?" · ":""}${it.place?"📍 "+esc(it.place):""}</div>`:""}
     ${it.body?`<p class="body">${esc(B(it))}</p>`:""}${attach(it)}${action}${admin}${adminRow(it)}</article>`;
@@ -2283,9 +2323,34 @@ $("#main").addEventListener("change", async e=>{
 async function setInsc(id, on){
   const cursos={...((S.insc&&S.insc.cursos)||{})};
   if(on) cursos[id]=new Date().toISOString(); else delete cursos[id];
-  try{ await S.db.doc("inscripciones/"+S.uid).set({uid:S.uid, cursos}); S.insc={uid:S.uid,cursos}; render(); }
+  const invitados={...((S.insc&&S.insc.invitados)||{})};
+  try{ await S.db.doc("inscripciones/"+S.uid).set({uid:S.uid, cursos, invitados}); S.insc={uid:S.uid,cursos,invitados}; render(); }
   catch(x){ if(x&&x.code==="invalid_argument"){ S.inscBlocked=true; render(); } }
 }
+async function setInvitados(id, lista){
+  const cursos={...((S.insc&&S.insc.cursos)||{})}, invitados={...((S.insc&&S.insc.invitados)||{})};
+  if(lista.length) invitados[id]=lista; else delete invitados[id];
+  await S.db.doc("inscripciones/"+S.uid).set({uid:S.uid, cursos, invitados}); S.insc={uid:S.uid,cursos,invitados}; render();
+}
+$("#main").addEventListener("toggle", e=>{ const d=e.target; if(!d.matches||!d.matches("details.fam")) return; if(d.open) S.famOpen=d.dataset.fam; else if(S.famOpen===d.dataset.fam) S.famOpen=null; }, true);
+$("#main").addEventListener("submit", async e=>{
+  const f=e.target.closest("[data-inv-form]"); if(!f) return; e.preventDefault();
+  const id=f.dataset.invForm, inp=f.querySelector("input"), err=f.parentElement.querySelector(".fam-err");
+  const nombre=inp.value.replace(/\s+/g," ").trim(); if(!nombre){ inp.focus(); return; }
+  const lista=invitadosDe(id);
+  if(lista.some(x=>x.toLowerCase()===nombre.toLowerCase())){ err.textContent="Esa persona ya está apuntada."; err.hidden=false; return; }
+  if(lista.length>=10){ err.textContent="Puedes apuntar hasta 10 personas."; err.hidden=false; return; }
+  const btn=f.querySelector("button"); btn.disabled=true; S.famOpen=id;
+  try{ inp.value=""; inp.blur(); await setInvitados(id, [...lista, nombre]); }
+  catch(x){ btn.disabled=false; inp.value=nombre; err.textContent="No se ha podido guardar. Vuelve a intentarlo."; err.hidden=false; }
+});
+$("#main").addEventListener("click", async e=>{
+  const b=e.target.closest("[data-inv-del]"); if(!b) return;
+  const id=b.dataset.invDel, i=+b.dataset.invI, lista=invitadosDe(id); if(!lista[i]) return;
+  if(!confirm(`¿Quitar a ${lista[i]} del curso?`)) return;
+  b.disabled=true; S.famOpen=id;
+  try{ await setInvitados(id, lista.filter((_,k)=>k!==i)); }catch(x){ b.disabled=false; alert("No se ha podido quitar. Vuelve a intentarlo."); }
+});
 $("#main").addEventListener("click", e=>{
   const a=e.target.closest("[data-alta]"); if(a) return setInsc(a.dataset.alta,true);
   const b=e.target.closest("[data-baja]"); if(b) return setInsc(b.dataset.baja,false);
