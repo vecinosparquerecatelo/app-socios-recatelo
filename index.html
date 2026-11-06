@@ -992,7 +992,7 @@ const GROUPS = [
   {label:"Mercadiño", subs:[["mercadillo","Mercadiño"]]},
   {label:"Sugerencias", subs:[["sugerencias","Sugerencias"],["incidencias","Avisos del barrio"]]},
   {label:"Parque Rosalía BIC", subs:[["bic","Parque Rosalía BIC"]]},
-  {label:"La asociación", subs:[["reuniones","Reuniones"],["proyectos","Proyectos"],["colectivos","Colectivos"],["estatutos","Estatutos"],["bienestar","Bienestar animal"],["arboles","Árboles y plantas"]]},
+  {label:"La asociación", subs:[["reuniones","Reuniones"],["proyectos","Proyectos"],["colectivos","Colectivos"],["estatutos","Estatutos"],["bienestar","Bienestar animal"],["arboles","Protección arboleda"]]},
   {label:"Fotos y carteles", subs:[["fotos","Fotos"],["carteles","Carteles"]]},
   {label:"Mi cuenta", subs:[["misdatos","Mis datos"],["privacidad","Protección de datos"],["avisosact","Avisos activados"]]}
 ];
@@ -1768,7 +1768,7 @@ const VIEWS = {
   },
   arboles(){
     const ley=(t,quien,txt,url,btn)=>`<article class="card"><h3>${t}</h3><p class="meta" style="margin:2px 0 8px">${quien}</p><p class="body">${txt}</p><div style="margin-top:10px"><a class="btn ghost small" href="${url}" target="_blank" rel="noopener">${btn}</a></div></article>`;
-    return `<div><h2>Árboles y plantas</h2></div>
+    return `<div><h2>Protección arboleda</h2></div>
       <article class="card"><h3>Lo que dicen nuestros Estatutos</h3><p class="meta" style="margin:2px 0 8px">Artículo 2º.- Fines. Punto 11º</p><blockquote class="body" style="margin:0;padding-left:12px;border-left:3px solid var(--green)"><p style="margin:0 0 8px">11º) Presentación de iniciativas y propuestas, y realización de actuaciones para el fomento de acciones por parte de los servicios públicos competentes, de acciones para la conservación y protección del Medio Ambiente –soterramiento de contenedores de recogida selectiva de basura, implantación del aparcamiento y la bicicleta eléctrica, puntos de recarga de automóviles eléctricos o pila de combustible…etc.</p><p style="margin:0">Promoviendo asimismo entre todos los vecinos, la necesaria concienciación para contribuir activamente, tanto de forma individual y colectiva, como miembros de la comunidad, en la realización de dichas acciones de protección y preservación del Medio Ambiente, fomentando una mayor involucración, y un incremento de la participación de todos los vecinos en actuaciones y medidas de protección medioambiental.</p></blockquote><p class="meta" style="margin:10px 0 0">En el punto 6º también se recoge la «Mejora de la situación actual de parques y jardines».</p></article>
       <section class="stack"><h3>Leyes que protegen árboles y plantas</h3>
       ${ley("Ley 5/2019, de 2 de agosto, del patrimonio natural y de la biodiversidad de Galicia","Ley gallega · BOE","Es la ley de Galicia que protege la naturaleza: los espacios naturales, las plantas y los animales. Considera monumentos naturales los árboles singulares y monumentales y regula el Catálogo gallego de árboles singulares.","https://www.boe.es/eli/es-ga/l/2019/08/02/5/con","📄 Leer la ley en el BOE")}
