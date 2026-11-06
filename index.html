@@ -1225,7 +1225,7 @@ function inscAviso(it){
   const past = it.date && it.date < today();
   const yo = !!(S.insc&&S.insc.cursos&&S.insc.cursos[it.id]);
   let action="";
-  if(!past && S.uid && !S.canEdit && !S.inscBlocked) action = yo
+  if(!past && S.uid && !S.inscBlocked) action = yo
     ? `<div class="row-actions"><span class="pill p-green" style="align-self:center">Estás apuntado/a</span><button class="btn ghost small" data-baja="${esc(it.id)}">Darme de baja</button></div>`
     : `<div class="row-actions"><button class="btn" data-alta="${esc(it.id)}">Apuntarme</button></div>`;
   let admin="";
