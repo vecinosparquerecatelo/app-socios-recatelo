@@ -1,5 +1,8 @@
 /* Traducción al gallego de los textos de la app (castellano -> galego). La usa i18n.js. */
 window.GL_DICT = {
+"📝 Apuntar a otras personas (solo directiva)":"📝 Apuntar a outras persoas (só directiva)",
+"Escribe el nombre de quien quieras apuntar y pulsa «Añadir». Solo lo ve la directiva; los socios no ven esta lista.":"Escribe o nome de quen queiras apuntar e preme «Engadir». Só o ve a directiva; os socios non ven esta lista.",
+"· apuntado por la directiva":"· apuntado pola directiva",
 "Solo directiva:":"Só directiva:",
 "Familiares y amigos":"Familiares e amigos",
 "✔ Botón «Apuntarme»: activado":"✔ Botón «Apuntarme»: activado",
