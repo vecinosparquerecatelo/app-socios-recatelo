@@ -1262,6 +1262,7 @@ function inscAviso(it){
     ? `<div class="row-actions"><span class="pill p-green" style="align-self:center">Estás apuntado/a</span><button class="btn ghost small" data-baja="${esc(it.id)}">Darme de baja</button></div>`
     : `<div class="row-actions"><button class="btn" data-alta="${esc(it.id)}">Apuntarme</button></div>`;
   if(!past && S.uid && !S.inscBlocked && it.familiares) action+=famBox(it);
+  if(!past) action=numApuntados(it)+action;
   if(past && !inscritosDe(it.id).length && !invitadosTodos(it.id).length) return action;
   return action+listaInsc(it);
 }
@@ -2071,11 +2072,13 @@ async function cambiarOpcion(btn){
   catch(e){ btn.disabled=false; alert("No se ha podido guardar. Vuelve a intentarlo."); }
 }
 $("#main").addEventListener("click", e=>{ const b=e.target.closest("[data-opc]"); if(b) cambiarOpcion(b); });
+/* Número de apuntados que ven los socios (sin nombres). Lo calcula Supabase: supabase-recuento-inscritos.sql */
+async function contarInscritos(){ if(!window.rpcApp) return; try{ const r=await rpcApp("recuento_inscritos"); if(r&&typeof r==="object"){ S.recInsc=r; renderDatos(); } }catch(e){} }
+function numApuntados(it){ if(S.canEdit||!S.recInsc) return ""; const n=+S.recInsc[it.id]||0; return n?`<p class="meta">👥 ${n} apuntado${n===1?"":"s"}</p>`:""; }
 function famBox(it){
   const inv=invitadosDe(it.id);
-  return `<details class="fam" data-fam="${esc(it.id)}"${S.famOpen===it.id?" open":""}><summary>${S.canEdit?`📝 Apuntar a otras personas (solo directiva)</summary>
-    <p class="meta">Escribe el nombre de quien quieras apuntar y pulsa «Añadir». Solo lo ve la directiva; los socios no ven esta lista.</p>`:`👨‍👩‍👧 Familiares y amigos</summary>
-    <p class="meta">Si quieres traer a algún familiar o amigo, escribe su nombre y apellidos y pulsa «Añadir». Uno por uno.</p>`}
+  return `<details class="fam" data-fam="${esc(it.id)}"${S.famOpen===it.id?" open":""}><summary>👨‍👩‍👧 Familiares y amigos</summary>
+    <p class="meta">Si quieres traer a algún familiar o amigo, escribe su nombre y apellidos y pulsa «Añadir». Uno por uno.</p>
     ${inv.length?`<ul class="fam-list">${inv.map((n,i)=>`<li><span data-noi18n>${esc(n)}</span><button class="btn ghost small" data-inv-del="${esc(it.id)}" data-inv-i="${i}" aria-label="Quitar">Quitar</button></li>`).join("")}</ul>`:""}
     <form class="fam-form" data-inv-form="${esc(it.id)}"><input type="text" maxlength="80" autocomplete="off" placeholder="Nombre y apellidos"><button class="btn small" type="submit">Añadir</button></form>
     <p class="meta fam-err" hidden></p></details>`;
@@ -2088,6 +2091,7 @@ function cursoCard(it, past){
     : `<div class="row-actions"><button class="btn" data-alta="${esc(it.id)}">Apuntarme</button></div>`;
   let admin="";
   if(!past && S.uid && !S.inscBlocked && it.familiares!==false) action+=famBox(it);
+  if(!past) action=numApuntados(it)+action;
   admin=listaInsc(it)+opcionesDir(it,true);
   return `<article class="card"><div class="meta"><span class="pill p-blue">Curso</span>${it.date?`<span>${past?"":"Empieza el "}${fmtDate(it.date)}</span>`:`<span class="pill p-amber">${esc(it.cuando||"Fecha por determinar")}</span>`}${it.plazas&&!S.canEdit?`<span>${esc(it.plazas)} plazas</span>`:""}</div>
     <h3>${esc(T(it))}</h3>${it.time||it.place?`<div class="meta">${it.time?"🕒 "+esc(it.time):""}${it.time&&it.place?" · ":""}${it.place?"📍 "+esc(it.place):""}</div>`:""}
@@ -2328,13 +2332,13 @@ async function setInsc(id, on){
   const cursos={...((S.insc&&S.insc.cursos)||{})};
   if(on) cursos[id]=new Date().toISOString(); else delete cursos[id];
   const invitados={...((S.insc&&S.insc.invitados)||{})};
-  try{ await S.db.doc("inscripciones/"+S.uid).set({uid:S.uid, cursos, invitados}); S.insc={uid:S.uid,cursos,invitados}; render(); }
+  try{ await S.db.doc("inscripciones/"+S.uid).set({uid:S.uid, cursos, invitados}); S.insc={uid:S.uid,cursos,invitados}; render(); contarInscritos(); }
   catch(x){ if(x&&x.code==="invalid_argument"){ S.inscBlocked=true; render(); } }
 }
 async function setInvitados(id, lista){
   const cursos={...((S.insc&&S.insc.cursos)||{})}, invitados={...((S.insc&&S.insc.invitados)||{})};
   if(lista.length) invitados[id]=lista; else delete invitados[id];
-  await S.db.doc("inscripciones/"+S.uid).set({uid:S.uid, cursos, invitados}); S.insc={uid:S.uid,cursos,invitados}; render();
+  await S.db.doc("inscripciones/"+S.uid).set({uid:S.uid, cursos, invitados}); S.insc={uid:S.uid,cursos,invitados}; render(); contarInscritos();
 }
 $("#main").addEventListener("toggle", e=>{ const d=e.target; if(!d.matches||!d.matches("details.fam")) return; if(d.open) S.famOpen=d.dataset.fam; else if(S.famOpen===d.dataset.fam) S.famOpen=null; }, true);
 $("#main").addEventListener("submit", async e=>{
@@ -2361,6 +2365,7 @@ $("#main").addEventListener("click", e=>{
 });
 async function startInsc(){
   if(!S.db||!S.user) return;
+  contarInscritos(); setInterval(contarInscritos, 60000);
   if(S.uid) S.db.doc("inscripciones/"+S.uid).onSnapshot(snap=>{ S.insc=snap.exists?snap.data():null; renderDatos(); },()=>{});
   if(S.canEdit) S.db.collection("inscripciones").onSnapshot(async snap=>{
     S.inscAll=snap.docs.map(d=>({uid:d.id,...d.data()}));
