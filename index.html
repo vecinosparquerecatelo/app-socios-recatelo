@@ -66,6 +66,7 @@ h3{font-family:var(--display);font-weight:600;font-size:1.12rem;margin:0;text-wr
 .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px;display:grid;gap:8px;min-width:0}
 .card.con-sello{position:relative;overflow:hidden}
 .sello-sol{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:2;font-weight:800;font-size:clamp(1.3rem,6.5vw,2.2rem);letter-spacing:.06em;color:rgba(158,88,38,.75);background:rgba(158,88,38,.08);text-shadow:0 1px 0 rgba(255,255,255,.4)}
+.sello-sol.sello-arriba{align-items:flex-start;padding-top:110px}
 .sello-sol span{display:inline-block;padding:.15em .6em;border:5px solid rgba(158,88,38,.7);border-radius:14px;transform:rotate(-8deg)}
 .btn.sol{background:#9e5826;border-color:#9e5826;color:#fff}
 .meta{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;color:var(--muted);font-size:.88rem}
@@ -1217,7 +1218,7 @@ function esReuAlcReciente(a,t){ if(!a||!a.date||!/alcald/i.test(a.title||"")||a.
 function avisoCard(it){
   const tipo = it.kind==="reunion" ? `<span class="pill p-amber">Reunión de socios</span>` : `<span class="pill p-blue">Aviso</span>`;
   const reuAlc = /alcald/i.test(it.title||"") && it.id!=="aviso-reunion-alcaldia-4-nov";
-  const sol = it.solucionado ? (reuAlc ? `<div class="sello-sol" aria-label="Realizada"><span>✔ REALIZADA</span></div>` : `<div class="sello-sol" aria-label="Solucionado"><span>✔ SOLUCIONADO</span></div>`) : "";
+  const sol = it.solucionado ? (reuAlc ? `<div class="sello-sol" aria-label="Realizada"><span>✔ REALIZADA</span></div>` : `<div class="sello-sol${it.photo?" sello-arriba":""}" aria-label="Solucionado"><span>✔ SOLUCIONADO</span></div>`) : "";
   const bSol = S.canEdit ? `<div class="row-actions"><button type="button" class="btn small ${it.solucionado?"ghost":"sol"}" data-sol="${esc(it.id)}">${reuAlc ? (it.solucionado?"Quitar «Realizada»":"✔ Marcar como realizada") : (it.solucionado?"Quitar «Solucionado»":"✔ Marcar como solucionado")}</button></div>` : "";
   return `<article class="card${it.solucionado?" con-sello":""}">${sol}<div class="meta">${tipo}${it.date?`<span>${fmtDate(it.date)}${it.time?" · "+esc(it.time):""}</span>`:""}</div>
     <h3>${esc(T(it))}</h3>${it.place?`<div class="meta">📍 ${esc(it.place)}</div>`:""}
