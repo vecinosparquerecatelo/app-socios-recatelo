@@ -1253,14 +1253,16 @@ async function subirFotoAviso(inp){
   }catch(_){ inp.value=""; di("No se ha podido subir la foto. Vuelve a intentarlo."); }
 }
 /* Avisos con botón «Apuntarme» (usa las mismas inscripciones que los cursos). Tras la fecha ya no se puede apuntar nadie. */
+function avisoCerrado(it){ return !!((it.date && it.date < today()) || it.solucionado); }
 function inscAviso(it){
-  const past = it.date && it.date < today();
+  const past = avisoCerrado(it);
   const yo = !!(S.insc&&S.insc.cursos&&S.insc.cursos[it.id]);
   let action="";
   if(!past && S.uid && !S.inscBlocked) action = yo
     ? `<div class="row-actions"><span class="pill p-green" style="align-self:center">Estás apuntado/a</span><button class="btn ghost small" data-baja="${esc(it.id)}">Darme de baja</button></div>`
     : `<div class="row-actions"><button class="btn" data-alta="${esc(it.id)}">Apuntarme</button></div>`;
   if(!past && S.uid && !S.inscBlocked && it.familiares) action+=famBox(it);
+  if(past && !inscritosDe(it.id).length && !invitadosTodos(it.id).length) return action;
   return action+listaInsc(it);
 }
 function regLine(it){ return it.regDate ? `<div class="meta">📮 Registrado en el Concello el ${fmtDate(it.regDate)}${it.regNum?` (nº ${esc(it.regNum)})`:""}</div>` : ""; }
@@ -2056,6 +2058,7 @@ function listaInsc(it){
 /* Interruptores que solo ve la directiva: activar o quitar «Apuntarme» y «Familiares y amigos» desde el móvil */
 function opcionesDir(it, curso){
   if(!S.canEdit) return "";
+  if(!curso && avisoCerrado(it)) return "";
   const apu = curso || !!it.apuntarse, fam = curso ? it.familiares!==false : !!it.familiares;
   const bt=(campo,on,txt)=>`<button type="button" class="btn small ${on?"":"ghost"}" data-opc="${esc(it.id)}" data-campo="${campo}" data-val="${on?"0":"1"}">${on?"✔ ":""}${txt}: ${on?"activado":"desactivado"}</button>`;
   return `<div class="opc-dir"><span class="meta">Solo directiva:</span>${curso?"":bt("apuntarse",apu,"Botón «Apuntarme»")}${apu?bt("familiares",fam,"Familiares y amigos"):""}</div>`;
