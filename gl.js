@@ -1,5 +1,12 @@
 /* Traducción al gallego de los textos de la app (castellano -> galego). La usa i18n.js. */
 window.GL_DICT = {
+"Objetivos alcanzados:":"Obxectivos acadados:",
+"La apertura de los aparcamientos de los institutos Masculino y Femenino para los vecinos durante el San Froilán.":"A apertura dos aparcamentos dos institutos Masculino e Feminino para os veciños durante o San Froilán.",
+"Los murales de la zona, entre ellos el de la escalinata de Ciudad de Vivero.":"Os murais da zona, entre eles o da escalinata de Cidade de Viveiro.",
+"Más iluminación en las calles del barrio.":"Máis iluminación nas rúas do barrio.",
+"Frenar el ruido y el vandalismo del after Panda, tras reunirnos con la Policía Local y con la Subdelegación del Gobierno.":"Frear o ruído e o vandalismo do after Panda, tras reunirnos coa Policía Local e coa Subdelegación do Goberno.",
+"La reposición de los bancos de García Portela.":"A reposición dos bancos de García Portela.",
+"El compromiso de ceder la caseta del guarda a la asociación.":"O compromiso de ceder a caseta do garda á asociación.",
 "Tu cuota hace posible todo esto:":"A túa cota fai posible todo isto:",
 "Lo que hace posible tu cuota":"O que fai posible a túa cota",
 "Las Festas de Recatelo, que organizamos junto con las empresas colaboradoras.":"As Festas de Recatelo, que organizamos xunto coas empresas colaboradoras.",
