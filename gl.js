@@ -2,8 +2,11 @@
 window.GL_DICT = {
 "Qué incluye tu cuota:":"Que inclúe a túa cota:",
 "Qué incluye tu cuota":"Que inclúe a túa cota",
-"Las Festas de Recatelo.":"As Festas de Recatelo.",
-"Cursos y actividades para socios, como el de prevención del ictus con Cruz Roja.":"Cursos e actividades para socios, como o de prevención do ictus con Cruz Vermella.",
+"Las Festas de Recatelo, junto con las empresas colaboradoras.":"As Festas de Recatelo, xunto coas empresas colaboradoras.",
+"Actividades infantiles: la fiesta del Día das Letras Galegas y el Samaín.":"Actividades infantís: a festa do Día das Letras Galegas e o Samaín.",
+"El Mercadillo de Navidad.":"O Mercadiño de Nadal.",
+"Los Cantos de taberna.":"Os Cantos de taberna.",
+"Cursos y talleres, como el de cestería tradicional y el de prevención del ictus con Cruz Roja.":"Cursos e obradoiros, como o de cestaría tradicional e o de prevención do ictus con Cruz Vermella.",
 "La defensa del Parque Rosalía de Castro: la petición de BIC, el seguimiento de las reformas y la protección de la arboleda.":"A defensa do Parque Rosalía de Castro: a petición de BIC, o seguimento das reformas e a protección da arboreda.",
 "Las quejas y peticiones al Concello: limpieza, ruidos, movilidad, bancos, desbroces.":"As queixas e peticións ao Concello: limpeza, ruídos, mobilidade, bancos, rozas.",
 "Proyectos para el barrio: la caseta del guarda como local social y los Bancos y árboles de la memoria.":"Proxectos para o barrio: a caseta do garda como local social e os Bancos e árbores da memoria.",
