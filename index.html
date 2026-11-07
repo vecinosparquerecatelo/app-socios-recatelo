@@ -83,6 +83,7 @@ h3{font-family:var(--display);font-weight:600;font-size:1.12rem;margin:0;text-wr
 .empty strong{color:var(--ink);display:block;margin-bottom:2px}
 .filters{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px}
 .filters[data-filter="mercadillo"]{flex-wrap:wrap}
+.filters.envolver{flex-wrap:wrap}
 .lectores ul{margin:4px 0 0;padding-left:18px;font-size:.88rem}.lectores summary{cursor:pointer}
 .merc-fotos{display:flex;gap:8px;overflow-x:auto;margin:6px 0}.merc-fotos img{height:160px;width:auto;max-width:85%;object-fit:cover;border-radius:10px;flex:0 0 auto}
 .filters button{flex:none;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:6px 12px;font:inherit;font-size:.9rem;cursor:pointer}
@@ -2138,7 +2139,7 @@ function render(){
   else {
     const g = groupOf(S.tab);
     const gsubs=g.subs.filter(([id])=>(id!=="avisosact"&&id!=="bloqueos")||S.canEdit);
-    if(gsubs.length>1) html += `<div class="filters" role="tablist" aria-label="${esc(g.label)}">${gsubs.map(([id,l])=>`<button data-go="${id}" aria-pressed="${S.tab===id}">${l}${pestNueva(id)?` <span class="punto-rojo" aria-label="Novedad"></span>`:""}</button>`).join("")}</div>`;
+    if(gsubs.length>1) html += `<div class="filters${g.label==="Mi cuenta"?" envolver":""}" role="tablist" aria-label="${esc(g.label)}">${gsubs.map(([id,l])=>`<button data-go="${id}" aria-pressed="${S.tab===id}">${l}${pestNueva(id)?` <span class="punto-rojo" aria-label="Novedad"></span>`:""}</button>`).join("")}</div>`;
     html += VIEWS[S.tab]();
   }
   const keep = {}; for(const id of ["ns-nombre","ns-tel","mc-tipo","mc-precio","mc-titulo","mc-texto","mc-contacto","mc-nombre","bz-texto","bz-contacto","bz-tipo","fi-nombre","fi-dir","fi-tel","fi-email","fi-prio","lt-nombre","lt-dni","lt-n","inc-tipo","inc-texto","bq"]){ const el=document.getElementById(id); if(el) keep[id]=el.value; }
