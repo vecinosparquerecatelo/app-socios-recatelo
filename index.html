@@ -1003,7 +1003,7 @@ const GROUPS = [
   {label:"Parque Rosalía BIC", subs:[["bic","Parque Rosalía BIC"]]},
   {label:"La asociación", subs:[["reuniones","Reuniones"],["proyectos","Proyectos"],["colectivos","Colectivos"],["estatutos","Estatutos"],["bienestar","Bienestar animal"],["arboles","Protección arboleda"]]},
   {label:"Fotos y carteles", subs:[["fotos","Fotos"],["carteles","Carteles"]]},
-  {label:"Mi cuenta", subs:[["misdatos","Mis datos"],["privacidad","Protección de datos"],["avisosact","Avisos activados"]]}
+  {label:"Mi cuenta", subs:[["misdatos","Mis datos"],["privacidad","Protección de datos"],["avisosact","Avisos activados"],["bloqueos","Bloquear códigos"]]}
 ];
 const TABS = GROUPS.flatMap(g=>g.subs.map(([id,label])=>({id,label})));
 TABS.push({id:"buscar",label:"Buscar"}); // se abre desde el botón 🔍 Buscar, junto a «Cerrar sesión»
@@ -1495,6 +1495,11 @@ const VIEWS = {
     if(!S.canEdit) return `<div><h2>Avisos activados</h2><p class="lead">Esta pestaña es solo para la directiva.</p></div>`;
     setTimeout(()=>{ const el=document.getElementById("avact"); if(el && window.cargarAvisosActivados) window.cargarAvisosActivados(el); },0);
     return `<div><h2>Avisos activados</h2><p class="lead">Solo lo ve la directiva. Socios que han activado los avisos en su móvil y los que todavía no.</p></div><div id="avact" class="stack"><p class="meta">Cargando…</p></div>`;
+  },
+  bloqueos(){
+    if(!S.canEdit) return `<div><h2>Bloquear códigos</h2><p class="lead">Esta pestaña es solo para la directiva.</p></div>`;
+    setTimeout(()=>{ const el=document.getElementById("bloq"); if(el && window.cargarBloqueos) window.cargarBloqueos(el); },0);
+    return `<div><h2>Bloquear códigos</h2><p class="lead">Solo lo ve la directiva. Todos los códigos de socio emitidos. Al bloquear uno, esa persona deja de entrar en la app al momento. No se borra nada: se puede desbloquear.</p></div><div id="bloq" class="stack"><p class="meta">Cargando…</p></div>`;
   },
   inicio(){
     const t = today();
@@ -2132,7 +2137,7 @@ function render(){
   else if(gateFicha) html += `<div class="next"><span class="eyebrow">Un último paso</span><h3>Rellena tus datos de socio</h3><span>Así la directiva sabe quién eres y puede contactarte. Solo tendrás que hacerlo una vez y solo los ve la directiva.</span></div>` + VIEWS.misdatos();
   else {
     const g = groupOf(S.tab);
-    const gsubs=g.subs.filter(([id])=>id!=="avisosact"||S.canEdit);
+    const gsubs=g.subs.filter(([id])=>(id!=="avisosact"&&id!=="bloqueos")||S.canEdit);
     if(gsubs.length>1) html += `<div class="filters" role="tablist" aria-label="${esc(g.label)}">${gsubs.map(([id,l])=>`<button data-go="${id}" aria-pressed="${S.tab===id}">${l}${pestNueva(id)?` <span class="punto-rojo" aria-label="Novedad"></span>`:""}</button>`).join("")}</div>`;
     html += VIEWS[S.tab]();
   }

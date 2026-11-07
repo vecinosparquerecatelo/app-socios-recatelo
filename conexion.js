@@ -410,6 +410,38 @@
     el.innerHTML = `<section class="card"><h3>Con los avisos activados (${con.length})</h3><ul style="list-style:none;margin:0;padding:0">${con.map(k => fila(k, (k.moviles > 1 ? k.moviles + " móviles" : "1 móvil") + (k.desde ? " · desde el " + fecha(k.desde) : ""))).join("") || `<li class="acc-small">Nadie todavía.</li>`}</ul></section>
       <section class="card"><h3>Sin activar los avisos (${sin.length})</h3><ul style="list-style:none;margin:0;padding:0">${sin.map(k => fila(k, "Código " + escH(k.codigo))).join("") || `<li class="acc-small">Todos los socios los tienen activados.</li>`}</ul></section>`;
   };
+  let bqBuscar = "";
+  window.cargarBloqueos = async (el, buscar) => {
+    if(buscar === undefined) buscar = bqBuscar; else bqBuscar = buscar;
+    const { data, error } = await sb.rpc("listar_codigos");
+    if(!el.isConnected) return;
+    if(error){ el.innerHTML = `<p class="body">No se puede mostrar la lista de códigos ahora mismo. Inténtalo de nuevo en un rato.</p>`; return; }
+    const clave = v => String(v || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+    const q = clave(buscar || "").trim();
+    const todos = (Array.isArray(data) ? data : []).slice().sort((a, b) => clave(a.nombre).localeCompare(clave(b.nombre)));
+    const lista = q ? todos.filter(k => clave(k.nombre).includes(q) || clave(k.codigo).includes(q)) : todos;
+    const act = lista.filter(k => k.activo), blo = lista.filter(k => !k.activo);
+    const fila = (k, boton) => `<li style="display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;justify-content:space-between;border-top:1px solid var(--line);padding:8px 0">
+        <span><strong>${escH(k.nombre)}</strong><br><span class="acc-small">Código ${escH(k.codigo)}${k.activo ? (k.usos ? " · en uso" : " · sin usar todavía") : " · bloqueado"}</span></span>${boton}</li>`;
+    el.innerHTML = `<label for="bq-cod">Buscar por nombre o código<input id="bq-cod" autocomplete="off" value="${escH(buscar || "")}"></label>
+      <div id="bq-msg"></div>
+      <section class="card"><h3>Con acceso (${act.length})</h3><ul style="list-style:none;margin:0;padding:0">${act.map(k => fila(k, `<button class="btn small" data-bloq="${escH(k.codigo)}" data-n="${escH(k.nombre)}">Bloquear</button>`)).join("") || `<li class="acc-small">${q ? "Nadie con ese nombre." : "No hay códigos con acceso."}</li>`}</ul></section>
+      <section class="card"><h3>Bloqueados (${blo.length})</h3><ul style="list-style:none;margin:0;padding:0">${blo.map(k => fila(k, `<button class="btn ghost small" data-desbloq="${escH(k.codigo)}" data-n="${escH(k.nombre)}">Desbloquear</button>`)).join("") || `<li class="acc-small">${q ? "Nadie con ese nombre." : "No hay ningún código bloqueado."}</li>`}</ul></section>`;
+    const inp = el.querySelector("#bq-cod");
+    let t; inp.oninput = () => { clearTimeout(t); t = setTimeout(() => { window.cargarBloqueos(el, inp.value).then(() => { const i = el.querySelector("#bq-cod"); if(i){ i.focus(); i.setSelectionRange(i.value.length, i.value.length); } }); }, 250); };
+    el.querySelectorAll("[data-bloq]").forEach(b => b.onclick = async () => {
+      if(!confirm(`¿Bloquear el código de ${b.dataset.n}? Dejará de poder entrar en la app al momento.`)) return;
+      const { error } = await sb.rpc("quitar_codigo", { codigo: b.dataset.bloq });
+      if(error){ el.querySelector("#bq-msg").innerHTML = `<div class="notice">No se ha podido bloquear. Inténtalo de nuevo.</div>`; return; }
+      window.cargarBloqueos(el, inp.value);
+    });
+    el.querySelectorAll("[data-desbloq]").forEach(b => b.onclick = async () => {
+      if(!confirm(`¿Desbloquear el código de ${b.dataset.n}? Podrá volver a entrar en la app.`)) return;
+      const { data: ok, error } = await sb.rpc("activar_codigo", { codigo: b.dataset.desbloq });
+      if(error || !ok){ el.querySelector("#bq-msg").innerHTML = `<div class="notice">No se ha podido desbloquear. Si es la primera vez, falta pegar en Supabase el texto supabase-desbloquear-codigos.sql.</div>`; return; }
+      window.cargarBloqueos(el, inp.value);
+    });
+  };
   async function sinActivar(){
     const { data: lista } = await sb.rpc("listar_codigos");
     const clave = v => String(v || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
