@@ -12,7 +12,7 @@ window.GL_DICT = {
 "Tu cuota hace posible todo esto:":"A túa cota fai posible todo isto:",
 "Lo que hace posible tu cuota":"O que fai posible a túa cota",
 "Las Festas de Recatelo, que organizamos junto con las empresas colaboradoras.":"As Festas de Recatelo, que organizamos xunto coas empresas colaboradoras.",
-"Las actividades infantiles: la fiesta del Día das Letras Galegas con Xogos Tradicionais Muimenta (XOTRAMU), el teatro de monicreques, el Samaín y los cuentacuentos con la profe Alba.":"As actividades infantís: a festa do Día das Letras Galegas con Xogos Tradicionais Muimenta (XOTRAMU), o teatro de monicreques, o Samaín e os contacontos coa profe Alba.",
+"Las actividades infantiles: la fiesta del Día das Letras Galegas con Xogos Tradicionais Muimenta (XOTRAMU) y Os Xílgaros de Lugo, el teatro de monicreques, el Samaín y los cuentacuentos con la profe Alba.":"As actividades infantís: a festa do Día das Letras Galegas con Xogos Tradicionais Muimenta (XOTRAMU) e Os Xílgaros de Lugo, o teatro de monicreques, o Samaín e os contacontos coa profe Alba.",
 "El Mercadillo de Navidad.":"O Mercadiño de Nadal.",
 "Los Cantos de taberna, que además dan vida al comercio de la zona.":"Os Cantos de taberna, que ademais dan vida ao comercio da zona.",
 "Cursos y talleres, como el de cestería tradicional o el de prevención del ictus con Cruz Roja.":"Cursos e obradoiros, como o de cestaría tradicional ou o de prevención do ictus con Cruz Vermella.",
