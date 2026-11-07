@@ -15,6 +15,7 @@ window.GL_DICT = {
 "El seguro de responsabilidad civil de la asociación.":"O seguro de responsabilidade civil da asociación.",
 "El mantenimiento de la cuenta bancaria.":"O mantemento da conta bancaria.",
 "El material de oficina.":"O material de oficina.",
+"A través de nuestras actividades culturales nos reafirmamos públicamente como colectivo: un barrio vivo, unido y con voz propia.":"A través das nosas actividades culturais reafirmámonos publicamente como colectivo: un barrio vivo, unido e con voz propia.",
 "Sin socios no hay asociación. Cuantos más seamos, más fuerza tendrá el barrio.":"Sen socios non hai asociación. Canto máis sexamos, máis forza terá o barrio.",
 "📄 Informe":"📄 Informe",
 "📷 Fotos":"📷 Fotos",
