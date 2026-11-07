@@ -1,5 +1,17 @@
 /* Traducción al gallego de los textos de la app (castellano -> galego). La usa i18n.js. */
 window.GL_DICT = {
+"Qué incluye tu cuota:":"Que inclúe a túa cota:",
+"Qué incluye tu cuota":"Que inclúe a túa cota",
+"Las Festas de Recatelo.":"As Festas de Recatelo.",
+"Cursos y actividades para socios, como el de prevención del ictus con Cruz Roja.":"Cursos e actividades para socios, como o de prevención do ictus con Cruz Vermella.",
+"La defensa del Parque Rosalía de Castro: la petición de BIC, el seguimiento de las reformas y la protección de la arboleda.":"A defensa do Parque Rosalía de Castro: a petición de BIC, o seguimento das reformas e a protección da arboreda.",
+"Las quejas y peticiones al Concello: limpieza, ruidos, movilidad, bancos, desbroces.":"As queixas e peticións ao Concello: limpeza, ruídos, mobilidade, bancos, rozas.",
+"Proyectos para el barrio: la caseta del guarda como local social y los Bancos y árboles de la memoria.":"Proxectos para o barrio: a caseta do garda como local social e os Bancos e árbores da memoria.",
+"El apoyo a la Protectora de Animales, Asociación Capaces, Michos y la AECC, y el bienestar animal.":"O apoio á Protectora de Animais, Asociación Capaces, Michos e a AECC, e o benestar animal.",
+"La app de socios: avisos al móvil, Mercadiño, encuestas, buzón de quejas y consejos y documentos de la asociación.":"A app de socios: avisos ao móbil, Mercadiño, enquisas, caixón de queixas e consellos e documentos da asociación.",
+"El seguro de responsabilidad civil de la asociación.":"O seguro de responsabilidade civil da asociación.",
+"El mantenimiento de la cuenta bancaria de la asociación.":"O mantemento da conta bancaria da asociación.",
+"El material de oficina.":"O material de oficina.",
 "📄 Informe":"📄 Informe",
 "📷 Fotos":"📷 Fotos",
 "📷 Fotos ({0})":"📷 Fotos ({0})",
