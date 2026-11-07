@@ -66,6 +66,7 @@ h3{font-family:var(--display);font-weight:600;font-size:1.12rem;margin:0;text-wr
 .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px;display:grid;gap:8px;min-width:0}
 .card.con-sello{position:relative;overflow:hidden}
 .sello-sol{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:2;font-weight:800;font-size:clamp(1.3rem,6.5vw,2.2rem);letter-spacing:.06em;color:rgba(158,88,38,.75);background:rgba(158,88,38,.08);text-shadow:0 1px 0 rgba(255,255,255,.4)}
+.sello-zona{position:relative;min-height:90px}
 .sello-sol.sello-arriba{align-items:flex-start;padding-top:110px}
 .sello-sol span{display:inline-block;padding:.15em .6em;border:5px solid rgba(158,88,38,.7);border-radius:14px;transform:rotate(-8deg)}
 .btn.sol{background:#9e5826;border-color:#9e5826;color:#fff}
@@ -1231,9 +1232,12 @@ function avisoCard(it){
   const reuAlc = /alcald/i.test(it.title||"") && it.id!=="aviso-reunion-alcaldia-4-nov";
   const sol = it.solucionado ? (reuAlc ? `<div class="sello-sol" aria-label="Realizada"><span>✔ REALIZADA</span></div>` : `<div class="sello-sol${it.photo?" sello-arriba":""}" aria-label="Solucionado"><span>✔ SOLUCIONADO</span></div>`) : "";
   const bSol = S.canEdit ? `<div class="row-actions"><button type="button" class="btn small ${it.solucionado?"ghost":"sol"}" data-sol="${esc(it.id)}">${reuAlc ? (it.solucionado?"Quitar «Realizada»":"✔ Marcar como realizada") : (it.solucionado?"Quitar «Solucionado»":"✔ Marcar como solucionado")}</button></div>` : "";
-  return `<article class="card${it.solucionado?" con-sello":""}">${sol}<div class="meta">${tipo}${it.date?`<span>${fmtDate(it.date)}${it.time?" · "+esc(it.time):""}</span>`:""}</div>
-    <h3>${esc(T(it))}</h3>${it.place?`<div class="meta">📍 ${esc(it.place)}</div>`:""}
-    ${it.body?`<p class="body">${esc(B(it))}</p>`:""}${attach(it)}${fotoAviso(it)}${it.apuntarse?inscAviso(it):""}${opcionesDir(it,false)}${bSol}${adminRow(it)}</article>`;
+  /* Reunión con Alcaldía con foto: el sello «Realizada» va sobre el texto, no sobre la foto (Marta, 7-nov). */
+  const selloTexto = reuAlc && it.solucionado && it.photo;
+  const texto = `<h3>${esc(T(it))}</h3>${it.place?`<div class="meta">📍 ${esc(it.place)}</div>`:""}
+    ${it.body?`<p class="body">${esc(B(it))}</p>`:""}`;
+  return `<article class="card${it.solucionado?" con-sello":""}">${selloTexto?"":sol}<div class="meta">${tipo}${it.date?`<span>${fmtDate(it.date)}${it.time?" · "+esc(it.time):""}</span>`:""}</div>
+    ${selloTexto?`<div class="sello-zona">${sol}${texto}</div>`:texto}${attach(it)}${fotoAviso(it)}${it.apuntarse?inscAviso(it):""}${opcionesDir(it,false)}${bSol}${adminRow(it)}</article>`;
 }
 /* Botón para colgar una foto de la galería del móvil en el aviso (solo directiva). Marta, 6-nov: aviso de la enredadera. */
 const AVISOS_CON_FOTO = ["aviso-desbroce-villalba-mourelo"];
@@ -1271,12 +1275,12 @@ function inscAviso(it){
 }
 function regLine(it){ return it.regDate ? `<div class="meta">📮 Registrado en el Concello el ${fmtDate(it.regDate)}${it.regNum?` (nº ${esc(it.regNum)})`:""}</div>` : ""; }
 function reunionCard(it){
-  const conFotos = REUNIONES_CON_FOTOS.includes(it.id);
+  const conFotos = S.canEdit && REUNIONES_CON_FOTOS.includes(it.id); // de momento solo la ve la directiva (Marta, 7-nov)
   const contenido = `${it.body?`<p class="body">${esc(B(it))}</p>`:""}${attach(it)}`;
   return `<article class="card"><div class="meta"><span class="pill p-green">${esc(it.entity||"Reunión")}</span><span>${fmtDate(it.date)}</span></div>
     <h3>${esc(T(it))}</h3>${regLine(it)}${conFotos?reuPestanas(it, contenido):contenido}${adminRow(it)}</article>`;
 }
-/* Pestañas «Informe» y «Fotos» dentro de la reunión: la directiva cuelga fotos desde la galería del móvil y los socios las ven. Marta, 7-nov: reunión con Alcaldía del 4-nov. */
+/* Pestañas «Informe» y «Fotos» dentro de la reunión: la directiva cuelga fotos desde la galería del móvil. Por ahora solo la ve la directiva. Marta, 7-nov: reunión con Alcaldía del 4-nov. */
 const REUNIONES_CON_FOTOS = ["reunion-alcaldia-4-nov-2026-conclusiones"];
 S.reuTab = {};
 function reuPestanas(it, contenido){
