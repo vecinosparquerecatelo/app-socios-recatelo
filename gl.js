@@ -5,7 +5,7 @@ window.GL_DICT = {
 "Las Festas de Recatelo, junto con las empresas colaboradoras.":"As Festas de Recatelo, xunto coas empresas colaboradoras.",
 "Actividades infantiles: la fiesta del Día das Letras Galegas, el Samaín y cuentacuentos.":"Actividades infantís: a festa do Día das Letras Galegas, o Samaín e contacontos.",
 "El Mercadillo de Navidad.":"O Mercadiño de Nadal.",
-"Los Cantos de taberna.":"Os Cantos de taberna.",
+"Los Cantos de taberna, también como activador comercial de la zona.":"Os Cantos de taberna, tamén como activador comercial da zona.",
 "Cursos y talleres, como el de cestería tradicional y el de prevención del ictus con Cruz Roja.":"Cursos e obradoiros, como o de cestaría tradicional e o de prevención do ictus con Cruz Vermella.",
 "La defensa del Parque Rosalía de Castro: la petición de BIC, el seguimiento de las reformas y la protección de la arboleda.":"A defensa do Parque Rosalía de Castro: a petición de BIC, o seguimento das reformas e a protección da arboreda.",
 "Las quejas y peticiones al Concello: limpieza, ruidos, movilidad, bancos, desbroces.":"As queixas e peticións ao Concello: limpeza, ruídos, mobilidade, bancos, rozas.",
