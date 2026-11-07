@@ -1,5 +1,14 @@
 /* Traducción al gallego de los textos de la app (castellano -> galego). La usa i18n.js. */
 window.GL_DICT = {
+"📄 Informe":"📄 Informe",
+"📷 Fotos":"📷 Fotos",
+"📷 Fotos ({0})":"📷 Fotos ({0})",
+"📷 Añadir fotos de la galería":"📷 Engadir fotos da galería",
+"Añadir fotos de la galería":"Engadir fotos da galería",
+"Subiendo foto {0} de {1}…":"Subindo foto {0} de {1}…",
+"Todavía no hay fotos. Pulsa «Añadir fotos de la galería» para subir la primera.":"Aínda non hai fotos. Preme «Engadir fotos da galería» para subir a primeira.",
+"Pronto subiremos las fotos de la reunión.":"Axiña subiremos as fotos da reunión.",
+"¿Quitar esta foto de la reunión?":"Quitar esta foto da reunión?",
 "👥 {0} apuntados":"👥 {0} apuntados",
 "📝 Apuntar a otras personas (solo directiva)":"📝 Apuntar a outras persoas (só directiva)",
 "Escribe el nombre de quien quieras apuntar y pulsa «Añadir». Solo lo ve la directiva; los socios no ven esta lista.":"Escribe o nome de quen queiras apuntar e preme «Engadir». Só o ve a directiva; os socios non ven esta lista.",
