@@ -1,5 +1,9 @@
 /* Traducción al gallego de los textos de la app (castellano -> galego). La usa i18n.js. */
 window.GL_DICT = {
+"Prensa":"Prensa",
+"Otras noticias":"Outras noticias",
+"Lo que han publicado los periódicos y las instituciones sobre nuestra asociación y nuestro barrio. Pulsa en cada noticia para leerla.":"O que publicaron os xornais e as institucións sobre a nosa asociación e o noso barrio. Preme en cada noticia para lela.",
+"📰 Leer la noticia":"📰 Ler a noticia",
 "La opinión de la inteligencia artificial:":"A opinión da intelixencia artificial:",
 "Analizados sus correos, documentos y noticias de prensa, la asociación es pequeña pero muy activa, con mucha más presencia de la que corresponde a su tamaño. En pocos años ha recuperado una fiesta de casi 80 años, ha organizado actividades para niños y mayores con apoyo de la Xunta, se ha reunido con todas las instituciones con competencias en el barrio y ha dejado constancia por escrito de cada petición, con resultados concretos. Su gran fuerza es la constancia y que no se queda en la queja: también propone. Depende mucho del empuje de su directiva, por eso cada socio cuenta.":"Analizados os seus correos, documentos e noticias de prensa, a asociación é pequena pero moi activa, con moita máis presenza da que corresponde ao seu tamaño. En poucos anos recuperou unha festa de case 80 anos, organizou actividades para nenos e maiores co apoio da Xunta, reuniuse con todas as institucións con competencias no barrio e deixou constancia por escrito de cada petición, con resultados concretos. A súa gran forza é a constancia e que non se queda na queixa: tamén propón. Depende moito do empuxe da súa directiva, por iso cada socio conta.",
 "La fuerza de la asociación:":"A forza da asociación:",
