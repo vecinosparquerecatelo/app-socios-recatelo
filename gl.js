@@ -1,5 +1,10 @@
 /* Traducción al gallego de los textos de la app (castellano -> galego). La usa i18n.js. */
 window.GL_DICT = {
+"Borrar noticias":"Borrar noticias",
+"Solo lo ve la directiva. Pulsa «Borrar» en la noticia que quieras quitar: dejará de verse para los socios. Si te equivocas, pulsa «Recuperar».":"Só o ve a directiva. Preme «Borrar» na noticia que queiras quitar: deixará de verse para os socios. Se te equivocas, preme «Recuperar».",
+"🗑️ Borrar":"🗑️ Borrar",
+"↩️ Recuperar":"↩️ Recuperar",
+"Borrada":"Borrada",
 "Prensa":"Prensa",
 "Prensa, radio y televisión":"Prensa, radio e televisión",
 "Prensa, radio y TV":"Prensa, radio e TV",
