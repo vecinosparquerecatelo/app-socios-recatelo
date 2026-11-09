@@ -1,5 +1,7 @@
 /* Traducción al gallego de los textos de la app (castellano -> galego). La usa i18n.js. */
 window.GL_DICT = {
+"La alcaldesa Elena Candia presentó el proyecto a representantes de nuestra asociación, la Asociación de Vecinos Parque Rosalía de Castro-Recatelo.":"A alcaldesa Elena Candia presentou o proxecto a representantes da nosa asociación, a Asociación de Veciños Parque Rosalía de Castro-Recatelo.",
+"La asociación pidió a Ballesol que reserve parte de las 74 plazas de aparcamiento previstas para que los socios puedan alquilarlas o comprarlas (reunión con la Alcaldía del 4 de noviembre de 2026, punto 5.10). Las obras empezarán previsiblemente a principios de diciembre.":"A asociación pediulle a Ballesol que reserve parte das 74 prazas de aparcamento previstas para que os socios poidan alugalas ou mercalas (reunión coa Alcaldía do 4 de novembro de 2026, punto 5.10). As obras comezarán previsiblemente a principios de decembro.",
 "Borrar noticias":"Borrar noticias",
 "Solo lo ve la directiva. Pulsa «Borrar» en la noticia que quieras quitar: dejará de verse para los socios. Si te equivocas, pulsa «Recuperar».":"Só o ve a directiva. Preme «Borrar» na noticia que queiras quitar: deixará de verse para os socios. Se te equivocas, preme «Recuperar».",
 "🗑️ Borrar":"🗑️ Borrar",
