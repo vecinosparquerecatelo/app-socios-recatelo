@@ -27,7 +27,7 @@ body.oculta #main,body.oculta header{filter:blur(18px)}
 <style>
 /* Layout: app de una columna para móvil; cabecera con pestañas fijas, tarjetas por sección, botón flotante "Añadir" solo para la directiva */
 :root{
-  --bg:#f3f4ef; --surface:#ffffff; --ink:#1d2722; --muted:#5d6a62; --line:#dbe0d6;
+  --bg:#f3f4ef; --surface:#ffffff; --ink:#0e1511; --muted:#3b4640; --line:#dbe0d6;
   --green:#3e625c; --green-soft:#e1ecea; --amber:#b86a12; --amber-soft:#f8ebd9;
   --red:#a8382f; --red-soft:#f6e1de; --blue:#2d5a85; --blue-soft:#e0eaf3;
   --display:"Bricolage Grotesque", "Trebuchet MS", system-ui, sans-serif;
@@ -35,15 +35,16 @@ body.oculta #main,body.oculta header{filter:blur(18px)}
   --r:14px;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
-  --bg:#121815; --surface:#1b231f; --ink:#e7ece8; --muted:#9fb0a6; --line:#2d3833;
+  --bg:#121815; --surface:#1b231f; --ink:#f5f8f6; --muted:#c4d0c9; --line:#2d3833;
   --green:#7fc39f; --green-soft:#1f3329; --amber:#e6a85a; --amber-soft:#3a2b17;
   --red:#ee8f86; --red-soft:#3d2220; --blue:#8fb8e0; --blue-soft:#1d2b3a; color-scheme:dark}}
 :root[data-theme="dark"]{
-  --bg:#121815; --surface:#1b231f; --ink:#e7ece8; --muted:#9fb0a6; --line:#2d3833;
+  --bg:#121815; --surface:#1b231f; --ink:#f5f8f6; --muted:#c4d0c9; --line:#2d3833;
   --green:#7fc39f; --green-soft:#1f3329; --amber:#e6a85a; --amber-soft:#3a2b17;
   --red:#ee8f86; --red-soft:#3d2220; --blue:#8fb8e0; --blue-soft:#1d2b3a; color-scheme:dark}
 *{box-sizing:border-box}
-body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.5}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.5;text-rendering:optimizeLegibility;-webkit-text-size-adjust:100%}
+input::placeholder,textarea::placeholder{color:var(--muted);opacity:1}
 body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--green)}
 .wrap{max-width:760px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 header.top{background:var(--green);color:#fff;position:sticky;top:env(safe-area-inset-top,0px);z-index:5}
