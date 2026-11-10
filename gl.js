@@ -709,6 +709,7 @@ window.GL_DICT = {
 "Propuestas de la asociación": "Propostas da asociación",
 "Proyecto": "Proxecto",
 "Proyectos": "Proxectos",
+"Proyectos notificados y registrados": "Proxectos notificados e rexistrados",
 "Pulsa": "Preme",
 "Pulsa el botón": "Preme o botón",
 "Pulsa el menú": "Preme o menú",

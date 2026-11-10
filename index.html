@@ -1006,7 +1006,7 @@ const GROUPS = [
   {label:"Mercadiño", subs:[["mercadillo","Mercadiño"]]},
   {label:"Sugerencias", subs:[["sugerencias","Sugerencias"],["incidencias","Avisos del barrio"]]},
   {label:"Parque Rosalía BIC", subs:[["bic","Parque Rosalía BIC"]]},
-  {label:"La asociación", subs:[["reuniones","Reuniones"],["proyectos","Proyectos"],["colectivos","Colectivos"],["estatutos","Estatutos"],["bienestar","Bienestar animal"],["arboles","Protección arboleda"]]},
+  {label:"La asociación", subs:[["reuniones","Reuniones"],["proyectos","Proyectos notificados y registrados"],["colectivos","Colectivos"],["estatutos","Estatutos"],["bienestar","Bienestar animal"],["arboles","Protección arboleda"]]},
   {label:"Prensa, radio y TV", subs:[["prensa","Prensa, radio y televisión"],["prensaborrar","Borrar noticias"]]},
   {label:"Fotos y carteles", subs:[["fotos","Fotos"],["carteles","Carteles"]]},
   {label:"Teléfonos útiles", subs:[["telefonos","Teléfonos útiles"]]},
@@ -1082,7 +1082,7 @@ const SIN_TILDES = t => String(t||"").normalize("NFD").replace(/[\u0300-\u036f]/
 function resultadosBusqueda(q){
   const palabras = SIN_TILDES(q).split(/\s+/).filter(w=>w.length>1);
   if(!palabras.length) return "";
-  const nombreSec = sec => sec==="avisos" ? ["inicio","Avisos"] : (TABS.find(t=>t.id===sec) ? [sec, TABS.find(t=>t.id===sec).label] : [sec==="quejas"?"proyectos":"inicio", sec==="quejas"?"Proyectos":"Avisos"]);
+  const nombreSec = sec => sec==="avisos" ? ["inicio","Avisos"] : (TABS.find(t=>t.id===sec) ? [sec, TABS.find(t=>t.id===sec).label] : [sec==="quejas"?"proyectos":"inicio", sec==="quejas"?"Proyectos notificados y registrados":"Avisos"]);
   const casa = txt => { const t=SIN_TILDES(txt); return palabras.every(w=>t.includes(w)); };
   const trozo = txt => { const t=String(txt||""); if(t.length<=220) return t; const k=SIN_TILDES(t).indexOf(palabras[0]); const a=Math.max(0,k-80); return (a?"…":"")+t.slice(a,a+220)+"…"; };
   const out=[];
@@ -1513,7 +1513,7 @@ function listaDocs(){
     if(!proy&&it.section!=="reuniones"&&it.section!=="bic") continue;
     if(!it.doc&&!it.photo&&!it.doc2) continue;
     const ptab=it.ptab==="Banco de la memoria"?PTABS[0]:it.ptab;
-    const donde=proy?"Proyectos"+(PTABS.includes(ptab)?" › "+ptab:""):it.section==="reuniones"?"Reuniones"+(it.entity?" › "+it.entity:""):"Parque Rosalía BIC";
+    const donde=proy?"Proyectos notificados y registrados"+(PTABS.includes(ptab)?" › "+ptab:""):it.section==="reuniones"?"Reuniones"+(it.entity?" › "+it.entity:""):"Parque Rosalía BIC";
     docs.push({t:T(it)||"Documento", donde, tab:proy?"proyectos":it.section, orden:proy?1:it.section==="reuniones"?2:0, date:it.date||""});
   }
   docs.push({t:"Estatutos de la asociación", donde:"La asociación › Estatutos", tab:"estatutos", orden:3, date:""});
@@ -1661,7 +1661,7 @@ const VIEWS = {
     if(!tabs.includes(S.filter.proyectos)) S.filter.proyectos=PTABS[0];
     const f=S.filter.proyectos;
     list = f==="Otros" ? list.filter(i=>!PTABS.includes(i.ptab)) : list.filter(i=>i.ptab===f);
-    return `<div><h2>Proyectos</h2><p class="lead">Los proyectos que la asociación impulsa para el barrio y en qué punto está cada uno.</p></div>
+    return `<div><h2>Proyectos notificados y registrados</h2><p class="lead">Los proyectos que la asociación impulsa para el barrio y en qué punto está cada uno.</p></div>
       ${filterBar("proyectos",tabs,true)}
       ${PINTRO[f]?`<div class="card"><p style="margin:0">${PINTRO[f]}</p></div>`:""}
       <section class="stack">${list.length?list.map(quejaCard).join(""):emptyBox("Todavía no hay documentos en esta pestaña.","Añade el documento con «+ Añadir proyecto» y elige esta pestaña.")}</section>`;
