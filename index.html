@@ -1003,14 +1003,14 @@ Castro-Recatelo a partir do documento orixinal en castelán.</em></p>
 const GROUPS = [
   {label:"Inicio", subs:[["inicio","Inicio"]]},
   {label:"Cursos", subs:[["cursos","Cursos"]]},
-  {label:"Encuestas", subs:[["encuestas","Encuestas"]]},
   {label:"Mercadiño", subs:[["mercadillo","Mercadiño"]]},
-  {label:"Sugerencias", subs:[["sugerencias","Sugerencias"],["incidencias","Avisos del barrio"]]},
   {label:"Parque Rosalía BIC", subs:[["bic","Parque Rosalía BIC"]]},
   {label:"La asociación", subs:[["reuniones","Reuniones"],["proyectos","Proyectos notificados y registrados"],["colectivos","Colectivos"],["estatutos","Estatutos"],["bienestar","Bienestar animal"],["arboles","Protección arboleda"]]},
   {label:"Prensa, radio y TV", subs:[["prensa","Prensa, radio y televisión"],["prensaborrar","Borrar noticias"]]},
   {label:"Fotos y carteles", subs:[["fotos","Fotos"],["carteles","Carteles"]]},
   {label:"Teléfonos de interés", subs:[["telefonos","Teléfonos de interés"]]},
+  {label:"Encuestas", subs:[["encuestas","Encuestas"]]},
+  {label:"Sugerencias", subs:[["sugerencias","Sugerencias"],["incidencias","Avisos del barrio"]]},
   {label:"Mi cuenta", subs:[["misdatos","Mis datos"],["privacidad","Protección de datos"],["avisosact","Avisos activados"],["bloqueos","Bloquear códigos"]]}
 ];
 const TABS = GROUPS.flatMap(g=>g.subs.map(([id,label])=>({id,label})));
