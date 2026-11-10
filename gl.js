@@ -942,6 +942,7 @@ window.GL_DICT = {
 "Novedad en Cursos": "Novidade en Cursos",
 "Novedad": "Novidade",
 "Bienestar animal": "Benestar animal",
+"Teléfonos de interés": "Teléfonos de interese",
 "Leyes de bienestar animal": "Leis de benestar animal",
 "Lo que dicen nuestros Estatutos": "O que din os nosos Estatutos",
 "Artículo 2º.- Fines. Punto 16º": "Artigo 2º.- Fins. Punto 16º",
