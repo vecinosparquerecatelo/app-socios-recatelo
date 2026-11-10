@@ -12,11 +12,105 @@
   let readyResolve; const ready = new Promise(r => readyResolve = r);
 
   /* ---------- archivos ---------- */
+  /* Los archivos (fotos y PDF) están en un almacén privado: solo se ven con enlaces
+     firmados que Supabase da a socios y directiva, y que caducan a las 6 horas.
+     Mientras llega el enlace se pone una imagen vacía y luego se cambia sola. */
+  const VACIA = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
+  const firmadas = new Map(); // id -> { url, hasta }
+  const porFirmar = new Set(); let firmando = null;
+  const SEG = 6 * 3600;
+  function cacheada(id){ const c = firmadas.get(id); return c && c.hasta > Date.now() ? c.url : null; }
+  function ponerCambio(){
+    document.querySelectorAll('img[src^="' + VACIA + '#"], a[href^="' + VACIA + '#"]').forEach(el => {
+      const at = el.tagName === "A" ? "href" : "src", v = el.getAttribute(at);
+      const id = decodeURIComponent(v.slice(v.indexOf("#") + 1)), u = cacheada(id);
+      if(u) el.setAttribute(at, u);
+    });
+  }
+  // PDF fijos de la app (docs/...): si aún no están en el almacén, se abren desde su copia cifrada
+  async function pdfCifrado(id){
+    const k = await claveApp(); if(!k) return null;
+    const r = await fetch("docs-c/" + id.slice(5) + ".enc", { cache: "no-cache" }); if(!r.ok) return null;
+    return URL.createObjectURL(new Blob([await descifrar(k, await r.arrayBuffer())], { type: "application/pdf" }));
+  }
+  async function firmarPendientes(){
+    await ready; await new Promise(r => setTimeout(r, 30));
+    const ids = [...porFirmar]; porFirmar.clear();
+    try{
+      const res = await firmarVarios(ids);
+      for(const id of ids){
+        let url = res[id] || null, hasta = Date.now() + (SEG - 600) * 1000;
+        if(!url && id.startsWith("docs/")){ try{ url = await pdfCifrado(id); }catch(e){} }
+        if(!url){ url = sb.storage.from("archivos").getPublicUrl(id).data.publicUrl; hasta = Date.now() + 60000; } // por si el almacén aún es público
+        firmadas.set(id, { url, hasta });
+      }
+    }catch(e){}
+    firmando = null; ponerCambio();
+    if(porFirmar.size) programar();
+  }
+  async function firmarVarios(ids){
+    const out = {};
+    for(let i = 0; i < ids.length; i += 100){
+      const { data } = await sb.storage.from("archivos").createSignedUrls(ids.slice(i, i + 100), SEG);
+      (data || []).forEach(x => { if(x && x.path && x.signedUrl && !x.error) out[x.path] = x.signedUrl; });
+    }
+    return out;
+  }
+  function programar(){ if(!firmando) firmando = firmarPendientes(); return firmando; }
   window.blobUrl = function(id){
     if(!id || id === DEFAULT_LOGO) return "logo.jpg";
-    if(id.startsWith("docs/")) return id; // documentos fijos que van dentro de la app
-    return sb.storage.from("archivos").getPublicUrl(id).data.publicUrl;
+    const u = cacheada(id); if(u) return u;
+    porFirmar.add(id); programar();
+    return VACIA + "#" + encodeURIComponent(id);
   };
+  // Para cuando hace falta el enlace ya (descargar una foto para editarla)
+  window.urlArchivo = async function(id){
+    if(!id || id === DEFAULT_LOGO) return "logo.jpg";
+    let u = cacheada(id); if(u) return u;
+    for(let i = 0; i < 3 && !cacheada(id); i++){ porFirmar.add(id); await programar(); }
+    return cacheada(id) || sb.storage.from("archivos").getPublicUrl(id).data.publicUrl;
+  };
+
+  /* ---------- contenido cifrado (avisos fijos, PDF de la app) ---------- */
+  let claveP = null;
+  function claveApp(){
+    if(!claveP) claveP = (async () => {
+      const { data, error } = await sb.from("docs").select("data").eq("coll", "clave").eq("id", "app").maybeSingle();
+      if(error || !data || !data.data || !data.data.k) throw 0;
+      const raw = Uint8Array.from(atob(data.data.k), c => c.charCodeAt(0));
+      return crypto.subtle.importKey("raw", raw, "AES-GCM", false, ["decrypt"]);
+    })().catch(() => { claveP = null; return null; });
+    return claveP;
+  }
+  async function descifrar(k, buf){
+    const b = new Uint8Array(buf);
+    return crypto.subtle.decrypt({ name: "AES-GCM", iv: b.slice(0, 12) }, k, b.slice(12));
+  }
+  let privadoP = null;
+  window.contenidoPrivado = function(){
+    if(!privadoP) privadoP = (async () => {
+      await ready; if(!state.uid) throw 0;
+      const k = await claveApp(); if(!k) throw 0;
+      const r = await fetch("privado.bin", { cache: "no-cache" }); if(!r.ok) throw 0;
+      const p = JSON.parse(new TextDecoder().decode(await descifrar(k, await r.arrayBuffer())));
+      if(state.directiva) subirPdfFijos(p).catch(() => {});
+      return p;
+    })().catch(() => { privadoP = null; return null; });
+    return privadoP;
+  };
+  // La directiva pasa una vez los PDF fijos al almacén privado (así se abren igual que los demás en iPhone)
+  async function subirPdfFijos(p){
+    const ids = [...new Set((p.semillas || []).flatMap(s => [s.doc, s.doc2, s.docGl]).filter(d => d && d.startsWith("docs/")))];
+    if(!ids.length) return;
+    const ya = await firmarVarios(ids), k = await claveApp(); if(!k) return;
+    for(const id of ids){
+      if(ya[id]) continue;
+      const r = await fetch("docs-c/" + id.slice(5) + ".enc", { cache: "no-cache" }); if(!r.ok) continue;
+      const pdf = new Blob([await descifrar(k, await r.arrayBuffer())], { type: "application/pdf" });
+      const { error } = await sb.storage.from("archivos").upload(id, pdf, { contentType: "application/pdf", upsert: false });
+      if(!error) firmadas.delete(id);
+    }
+  }
 
   // Recuentos que calcula Supabase sin enseñar quién ha votado o apoyado
   window.rpcApp = async (name, args) => { const { data, error } = await sb.rpc(name, args || {}); if(error) throw err("unavailable", error.message); return data; };
