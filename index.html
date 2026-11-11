@@ -1007,7 +1007,7 @@ const GROUPS = [
   {label:"La asociación", subs:[["reuniones","Reuniones"],["proyectos","Proyectos notificados y registrados"],["colectivos","Colectivos"],["estatutos","Estatutos"],["bienestar","Bienestar animal"],["arboles","Protección arboleda"]]},
   {label:"Parque Rosalía BIC", subs:[["bic","Parque Rosalía BIC"]]},
   {label:"Prensa, radio y TV", subs:[["prensa","Prensa, radio y televisión"],["prensaborrar","Borrar noticias"]]},
-  {label:"Encuestas", subs:[["encuestas","Encuestas"]]},
+  {label:"Encuestas", subs:[["encuestas","Encuestas"],["quienvota","Quién vota"]]},
   {label:"Sugerencias", subs:[["sugerencias","Sugerencias"],["incidencias","Avisos del barrio"]]},
   {label:"Teléfonos de interés", subs:[["telefonos","Teléfonos de interés"]]},
   {label:"Fotos y carteles", subs:[["fotos","Fotos"],["carteles","Carteles"]]},
@@ -1042,7 +1042,7 @@ const IESTADOS = {pendiente:["Pendiente","p-red"], comunicado:["Comunicado al Co
 const DEFAULT_LOGO = "c37727719b16fb206a49359b064fca6d";
 const LOT = {precio:20, donativo:3, sorteo:"Sorteo Extraordinario de Navidad 2026"};
 let LECT_COLA=Promise.resolve();
-const S = {bq:"", fichaLoaded:false, mcFotos:[], lect:null, lectAll:[], apoyo:null, apoyosAll:[], nApoyos:null, votos:null, recVotos:{}, incAll:[], cuota:null, cuotasAll:[], lot:null, lotAll:[], lotBlocked:false, insc:null, inscAll:[], inscBlocked:false, estatutos:null, ficha:null, fichasAll:[], fichaBlocked:false, logo:DEFAULT_LOGO, consent:null, consentAll:[], consentBlocked:false, buzon:null, buzonAll:[], mercAll:[], uid:null, user:null, names:{}, buzonBlocked:false, items:[], loaded:false, canEdit:false, db:null, assets:null, noDb:false, tab:"inicio", filter:{reuniones:"todas", quejas:"todas", fotos:"todas", proyectos:""}};
+const S = {bq:"", fichaLoaded:false, mcFotos:[], lect:null, lectAll:[], apoyo:null, apoyosAll:[], nApoyos:null, votos:null, votosAll:[], recVotos:{}, incAll:[], cuota:null, cuotasAll:[], lot:null, lotAll:[], lotBlocked:false, insc:null, inscAll:[], inscBlocked:false, estatutos:null, ficha:null, fichasAll:[], fichaBlocked:false, logo:DEFAULT_LOGO, consent:null, consentAll:[], consentBlocked:false, buzon:null, buzonAll:[], mercAll:[], uid:null, user:null, names:{}, buzonBlocked:false, items:[], loaded:false, canEdit:false, db:null, assets:null, noDb:false, tab:"inicio", filter:{reuniones:"todas", quejas:"todas", fotos:"todas", proyectos:""}};
 
 const $ = s => document.querySelector(s);
 function esc(t){return String(t ?? "").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
@@ -1551,6 +1551,12 @@ const VIEWS = {
     setTimeout(()=>{ const el=document.getElementById("avact"); if(el && window.cargarAvisosActivados) window.cargarAvisosActivados(el); },0);
     return `<div><h2>Avisos activados</h2><p class="lead">Solo lo ve la directiva. Socios que han activado los avisos en su móvil y los que todavía no.</p></div><div id="avact" class="stack"><p class="meta">Cargando…</p></div>`;
   },
+  quienvota(){
+    if(!S.canEdit) return `<div><h2>Quién vota</h2><p class="lead">Esta pestaña es solo para la directiva.</p></div>`;
+    const list=sortDesc(bySection("encuestas"));
+    return `<div><h2>Quién vota</h2><p class="lead">Solo lo ve la directiva. Qué ha votado cada socio en cada encuesta. Los socios no ven nombres en Encuestas, solo los resultados.</p></div>
+      <section class="stack">${list.length?list.map(quienVotaCard).join(""):`<div class="empty"><strong>No hay encuestas.</strong></div>`}</section>`;
+  },
   bloqueos(){
     if(!S.canEdit) return `<div><h2>Bloquear códigos</h2><p class="lead">Esta pestaña es solo para la directiva.</p></div>`;
     setTimeout(()=>{ const el=document.getElementById("bloq"); if(el && window.cargarBloqueos) window.cargarBloqueos(el); },0);
@@ -2049,6 +2055,17 @@ function encuestaCard(it){
   return `<article class="card"><div class="meta"><span class="pill ${cerrada?"p-amber":"p-green"}">${cerrada?"Cerrada":"Abierta"}</span>${it.cierre?`<span>${cerrada?"Cerró el":"Se puede votar hasta el"} ${fmtDate(it.cierre)}</span>`:""}</div>
     <h3>${esc(T(it))}</h3>${it.body?`<p class="body">${esc(B(it))}</p>`:""}${cuerpo}${botones}${adminRow(it)}</article>`;
 }
+/* quién ha votado qué en cada encuesta: solo la directiva (los votos de cada socio son privados) */
+function quienVotaCard(it){
+  const ops=it.opciones||[], cerrada=!!(it.cierre&&it.cierre<today());
+  const por=ops.map(()=>[]);
+  for(const d of (S.votosAll||[])){ const v=d.votos&&d.votos[it.id]; if(v!==undefined&&v!==null&&por[v]) por[v].push(nombreDe(d.uid)); }
+  por.forEach(l=>l.sort((a,b)=>a.localeCompare(b,"es")));
+  const total=por.reduce((a,l)=>a+l.length,0);
+  return `<article class="card"><div class="meta"><span class="pill ${cerrada?"p-amber":"p-green"}">${cerrada?"Cerrada":"Abierta"}</span><span>${total===1?"1 voto":total+" votos"}</span></div>
+    <h3>${esc(T(it))}</h3>
+    ${ops.map((o,i)=>`<details class="lectores"${por[i].length?" open":""}><summary class="meta"><strong>${esc(o)}</strong> · ${por[i].length} ${por[i].length===1?"socio":"socios"}</summary>${por[i].length?`<ul>${por[i].map(n=>`<li>${esc(n)}</li>`).join("")}</ul>`:`<p class="meta">Nadie ha votado esta opción.</p>`}</details>`).join("")}</article>`;
+}
 async function contarVotos(){ if(!window.rpcApp) return; try{ const r=await rpcApp("recuento_votos"); if(r&&typeof r==="object"){ S.recVotos=r; render(); } }catch(e){} }
 async function votar(enc, i){
   const votos={...((S.votos&&S.votos.votos)||{})}; votos[enc]=i;
@@ -2058,6 +2075,12 @@ async function votar(enc, i){
 async function startVotos(){
   if(!S.db||!S.uid) return;
   S.db.doc("votos/"+S.uid).onSnapshot(snap=>{ S.votos=snap.exists?snap.data():null; renderDatos(); },()=>{});
+  if(S.canEdit) S.db.collection("votos").onSnapshot(async snap=>{
+    S.votosAll=snap.docs.map(d=>({uid:d.id,...d.data()}));
+    const faltan=S.votosAll.map(d=>d.uid).filter(u=>!S.names[u]&&!S.fichasAll.some(f=>f.uid===u));
+    if(faltan.length){ try{ const ps=await S.user.profiles(faltan); for(const u in ps) S.names[u]=ps[u].name||""; }catch(e){} }
+    renderDatos();
+  },()=>{});
   contarVotos(); setInterval(()=>{ if(S.tab==="encuestas"&&document.visibilityState==="visible") contarVotos(); }, 30000);
 }
 
@@ -2256,7 +2279,7 @@ function render(){
   else if(gateFicha) html += `<div class="next"><span class="eyebrow">Un último paso</span><h3>Rellena tus datos de socio</h3><span>Así la directiva sabe quién eres y puede contactarte. Solo tendrás que hacerlo una vez y solo los ve la directiva.</span></div>` + VIEWS.misdatos();
   else {
     const g = groupOf(S.tab);
-    const gsubs=g.subs.filter(([id])=>(id!=="avisosact"&&id!=="bloqueos"&&id!=="prensaborrar")||S.canEdit);
+    const gsubs=g.subs.filter(([id])=>(id!=="avisosact"&&id!=="bloqueos"&&id!=="prensaborrar"&&id!=="quienvota")||S.canEdit);
     if(gsubs.length>1) html += `<div class="filters" role="tablist" aria-label="${esc(g.label)}">${gsubs.map(([id,l])=>`<button data-go="${id}" aria-pressed="${S.tab===id}">${l}${pestNueva(id)?` <span class="punto-rojo" aria-label="Novedad"></span>`:""}</button>`).join("")}</div>`;
     html += VIEWS[S.tab]();
   }

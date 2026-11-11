@@ -969,5 +969,9 @@ window.GL_DICT = {
 "Ley 5/2016, de 4 de mayo, del patrimonio cultural de Galicia": "Lei 5/2016, do 4 de maio, do patrimonio cultural de Galicia",
 "Protege el patrimonio cultural de Galicia. Incluye la figura de jardín histórico, que puede declararse Bien de Interés Cultural (BIC). Es la ley en la que se apoya la petición de BIC para el Parque Rosalía.": "Protexe o patrimonio cultural de Galicia. Inclúe a figura de xardín histórico, que pode declararse Ben de Interese Cultural (BIC). É a lei na que se apoia a petición de BIC para o Parque Rosalía.",
 "Ley 42/2007, de 13 de diciembre, del Patrimonio Natural y de la Biodiversidad": "Lei 42/2007, do 13 de decembro, do Patrimonio Natural e da Biodiversidade",
-"Es la ley para toda España que protege la naturaleza, los espacios naturales y las especies de plantas y animales.": "É a lei para toda España que protexe a natureza, os espazos naturais e as especies de plantas e animais."
+"Es la ley para toda España que protege la naturaleza, los espacios naturales y las especies de plantas y animales.": "É a lei para toda España que protexe a natureza, os espazos naturais e as especies de plantas e animais.",
+"Quién vota": "Quen vota",
+"Solo lo ve la directiva. Qué ha votado cada socio en cada encuesta. Los socios no ven nombres en Encuestas, solo los resultados.": "Só o ve a directiva. Que votou cada socio en cada enquisa. Os socios non ven nomes en Enquisas, só os resultados.",
+"Nadie ha votado esta opción.": "Ninguén votou esta opción.",
+"No hay encuestas.": "Non hai enquisas.",
 };
