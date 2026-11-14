@@ -998,6 +998,7 @@ Castro-Recatelo a partir do documento orixinal en castelán.</em></p>
 <script src="gl.js"></script>
 <script src="i18n.js"></script>
 <script>document.getElementById("idioma-top").innerHTML = idiomaHTML();</script>
+<script src="agenda.js"></script>
 <script src="conexion.js"></script>
 <script>
 const GROUPS = [
@@ -1905,29 +1906,31 @@ const VIEWS = {
       <p class="meta">Si ves un animal maltratado o abandonado, puedes avisar al 112.</p>`;
   },
   agenda(){
-    /* Agenda Cultural Lugo (Marta, 14-nov): enlaces a agendas de Lugo que se actualizan solas cada día; la app no se toca para ponerla al día. */
+    /* Agenda Cultural Lugo (Marta, 14-nov): lista escrita por nosotros en agenda.js, sin enlaces a empresas.
+       De cada acto: nombre, sitio, hora y teléfono para reservar. Solo se ven los actos de hoy en adelante. */
     const gl=window.IDIOMA==="gl", T=(es,g)=>gl?g:es;
-    const d=new Date(), hoy=gl?["domingo","luns","martes","mércores","xoves","venres","sábado"][d.getDay()]+", "+d.getDate()+" de "+["xaneiro","febreiro","marzo","abril","maio","xuño","xullo","agosto","setembro","outubro","novembro","decembro"][d.getMonth()]:d.toLocaleDateString("es-ES",{weekday:"long",day:"numeric",month:"long"});
-    const fuente=(ico,tit,txt,url,btn,principal)=>`<article class="card ag-card${principal?" ag-main":""}"><h3>${ico} ${tit}</h3><p class="body">${txt}</p><div style="margin-top:12px"><a class="btn${principal?"":" ghost"}" href="${url}" target="_blank" rel="noopener">${btn}</a></div></article>`;
-    return `<style>.ag-main{border:2px solid var(--green)}.ag-hoy{display:inline-block;background:var(--amber-soft);color:var(--amber);border-radius:999px;padding:6px 14px;font-weight:700;margin:4px 0 6px}.ag-nota{color:var(--muted);font-size:.95rem}</style>
-      <div data-noi18n><h2>${T("Agenda Cultural Lugo","Axenda Cultural Lugo")}</h2>
-      <p class="lead">${T("Teatro, conferencias y otros actos culturales en Lugo. Muy pronto, aquí mismo, la lista de lo que hay cada día.","Teatro, conferencias e outros actos culturais en Lugo. Moi pronto, aquí mesmo, a lista do que hai cada día.")}</p>
-      <span class="ag-hoy">📅 ${T("Hoy","Hoxe")}, ${esc(hoy)}</span></div>
-      <div class="stack" data-noi18n>
-      <article class="card"><p class="body">${T("Estamos preparando la lista de actos de cada día. Muy pronto estará aquí.","Estamos preparando a lista de actos de cada día. Moi pronto estará aquí.")}</p></article>
-      <p class="ag-nota"></p>
+    const DIAS=gl?["domingo","luns","martes","mércores","xoves","venres","sábado"]:["domingo","lunes","martes","miércoles","jueves","viernes","sábado"];
+    const MESES=gl?["xaneiro","febreiro","marzo","abril","maio","xuño","xullo","agosto","setembro","outubro","novembro","decembro"]:["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
+    const iso=x=>x.getFullYear()+"-"+String(x.getMonth()+1).padStart(2,"0")+"-"+String(x.getDate()).padStart(2,"0");
+    const larga=s=>{ const x=new Date(s+"T12:00:00"); return DIAS[x.getDay()]+", "+x.getDate()+" de "+MESES[x.getMonth()]; };
+    const hoyD=new Date(), hoy=iso(hoyD), man=iso(new Date(hoyD.getFullYear(),hoyD.getMonth(),hoyD.getDate()+1));
+    const lista=(window.AGENDA||[]).filter(e=>e.d>=hoy).sort((a,b)=>(a.d+a.h).localeCompare(b.d+b.h));
+    const dias=[...new Set(lista.map(e=>e.d))];
+    const telA=n=>`<a class="ag-tel" href="tel:${esc(String(n).replace(/\s/g,""))}">📞 ${esc(n)}</a>`;
+    const acto=e=>`<div class="ag-acto"><div class="ag-hora">${esc(e.h||"")}</div><div class="ag-info"><strong>${esc(gl&&e.tgl?e.tgl:e.t)}</strong><small>📍 ${esc(gl&&e.lgl?e.lgl:e.l)}</small>${e.tel?`<span class="ag-res">${telA(e.tel)}${e.tel2?`<small>${T("desde fuera de Lugo:","dende fóra de Lugo:")}</small>${telA(e.tel2)}`:""}</span>`:""}</div></div>`;
+    return `<style>.ag-intro{background:var(--green-soft);border:1px solid var(--line);border-radius:18px;padding:18px 18px 16px;margin:6px 0 18px}.ag-intro h2{margin:0 0 6px;display:flex;align-items:center;gap:10px}.ag-intro .ag-ico{font-size:1.7rem;line-height:1}.ag-intro p{margin:6px 0;line-height:1.5}.ag-pasos{list-style:none;padding:0;margin:10px 0 4px;display:grid;gap:8px}.ag-pasos li{display:flex;gap:10px;align-items:flex-start;line-height:1.45}.ag-pasos li span:first-child{flex:none;width:30px;height:30px;border-radius:50%;background:var(--surface);display:grid;place-items:center;font-size:1rem}.ag-hoy{display:inline-block;background:var(--amber-soft);color:var(--amber);border-radius:999px;padding:6px 14px;font-weight:700;margin:10px 0 0}.ag-diah{display:flex;align-items:center;gap:8px;margin:18px 0 8px;font-size:1.05rem;text-transform:none}.ag-diah b{background:var(--green);color:var(--surface);border-radius:999px;padding:4px 12px;font-size:.9rem}.ag-dia{padding:0;gap:0;overflow:hidden;border-left:5px solid var(--green)}.ag-acto{display:flex;gap:14px;padding:14px 16px;border-top:1px solid var(--line)}.ag-acto:first-child{border-top:0}.ag-hora{flex:none;min-width:62px;align-self:flex-start;text-align:center;background:var(--amber-soft);color:var(--amber);font-weight:800;border-radius:12px;padding:6px 8px;font-size:.95rem;line-height:1.25}.ag-info{display:grid;gap:5px;min-width:0}.ag-info strong{font-size:1.05rem;line-height:1.35}.ag-info small{color:var(--muted);font-size:.95rem}.ag-res{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:2px}.ag-tel{display:inline-flex;align-items:center;gap:4px;font-weight:700;color:var(--green);background:var(--green-soft);border-radius:999px;padding:5px 12px;text-decoration:none;white-space:nowrap}.ag-res small{font-size:.85rem}.ag-nota{color:var(--muted);font-size:.95rem;margin-top:16px}</style>
+      <div data-noi18n class="ag-intro"><h2><span class="ag-ico">🎭</span>${T("Agenda Cultural Lugo","Axenda Cultural Lugo")}</h2>
+      <p>${T("Aquí tienes lo que pasa en Lugo para disfrutar de la cultura: teatro, charlas, cine, danza y actividades para los niños.","Aquí tes o que pasa en Lugo para gozar da cultura: teatro, charlas, cine, danza e actividades para os nenos.")}</p>
+      <ul class="ag-pasos">
+        <li><span>📅</span><span>${T("Está ordenado por días y empieza siempre por hoy. Lo que ya pasó desaparece solo.","Está ordenado por días e comeza sempre por hoxe. O que xa pasou desaparece só.")}</span></li>
+        <li><span>📞</span><span>${T("Para reservar o preguntar, toca el teléfono y llamas directamente.","Para reservar ou preguntar, toca o teléfono e chamas directamente.")}</span></li>
+        <li><span>🔄</span><span>${T("La asociación pone la lista al día dos veces por semana.","A asociación pon a lista ao día dúas veces por semana.")}</span></li>
+      </ul>
+      <span class="ag-hoy">${T("Hoy","Hoxe")}, ${larga(hoy)}</span></div>
+      <div data-noi18n>
+      ${dias.length?dias.map(d=>`<section><h3 class="ag-diah">${d===hoy?`<b>${T("Hoy","Hoxe")}</b>`:d===man?`<b>${T("Mañana","Mañá")}</b>`:""}${larga(d)}</h3><article class="card ag-dia">${lista.filter(e=>e.d===d).map(acto).join("")}</article></section>`).join(""):`<article class="card"><p class="body">${T("Ahora mismo no hay actos apuntados para los próximos días.","Agora mesmo non hai actos apuntados para os próximos días.")}</p></article>`}
+      <p class="ag-nota">${T("La asociación no organiza estos actos, salvo que se diga en Inicio.","A asociación non organiza estes actos, agás que se diga en Inicio.")}${window.AGENDA_ACT?" "+T("Actualizada el ","Actualizada o ")+larga(window.AGENDA_ACT)+".":""}</p>
       </div>`;
-  },
-  comousar(){
-    /* Vídeos que explican la app (Marta, 14-nov): Rosalía, Xosé y Carmiña. Solo el del idioma elegido. */
-    const gl=window.IDIOMA==="gl", T=(es,g)=>gl?g:es;
-    const vid=(src,poster,tit,dur)=>`<article class="card" style="gap:10px"><h3>${tit}</h3><div class="vwrap" style="position:relative;width:100%;max-width:420px;justify-self:center"><video src="${src}" poster="${poster}" controls playsinline preload="none" style="display:block;width:100%;aspect-ratio:9/16;border-radius:12px;background:#000"></video><button type="button" class="vplay" aria-label="${T("Ver el vídeo","Ver o vídeo")}" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:84px;height:84px;border-radius:50%;border:0;background:rgba(53,89,79,.92);color:#fff;font-size:38px;line-height:84px;padding:0 0 0 8px;box-shadow:0 4px 16px rgba(0,0,0,.35);cursor:pointer">▶</button></div><p class="meta">${dur}</p></article>`;
-    const es=vid("videos/como-usar-la-app-es-v1.mp4","videos/portada-es.jpg",T("En castellano","En castelán"),T("7 minutos y medio","7 minutos e medio"));
-    const g=vid("videos/como-usar-a-app-gl-v1.mp4","videos/portada-gl.jpg",T("En gallego","En galego"),T("7 minutos","7 minutos"));
-    const pts=gl?["Como entrar en recatelo.es co código persoal que che chega por WhatsApp.","Que é a protección de datos e que datos che pide a app a primeira vez.","Como instalar a app no móbil e activar as notificacións. Se che custa, a directiva axúdache en persoa.","Para que serve cada pestana: avisos, cursos, Mercadiño, a asociación, o parque, fotos e moito máis.","Que pedimos para o barrio: o local social, o canil e a convivencia."]:["Cómo entrar en recatelo.es con el código personal que te llega por WhatsApp.","Qué es la protección de datos y qué datos te pide la app la primera vez.","Cómo instalar la app en el móvil y activar las notificaciones. Si te cuesta, la directiva te ayuda en persona.","Para qué sirve cada pestaña: avisos, cursos, Mercadiño, la asociación, el parque, fotos y mucho más.","Qué pedimos para el barrio: el local social, el canil y la convivencia."];
-    return `<div data-noi18n><h2>${T("Cómo usar la app","Como usar a app")}</h2><p class="lead">${T("Rosalía, Xosé y Carmiña te explican paso a paso cómo funciona la app de socios. Si eliges Galego arriba, verás el vídeo en gallego.","Rosalía, Xosé e Carmiña explícanche paso a paso como funciona a app de socios. Se escolles Castellano arriba, verás o vídeo en castelán.")}</p></div>
-      <article class="card" data-noi18n><h3>${T("En el vídeo verás","No vídeo verás")}</h3><ul style="margin:0;padding-left:20px;display:grid;gap:6px">${pts.map(p=>`<li>${p}</li>`).join("")}</ul><p class="meta" style="margin:4px 0 0">${T("Pulsa el triángulo para verlo. Puedes pararlo cuando quieras y volver a verlo las veces que necesites.","Preme o triángulo para velo. Podes paralo cando queiras e volver velo as veces que precises.")}</p></article>
-      <div class="stack" data-noi18n>${gl?g:es}</div>`;
   },
   telefonos(){
     /* Teléfonos útiles (Marta, 10-nov): se llama tocando el número. Comprobados en webs oficiales y guías el 10-nov-2026. */
