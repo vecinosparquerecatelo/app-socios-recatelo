@@ -1237,6 +1237,7 @@ const CORTE_ANT="2026-11-05";
 /* El aviso de la reunión con Alcaldía del 4-nov sigue arriba con su sello. */
 function esReuAlcReciente(a,t){ if(!a||!a.date||!/alcald/i.test(a.title||"")||a.id==="aviso-reunion-alcaldia-4-nov") return false; return a.date>="2026-11-04"; }
 function avisoCard(it){
+  if(it.soloEs && window.IDIOMA==="gl") return "";
   const tipo = it.kind==="reunion" ? `<span class="pill p-amber">Reunión de socios</span>` : `<span class="pill p-blue">Aviso</span>`;
   const reuAlc = (/alcald/i.test(it.title||"") && it.id!=="aviso-reunion-alcaldia-4-nov") || it.id==="aviso-xuntanza-ordenanza-ruidos";
   const sol = it.solucionado ? (reuAlc ? `<div class="sello-sol" aria-label="Realizada"><span>✔ REALIZADA</span></div>` : `<div class="sello-sol${it.photo?" sello-arriba":""}" aria-label="Solucionado"><span>✔ SOLUCIONADO</span></div>`) : "";
@@ -1246,10 +1247,16 @@ function avisoCard(it){
   const texto = `<h3>${esc(T(it))}</h3>${it.place?`<div class="meta">📍 ${esc(it.place)}</div>`:""}
     ${it.body?`<p class="body">${esc(B(it))}</p>`:""}`;
   return `<article class="card${it.solucionado?" con-sello":""}">${selloTexto?"":sol}<div class="meta">${tipo}${it.date?`<span>${fmtDate(it.date)}${it.time?" · "+esc(it.time):""}</span>`:""}</div>
-    ${selloTexto?`<div class="sello-zona">${sol}${texto}</div>`:texto}${attach(it)}${fotoAviso(it)}${it.apuntarse?inscAviso(it):""}${it.sinBotones?"":opcionesDir(it,false)+bSol}${adminRow(it)}</article>`;
+    ${selloTexto?`<div class="sello-zona">${sol}${texto}</div>`:texto}${attach(it)}${fotoAviso(it)}${videoAviso(it)}${it.apuntarse?inscAviso(it):""}${it.sinBotones?"":opcionesDir(it,false)+bSol}${adminRow(it)}</article>`;
 }
 /* Botón para colgar una foto de la galería del móvil en el aviso (solo directiva). Marta, 6-nov: aviso de la enredadera. */
 const AVISOS_CON_FOTO = ["aviso-desbroce-villalba-mourelo"];
+/* Vídeo dentro de un aviso o pestaña, con ▶ grande (Marta, 14-nov). Sin botón de descarga: Marta no lo quiere en la app. */
+function cajaVideo(src,poster,nombre){
+  const gl=window.IDIOMA==="gl";
+  return `<div class="vwrap" style="position:relative;width:100%;max-width:420px;justify-self:center;margin:8px auto 0"><video src="${src}" poster="${poster}" controls playsinline preload="none" style="display:block;width:100%;aspect-ratio:9/16;border-radius:12px;background:#000"></video><button type="button" class="vplay" aria-label="${gl?"Ver o vídeo":"Ver el vídeo"}" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:84px;height:84px;border-radius:50%;border:0;background:rgba(53,89,79,.92);color:#fff;font-size:38px;line-height:84px;padding:0 0 0 8px;box-shadow:0 4px 16px rgba(0,0,0,.35);cursor:pointer">▶</button></div>`;
+}
+function videoAviso(it){ return it.video ? cajaVideo(it.video,it.poster||"",it.videoNombre||"video.mp4") : ""; }
 function fotoAviso(it){
   if(!S.canEdit || !S.assets || !AVISOS_CON_FOTO.includes(it.id)) return "";
   return `<div class="row-actions"><label class="btn small" style="display:inline-block;cursor:pointer">📷 ${it.photo?"Cambiar la foto":"Añadir foto de la galería"}<input type="file" accept="image/*" data-foto-aviso="${esc(it.id)}" hidden></label><span class="meta" data-foto-aviso-msg="${esc(it.id)}"></span></div>`;
@@ -1941,6 +1948,7 @@ const VIEWS = {
     const pts=gl?["Como entrar en recatelo.es co código persoal que che chega por WhatsApp.","Que é a protección de datos e que datos che pide a app a primeira vez.","Como instalar a app no móbil e activar as notificacións. Se che custa, a directiva axúdache en persoa.","Para que serve cada pestana: avisos, cursos, Mercadiño, a asociación, o parque, fotos e moito máis.","Que pedimos para o barrio: o local social, o canil e a convivencia."]:["Cómo entrar en recatelo.es con el código personal que te llega por WhatsApp.","Qué es la protección de datos y qué datos te pide la app la primera vez.","Cómo instalar la app en el móvil y activar las notificaciones. Si te cuesta, la directiva te ayuda en persona.","Para qué sirve cada pestaña: avisos, cursos, Mercadiño, la asociación, el parque, fotos y mucho más.","Qué pedimos para el barrio: el local social, el canil y la convivencia."];
     return `<div data-noi18n><h2>${T("Cómo usar la app","Como usar a app")}</h2><p class="lead">${T("Rosalía, Xosé y Carmiña te explican paso a paso cómo funciona la app de socios. Si eliges Galego arriba, verás el vídeo en gallego.","Rosalía, Xosé e Carmiña explícanche paso a paso como funciona a app de socios. Se escolles Castellano arriba, verás o vídeo en castelán.")}</p></div>
       <article class="card" data-noi18n><h3>${T("En el vídeo verás","No vídeo verás")}</h3><ul style="margin:0;padding-left:20px;display:grid;gap:6px">${pts.map(p=>`<li>${p}</li>`).join("")}</ul><p class="meta" style="margin:4px 0 0">${T("Pulsa el triángulo para verlo. Puedes pararlo cuando quieras y volver a verlo las veces que necesites.","Preme o triángulo para velo. Podes paralo cando queiras e volver velo as veces que precises.")}</p></article>
+      ${gl?"":`<article class="card" data-noi18n style="gap:10px"><h3>Rosalía: Agenda Cultural y Calendario 2027</h3><p class="meta" style="margin:0">Rosalía os habla desde su casiña de Iria Flavia. Minuto y medio.</p>${cajaVideo("videos/rosalia-agenda-es-v1.mp4","videos/portada-rosalia-agenda-es.jpg","Rosalía - Agenda Cultural y Calendario 2027.mp4")}</article>`}
       <div class="stack" data-noi18n>${gl?g:es}</div>`;
   },
   telefonos(){
