@@ -945,6 +945,7 @@ window.GL_DICT = {
 "Bienestar animal": "Benestar animal",
 "Teléfonos de interés": "Teléfonos de interese",
 "Agenda Cultural Lugo": "Axenda Cultural Lugo",
+"Cómo usar la app": "Como usar a app",
 "Leyes de bienestar animal": "Leis de benestar animal",
 "Lo que dicen nuestros Estatutos": "O que din os nosos Estatutos",
 "Artículo 2º.- Fines. Punto 16º": "Artigo 2º.- Fins. Punto 16º",
