@@ -4,6 +4,7 @@
 window.AGENDA_ACT = "2026-11-14";
 const TEL_CONCELLO = {tel:"010", tel2:"982 297 350"}; // Concello de Lugo: 010; desde fuera de Lugo 982 297 350
 const TEL_DEPUTACION = {tel:"982 260 000"};
+const TEL_CIRCULO = {tel:"982 225 456"}; // Círculo das Artes, oficina (11:00-13:00 y 16:30-20:30)
 window.AGENDA = [
   {d:"2026-11-14", h:"11:00 y 12:30", t:"Cuentacuentos para los más pequeños: «A mancha ou a raias?»", tgl:"Contacontos para os máis pequenos: «A mancha ou a raias?»", l:"O Vello Cárcere", ...TEL_CONCELLO},
   {d:"2026-11-14", h:"11:30", t:"Charla «A aldea necesita + feeling: Psicogeografía de A Piringalla»", tgl:"Charla «A aldea necesita + feeling: Psicoxeografía da Piringalla»", l:"Auditorio Gustavo Freire", ...TEL_CONCELLO},
@@ -16,5 +17,13 @@ window.AGENDA = [
   {d:"2026-11-22", h:"18:30", t:"Danza: «Únicos» (a partir de 3 años)", tgl:"Danza: «Únicos» (a partir de 3 anos)", l:"Auditorio Gustavo Freire", ...TEL_CONCELLO},
   {d:"2026-11-26", h:"18:00", t:"«A máquina do tempo» (a partir de 4 años)", tgl:"«A máquina do tempo» (a partir de 4 anos)", l:"Biblioteca Municipal", ...TEL_CONCELLO},
   {d:"2026-12-03", h:"20:30", t:"Teatro: «Black Box, unha saga épica»", tgl:"Teatro: «Black Box, unha saga épica»", l:"Auditorio Gustavo Freire", ...TEL_CONCELLO},
-  {d:"2026-12-10", h:"18:00", t:"«Nadal cheo de contos» (cuentos de Navidad)", tgl:"«Nadal cheo de contos» (contos de Nadal)", l:"Biblioteca Municipal", ...TEL_CONCELLO}
+  {d:"2026-12-10", h:"18:00", t:"«Nadal cheo de contos» (cuentos de Navidad)", tgl:"«Nadal cheo de contos» (contos de Nadal)", l:"Biblioteca Municipal", ...TEL_CONCELLO},
+  {d:"2026-11-21", h:"Por confirmar", t:"Fiesta de los 80, abierta a todos (socios del Círculo gratis, resto 15 €)", tgl:"Festa dos 80, aberta a todos (socios do Círculo de balde, resto 15 €)", l:"Círculo das Artes (Praza Maior, 23), Salón Regio", ...TEL_CIRCULO},
+  {d:"2026-11-22", h:"Por confirmar", t:"Salón do Viño, con bodegueros de la zona", tgl:"Salón do Viño, con adegueiros da zona", l:"Círculo das Artes (Praza Maior, 23)", ...TEL_CIRCULO},
+  {d:"2026-11-24", h:"19:00", t:"Speak and Coffee: conversación en inglés", tgl:"Speak and Coffee: conversa en inglés", l:"Círculo das Artes (Praza Maior, 23)", ...TEL_CIRCULO},
+  {d:"2026-11-25", h:"20:00", t:"Charla y cata de miel gallega «Do trobo á mesa» (solo socios del Círculo, 20 €)", tgl:"Charla e cata de mel galego «Do trobo á mesa» (só socios do Círculo, 20 €)", l:"Círculo das Artes (Praza Maior, 23)", ...TEL_CIRCULO},
+  {d:"2026-11-27", h:"16:15, 17:45 y 19:15", t:"Chikichef: taller de cocina para niños (solo socios del Círculo, 6 €)", tgl:"Chikichef: obradoiro de cociña para nenos (só socios do Círculo, 6 €)", l:"Círculo das Artes (Praza Maior, 23)", ...TEL_CIRCULO},
+  {d:"2026-11-28", h:"10:00, 11:30 y 13:00", t:"Chikichef: taller de cocina para niños (solo socios del Círculo, 6 €)", tgl:"Chikichef: obradoiro de cociña para nenos (só socios do Círculo, 6 €)", l:"Círculo das Artes (Praza Maior, 23)", ...TEL_CIRCULO},
+  {d:"2026-12-01", h:"20:30", t:"Club do Viño: cata de vinos", tgl:"Club do Viño: cata de viños", l:"Círculo das Artes (Praza Maior, 23)", ...TEL_CIRCULO},
+  {d:"2026-12-29", h:"19:00", t:"Speak and Coffee: conversación en inglés", tgl:"Speak and Coffee: conversa en inglés", l:"Círculo das Artes (Praza Maior, 23)", ...TEL_CIRCULO}
 ];
