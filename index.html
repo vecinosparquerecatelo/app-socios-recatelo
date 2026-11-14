@@ -1009,6 +1009,7 @@ const GROUPS = [
   {label:"Encuestas", subs:[["encuestas","Encuestas"],["quienvota","Quién vota"]]},
   {label:"Sugerencias", subs:[["sugerencias","Sugerencias"],["incidencias","Avisos del barrio"]]},
   {label:"Prensa, radio y TV", subs:[["prensa","Prensa, radio y televisión"],["prensaborrar","Borrar noticias"]]},
+  {label:"Agenda Cultural Lugo", subs:[["agenda","Agenda Cultural Lugo"]]},
   {label:"Teléfonos de interés", subs:[["telefonos","Teléfonos de interés"]]},
   {label:"Fotos y carteles", subs:[["fotos","Fotos"],["carteles","Carteles"]]},
   {label:"Mi cuenta", subs:[["misdatos","Mis datos"],["privacidad","Protección de datos"],["avisosact","Avisos activados"],["bloqueos","Bloquear códigos"]]}
@@ -1057,7 +1058,7 @@ function cursosVisto(){ try{ let v=localStorage.getItem("recatelo-cursos-visto")
 function cursosNuevos(){ if(S.tab==="cursos"){ try{ localStorage.setItem("recatelo-cursos-visto",new Date().toISOString()); }catch(_){} return false; } const v=cursosVisto(); return (S.items||[]).some(i=>i.section==="cursos" && (i.updatedAt||i.createdAt||"")>v); }
 function mercNuevos(){ if(S.tab==="mercadillo") return 0; const v=mercVisto(); let n=0; for(const d of S.mercAll) if(d.uid!==S.uid) for(const a of (d.anuncios||[])) if((a.at||"")>v) n++; return n; }
 // Pestañas nuevas con punto rojo hasta que cada socio las abre (se recuerda en este móvil)
-const PEST_NUEVAS=["bienestar","arboles","prensa","telefonos","encuestas"];
+const PEST_NUEVAS=["bienestar","arboles","prensa","telefonos","encuestas","agenda"];
 // documentos de «Documentos de la asociación» (Inicio) con punto rojo delante; se quita en cada móvil al pulsarlo
 const DOCS_NUEVOS=["reunion-alcaldia-4-nov-2026-conclusiones","proyecto-horas-sociales-vandalismo"];
 function docNuevo(id){ if(!DOCS_NUEVOS.includes(id)) return false; try{ return !localStorage.getItem("recatelo-doc-visto-"+id); }catch(_){ return false; } }
@@ -1898,6 +1899,21 @@ const VIEWS = {
       ${ley("Ley 4/2017, de 3 de octubre, de protección y bienestar de los animales de compañía en Galicia","Ley gallega · DOG del 11 de octubre de 2017","Es la ley de Galicia. Prohíbe el maltrato y el abandono, establece el sacrificio cero en los centros de acogida, obliga a identificar y registrar a perros, gatos y hurones, y dice qué deben hacer los concellos con los animales perdidos o abandonados.",gl?"https://www.xunta.gal/dog/Publicados/2017/20171011/AnuncioC3B0-051017-0001_gl.html":"https://www.xunta.gal/dog/Publicados/2017/20171011/AnuncioC3B0-051017-0001_es.html","📄 Leer la ley en el DOG")}
       </section>
       <p class="meta">Si ves un animal maltratado o abandonado, puedes avisar al 112.</p>`;
+  },
+  agenda(){
+    /* Agenda Cultural Lugo (Marta, 14-nov): enlaces a agendas de Lugo que se actualizan solas cada día; la app no se toca para ponerla al día. */
+    const gl=window.IDIOMA==="gl", T=(es,g)=>gl?g:es;
+    const d=new Date(), hoy=gl?["domingo","luns","martes","mércores","xoves","venres","sábado"][d.getDay()]+", "+d.getDate()+" de "+["xaneiro","febreiro","marzo","abril","maio","xuño","xullo","agosto","setembro","outubro","novembro","decembro"][d.getMonth()]:d.toLocaleDateString("es-ES",{weekday:"long",day:"numeric",month:"long"});
+    const fuente=(ico,tit,txt,url,btn,principal)=>`<article class="card ag-card${principal?" ag-main":""}"><h3>${ico} ${tit}</h3><p class="body">${txt}</p><div style="margin-top:12px"><a class="btn${principal?"":" ghost"}" href="${url}" target="_blank" rel="noopener">${btn}</a></div></article>`;
+    return `<style>.ag-main{border:2px solid var(--green)}.ag-hoy{display:inline-block;background:var(--amber-soft);color:var(--amber);border-radius:999px;padding:6px 14px;font-weight:700;margin:4px 0 6px}.ag-nota{color:var(--muted);font-size:.95rem}</style>
+      <div data-noi18n><h2>${T("Agenda Cultural Lugo","Axenda Cultural Lugo")}</h2>
+      <p class="lead">${T("Lo que hay en Lugo desde hoy: teatro, conferencias, conciertos, exposiciones, cuentacuentos y mucho más. Se pone al día sola cada día.","O que hai en Lugo dende hoxe: teatro, conferencias, concertos, exposicións, contacontos e moito máis. Ponse ao día soa cada día.")}</p>
+      <span class="ag-hoy">📅 ${T("Hoy","Hoxe")}, ${esc(hoy)}</span></div>
+      <div class="stack" data-noi18n>
+      ${fuente("📅",T("Hoy y próximos días en Lugo","Hoxe e próximos días en Lugo"),T("Todo lo que hay en Lugo, ordenado por días y empezando por hoy, con la hora y el sitio de cada acto.","Todo o que hai en Lugo, ordenado por días e comezando por hoxe, coa hora e o sitio de cada acto."),gl?"https://www.viralagenda.com/es/galicia/lugo/lugo?locale=gl":"https://www.viralagenda.com/es/galicia/lugo/lugo",T("Ver la agenda de hoy","Ver a axenda de hoxe"),true)}
+      ${fuente("🎭",T("Teatro y espectáculos del Concello","Teatro e espectáculos do Concello"),T("Funciones del Auditorio Gustavo Freire y otros espacios municipales, con el precio y la venta de entradas del Concello de Lugo.","Funcións do Auditorio Gustavo Freire e outros espazos municipais, co prezo e a venda de entradas do Concello de Lugo."),"https://entradaslugo.es",T("Ver teatro y entradas","Ver teatro e entradas"),false)}
+      <p class="ag-nota">${T("Estas agendas son de otras páginas web. La asociación no organiza estos actos, salvo que se diga en Inicio.","Estas axendas son doutras páxinas web. A asociación non organiza estes actos, agás que se diga en Inicio.")}</p>
+      </div>`;
   },
   telefonos(){
     /* Teléfonos útiles (Marta, 10-nov): se llama tocando el número. Comprobados en webs oficiales y guías el 10-nov-2026. */
