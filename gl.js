@@ -61,6 +61,8 @@ window.GL_DICT = {
 "La asociación › Estatutos":"A asociación › Estatutos",
 "Estatutos de la asociación":"Estatutos da asociación",
 "Seguiremos subiendo más documentos.":"Seguiremos subindo máis documentos.",
+"Accesibilidad cognitiva y sensorial: tríptico en lectura fácil":"Accesibilidade cognitiva e sensorial: tríptico en lectura fácil",
+"Proyectos notificados y registrados › Inclusión y lectura fácil":"Proxectos notificados e rexistrados › Inclusión e lectura fácil",
 "Ver el Mercadiño":"Ver o Mercadiño",
 "📄 Documentos de la asociación":"📄 Documentos da asociación",
 "👁 Quién mira las fotos (solo directiva)":"👁 Quen mira as fotos (só directiva)",

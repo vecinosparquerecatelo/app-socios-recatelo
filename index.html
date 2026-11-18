@@ -1065,7 +1065,7 @@ function mercNuevos(){ if(S.tab==="mercadillo") return 0; const v=mercVisto(); l
 // Pestañas nuevas con punto rojo hasta que cada socio las abre (se recuerda en este móvil)
 const PEST_NUEVAS=["bienestar","arboles","prensa","telefonos","encuestas","agenda","comousar","proyectos"];
 // documentos de «Documentos de la asociación» (Inicio) con punto rojo delante; se quita en cada móvil al pulsarlo
-const DOCS_NUEVOS=["reunion-alcaldia-4-nov-2026-conclusiones","proyecto-horas-sociales-vandalismo"];
+const DOCS_NUEVOS=["reunion-alcaldia-4-nov-2026-conclusiones","proyecto-horas-sociales-vandalismo","inclusion-lectura-facil"];
 function docNuevo(id){ if(!DOCS_NUEVOS.includes(id)) return false; try{ return !localStorage.getItem("recatelo-doc-visto-"+id); }catch(_){ return false; } }
 // Vídeos de «Cómo usar la app»: el botón grande ▶ arranca el vídeo y desaparece
 document.addEventListener("click", e=>{ const b=e.target.closest(".vplay"); if(!b) return; const v=b.parentNode.querySelector("video"); b.remove(); if(v) v.play().catch(()=>{}); });
@@ -1533,9 +1533,10 @@ function listaDocs(){
     const donde=proy?"Proyectos notificados y registrados"+(PTABS.includes(ptab)?" › "+ptab:""):it.section==="reuniones"?"Reuniones"+(it.entity?" › "+it.entity:""):"Parque Rosalía BIC";
     docs.push({id:it.id, t:T(it)||"Documento", donde, tab:proy?"proyectos":it.section, orden:proy?1:it.section==="reuniones"?2:0, date:it.date||""});
   }
+  docs.push({id:"inclusion-lectura-facil", t:"Accesibilidad cognitiva y sensorial: tríptico en lectura fácil", donde:"Proyectos notificados y registrados › "+PTAB_INCL, tab:"proyectos", pfil:PTAB_INCL, orden:1, date:"2026-11-18"}); // Marta, 18-nov
   docs.push({t:"Estatutos de la asociación", donde:"La asociación › Estatutos", tab:"estatutos", orden:3, date:""});
   docs.sort((a,b)=>a.orden-b.orden||(a.orden===0?a.t.localeCompare(b.t,"es",{numeric:true}):(b.date||"").localeCompare(a.date||"")));
-  return `<article class="card"><h3>📄 Documentos de la asociación</h3><ul class="docs-lista">${docs.map(d=>`<li><button type="button" class="enlace" data-go="${d.tab}"${docNuevo(d.id)?` data-docnuevo="${esc(d.id)}"`:""}>${docNuevo(d.id)?`<span class="punto-rojo" aria-label="Novedad" style="vertical-align:middle;margin:0 8px 0 0"></span>`:""}${esc(d.t)}</button><br><span class="meta">${esc(d.donde)}</span></li>`).join("")}</ul><p class="meta" style="margin:10px 0 0">Seguiremos subiendo más documentos.</p></article>`;
+  return `<article class="card"><h3>📄 Documentos de la asociación</h3><ul class="docs-lista">${docs.map(d=>`<li><button type="button" class="enlace" data-go="${d.tab}"${d.pfil?` data-pfil="${esc(d.pfil)}"`:""}${docNuevo(d.id)?` data-docnuevo="${esc(d.id)}"`:""}>${docNuevo(d.id)?`<span class="punto-rojo" aria-label="Novedad" style="vertical-align:middle;margin:0 8px 0 0"></span>`:""}${esc(d.t)}</button><br><span class="meta">${esc(d.donde)}</span></li>`).join("")}</ul><p class="meta" style="margin:10px 0 0">Seguiremos subiendo más documentos.</p></article>`;
 }
 function avisosConDocs(prox){
   const i=prox.findIndex(a=>/fiesta|festa|festas/i.test((a.title||"")+" "+(a.body||"")));
@@ -2451,7 +2452,7 @@ function render(){
 }
 
 $("#main").addEventListener("click", e=>{
-  const g=e.target.closest("[data-go]"); if(g) return go(g.dataset.go);
+  const g=e.target.closest("[data-go]"); if(g){ if(g.dataset.pfil) S.filter.proyectos=g.dataset.pfil; return go(g.dataset.go); }
   const fb=e.target.closest("[data-f]"); if(fb){ const k=fb.parentElement.dataset.filter, v=fb.dataset.f; S.filter[k]=v; render();
     // En el Mercadiño, el anuncio nuevo toma el tipo de la pestaña abierta
     const mt=document.getElementById("mc-tipo"); if(k==="mercadillo" && mt){ if(v==="Empleo"){ if(!ETIPOS.includes(mt.value)) mt.value="Ofrezco empleo"; } else mt.value=v; }
