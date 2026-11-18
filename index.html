@@ -16,6 +16,8 @@ input,textarea,select,[contenteditable]{-webkit-user-select:text;user-select:tex
 img{-webkit-user-drag:none;-webkit-touch-callout:none}
 #marca{position:fixed;right:8px;bottom:calc(6px + env(safe-area-inset-bottom,0px));pointer-events:none;z-index:9999;font:600 10px/1 system-ui,sans-serif;letter-spacing:.06em;color:#000;opacity:.18}
 body.oculta #main,body.oculta header{filter:blur(18px)}
+/* Sin código válido solo se ve la pantalla de entrada (Marta, 18-nov) */
+html:not(.dentro) body>*:not(#acc):not(#sheet-root){display:none!important}
 @media print{body{display:none!important}}
 @media (prefers-color-scheme: dark){#marca{color:#fff;opacity:.2}}
 </style>

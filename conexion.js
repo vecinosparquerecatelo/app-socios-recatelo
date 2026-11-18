@@ -346,6 +346,7 @@
     const [{ data: soc }, { data: dir }] = await Promise.all([sb.rpc("es_socio"), sb.rpc("es_directiva")]);
     if(!soc){ document.getElementById("acc") || showLogin(); return; }
     state.uid = session.user.id; state.directiva = !!dir; state.email = session.user.email || null;
+    document.documentElement.classList.add("dentro");
     const acc = document.getElementById("acc"); if(acc) acc.remove();
     addTools();
     ponerBanner();
