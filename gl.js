@@ -99,6 +99,7 @@ window.GL_DICT = {
   "Noticia": "Novas",
   "Bancos y árboles de la memoria": "Bancos e árbores da memoria",
   "Comportamientos incívicos: horas a la comunidad": "Comportamentos incívicos: horas á comunidade",
+  "Inclusión y lectura fácil": "Inclusión e lectura fácil",
   "Notificada y registrada": "Notificada e rexistrada",
   "Leer la propuesta": "Ler a proposta",
   "Cesión de la caseta del guarda como local social": "Cesión da caseta do garda como local social",

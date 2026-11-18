@@ -1037,7 +1037,8 @@ const COLECTIVOS = [
 const ALB_MOVER = {"Festas Recatelo 2023":"Festas Recatelo 2024"};
 const ALBUMES = ["Festas Recatelo 2023","Festas Recatelo 2024","Festas Recatelo 2025","Festas Recatelo 2026","Día das Letras Galegas 2025","Festa do Día das Letras Galegas 2026","Mercadillo de Navidad 2024","Samaín 2024","Samaín 2025","Curso de cestería tradicional 2025","Cantos de taberna","Foto temática libre socios","Fotos denuncia","Fotos murales zona","Otros"];
 const ESTADOS = {presentada:["Presentada","p-blue"], tramite:["En trámite","p-amber"], resuelta:["Resuelta","p-green"], rechazada:["Sin respuesta / rechazada","p-red"], registrada:["Notificada y registrada","p-blue"]};
-const PTABS = ["Bancos y árboles de la memoria","Cesión de la caseta del guarda como local social","Comportamientos incívicos: horas a la comunidad"];
+const PTABS = ["Bancos y árboles de la memoria","Cesión de la caseta del guarda como local social","Comportamientos incívicos: horas a la comunidad","Inclusión y lectura fácil"];
+const PTAB_INCL = "Inclusión y lectura fácil"; // 18-nov: pestaña con texto fijo (VIEWS.accesibilidad) y tríptico
 let PINTRO = {}, PINTRO_GL = {}; // presentación de cada pestaña de Proyectos: llega cifrada en privado.bin
 const ADD_LABEL = {encuestas:"encuesta", bic:"documento", inicio:"aviso", avisos:"aviso", reuniones:"resumen de reunión", proyectos:"proyecto", sugerencias:"sugerencia", colectivos:"noticia de colectivo", fotos:"foto", carteles:"cartel", cursos:"curso"};
 
@@ -1062,7 +1063,7 @@ function cursosVisto(){ try{ let v=localStorage.getItem("recatelo-cursos-visto")
 function cursosNuevos(){ if(S.tab==="cursos"){ try{ localStorage.setItem("recatelo-cursos-visto",new Date().toISOString()); }catch(_){} return false; } const v=cursosVisto(); return (S.items||[]).some(i=>i.section==="cursos" && (i.updatedAt||i.createdAt||"")>v); }
 function mercNuevos(){ if(S.tab==="mercadillo") return 0; const v=mercVisto(); let n=0; for(const d of S.mercAll) if(d.uid!==S.uid) for(const a of (d.anuncios||[])) if((a.at||"")>v) n++; return n; }
 // Pestañas nuevas con punto rojo hasta que cada socio las abre (se recuerda en este móvil)
-const PEST_NUEVAS=["bienestar","arboles","prensa","telefonos","encuestas","agenda","comousar"];
+const PEST_NUEVAS=["bienestar","arboles","prensa","telefonos","encuestas","agenda","comousar","proyectos"];
 // documentos de «Documentos de la asociación» (Inicio) con punto rojo delante; se quita en cada móvil al pulsarlo
 const DOCS_NUEVOS=["reunion-alcaldia-4-nov-2026-conclusiones","proyecto-horas-sociales-vandalismo"];
 function docNuevo(id){ if(!DOCS_NUEVOS.includes(id)) return false; try{ return !localStorage.getItem("recatelo-doc-visto-"+id); }catch(_){ return false; } }
@@ -1685,8 +1686,8 @@ const VIEWS = {
     list = f==="Otros" ? list.filter(i=>!PTABS.includes(i.ptab)) : list.filter(i=>i.ptab===f);
     return `<div><h2>Proyectos notificados y registrados</h2><p class="lead">Los proyectos que la asociación impulsa para el barrio y en qué punto está cada uno.</p></div>
       ${filterBar("proyectos",tabs,true)}
-      ${PINTRO[f]?`<div class="card"><p style="margin:0">${(GLX()&&PINTRO_GL[f])||PINTRO[f]}</p></div>`:""}
-      <section class="stack">${list.length?list.map(quejaCard).join(""):emptyBox("Todavía no hay documentos en esta pestaña.","Añade el documento con «+ Añadir proyecto» y elige esta pestaña.")}</section>`;
+      ${f===PTAB_INCL?VIEWS.accesibilidad()+(list.length?`<section class="stack">${list.map(quejaCard).join("")}</section>`:""):`${PINTRO[f]?`<div class="card"><p style="margin:0">${(GLX()&&PINTRO_GL[f])||PINTRO[f]}</p></div>`:""}
+      <section class="stack">${list.length?list.map(quejaCard).join(""):emptyBox("Todavía no hay documentos en esta pestaña.","Añade el documento con «+ Añadir proyecto» y elige esta pestaña.")}</section>`}`;
   },
   mercadillo(){
     const mercContacto = a => {
@@ -1917,6 +1918,69 @@ const VIEWS = {
       ${ley("Ley 4/2017, de 3 de octubre, de protección y bienestar de los animales de compañía en Galicia","Ley gallega · DOG del 11 de octubre de 2017","Es la ley de Galicia. Prohíbe el maltrato y el abandono, establece el sacrificio cero en los centros de acogida, obliga a identificar y registrar a perros, gatos y hurones, y dice qué deben hacer los concellos con los animales perdidos o abandonados.",gl?"https://www.xunta.gal/dog/Publicados/2017/20171011/AnuncioC3B0-051017-0001_gl.html":"https://www.xunta.gal/dog/Publicados/2017/20171011/AnuncioC3B0-051017-0001_es.html","📄 Leer la ley en el DOG")}
       </section>
       <p class="meta">Si ves un animal maltratado o abandonado, puedes avisar al 112.</p>`;
+  },
+  accesibilidad(){
+    /* Accesibilidad (Marta, 18-nov): tríptico de lectura fácil y por qué lo hacemos. Imágenes y PDF cifrados en docs-c. */
+    const gl=window.IDIOMA==="gl", T=(es,g)=>gl?g:es, L=gl?"galego":"castellano";
+    const pdfT="docs/Triptico-lectura-facil-"+L+".pdf", pdfP="docs/Por-que-hacemos-el-triptico-lectura-facil.pdf";
+    const cara=(n,tit)=>`<figure style="margin:0;display:grid;gap:6px"><a href="${esc(docHref("docs/Triptico-"+L+"-"+n+".jpg"))}" target="_blank" rel="noopener"><img src="${esc(imgSrc("docs/Triptico-"+L+"-"+n+".jpg"))}" alt="${tit}" style="display:block;width:100%;border-radius:10px;border:1px solid var(--line);background:#fff"></a><figcaption class="meta">${tit}</figcaption></figure>`;
+    const punto=(ico,txt)=>`<li><span>${ico}</span><span>${txt}</span></li>`;
+    return `<style>.acc-l{list-style:none;padding:0;margin:4px 0 0;display:grid;gap:10px}.acc-l li{display:flex;gap:12px;align-items:flex-start;line-height:1.5}.acc-l li span:first-child{flex:none;width:34px;height:34px;border-radius:50%;background:var(--green-soft);display:grid;place-items:center;font-size:1.15rem}.acc-cita{margin:0;padding-left:12px;border-left:3px solid var(--green)}</style>
+      <div data-noi18n><h3 style="margin:4px 0 6px">${T("Un barrio para todas las personas","Un barrio para todas as persoas")}</h3><p class="lead">${T("Queremos un barrio en el que todas las personas puedan enterarse de lo que hacemos, entenderlo y participar.","Queremos un barrio no que todas as persoas poidan enterarse do que facemos, entendelo e participar.")}</p></div>
+      <article class="card" data-noi18n><h3>${T("¿Qué es la accesibilidad?","Que é a accesibilidade?")}</h3>
+        <p class="body">${T("Solemos pensar en rampas, ascensores o puertas anchas. Eso es importante, pero no es todo.","Adoitamos pensar en ramplas, ascensores ou portas anchas. Iso é importante, pero non é todo.")}</p>
+        <p class="body">${T("Algo es accesible cuando todas las personas pueden llegar a ello, usarlo y también entenderlo, con seguridad y sin depender de otros.","Algo é accesible cando todas as persoas poden chegar a el, usalo e tamén entendelo, con seguridade e sen depender doutros.")}</p>
+        <ul class="acc-l">
+          ${punto("🧠",T("Accesibilidad cognitiva: que la información se entienda. Textos claros, dibujos y lectura fácil.","Accesibilidade cognitiva: que a información se entenda. Textos claros, debuxos e lectura fácil."))}
+          ${punto("👁️",T("Accesibilidad sensorial: pensar en quien ve u oye poco o nada. Letra grande, buen contraste, colores que no confundan y braille.","Accesibilidade sensorial: pensar en quen ve ou oe pouco ou nada. Letra grande, bo contraste, cores que non confundan e braille."))}
+        </ul>
+        <p class="meta" style="margin:8px 0 0">${T("Lo dice la ley: Real Decreto Legislativo 1/2013 (derechos de las personas con discapacidad). La Ley 6/2022 añadió la accesibilidad cognitiva.","Dío a lei: Real Decreto Lexislativo 1/2013 (dereitos das persoas con discapacidade). A Lei 6/2022 engadiu a accesibilidade cognitiva.")}</p>
+      </article>
+      <article class="card" data-noi18n><h3>${T("¿Qué es la lectura fácil?","Que é a lectura fácil?")}</h3>
+        <p class="body">${T("Es una forma de escribir para que lo entienda todo el mundo, también quien tiene dificultades para leer o para comprender.","É unha forma de escribir para que o entenda todo o mundo, tamén quen ten dificultades para ler ou para comprender.")}</p>
+        <ul class="acc-l">
+          ${punto("✂️",T("Frases cortas, con una sola idea.","Frases curtas, cunha soa idea."))}
+          ${punto("💬",T("Palabras de todos los días. Las difíciles se explican.","Palabras de todos os días. As difíciles explícanse."))}
+          ${punto("🖼️",T("Un dibujo al lado de cada idea.","Un debuxo ao lado de cada idea."))}
+        </ul>
+        <p class="body" style="margin-top:8px">${T("Lo que algunas personas necesitan, a todas nos viene bien: un texto claro se lee antes y se recuerda mejor.","O que algunhas persoas necesitan, a todas nos vén ben: un texto claro lese antes e recórdase mellor.")}</p>
+      </article>
+      <article class="card" data-noi18n style="gap:12px"><h3>${T("Nuestro tríptico en lectura fácil","O noso tríptico en lectura fácil")}</h3>
+        <p class="body">${T("Hemos hecho un folleto que explica en pocas palabras quiénes somos, qué hacemos durante el año y cómo puedes participar. Está en castellano y en gallego.","Fixemos un folleto que explica en poucas palabras quen somos, que facemos durante o ano e como podes participar. Está en castelán e en galego.")}</p>
+        <p class="body"><strong>${T("Vamos a imprimirlo y repartirlo por el barrio, para que todo el mundo conozca cómo avanzamos en inclusión.","Imos imprimilo e repartilo polo barrio, para que todo o mundo coñeza como avanzamos en inclusión.")}</strong></p>
+        ${cara(1,T("Cara de fuera: portada, contacto y qué te ofrecemos","Cara de fóra: portada, contacto e que che ofrecemos"))}
+        ${cara(2,T("Cara de dentro: quiénes somos, la fiesta del barrio y actividades del año","Cara de dentro: quen somos, a festa do barrio e actividades do ano"))}
+        <p class="meta" style="margin:0">${T("Toca una imagen para verla en grande.","Toca unha imaxe para vela en grande.")}</p>
+        <ul class="acc-l">
+          ${punto("🔠",T("Letra grande y muy clara, pensada para personas con baja visión. Sin cursivas ni frases en mayúsculas.","Letra grande e moi clara, pensada para persoas con baixa visión. Sen cursivas nin frases en maiúsculas."))}
+          ${punto("🎨",T("Azul oscuro y naranja: las personas con daltonismo los distinguen bien. Evitamos el rojo y el verde.","Azul escuro e laranxa: as persoas con daltonismo distínguenos ben. Evitamos o vermello e o verde."))}
+          ${punto("🔲",T("Un código QR que abre un correo para la asociación. Puedes escribirnos o mandarnos un audio.","Un código QR que abre un correo para a asociación. Podes escribirnos ou mandarnos un audio."))}
+          ${punto("⠿",T("Un hueco para una pegatina en braille con el nombre de la asociación, la web y el correo. Ya hemos pedido presupuesto.","Un oco para unha pegatina en braille co nome da asociación, a web e o correo. Xa pedimos orzamento."))}
+          ${punto("👥",T("Antes de imprimirlo, queremos que lo lean algunas de las personas a las que va dirigido, para comprobar que se entiende.","Antes de imprimilo, queremos que o lean algunhas das persoas ás que vai dirixido, para comprobar que se entende."))}
+        </ul>
+        <div style="display:flex;flex-wrap:wrap;gap:8px"><a class="btn ghost small" href="${esc(docHref(pdfT))}" target="_blank" rel="noopener">📄 ${T("Abrir el tríptico (PDF)","Abrir o tríptico (PDF)")}</a></div>
+      </article>
+      <article class="card" data-noi18n><h3>${T("¿Para quién es?","Para quen é?")}</h3>
+        <p class="body">${T("Para todo el barrio. Y sobre todo para quien suele quedarse sin enterarse:","Para todo o barrio. E sobre todo para quen adoita quedar sen enterarse:")}</p>
+        <ul style="margin:6px 0 0;padding-left:20px;display:grid;gap:6px;line-height:1.5">
+          <li>${T("Personas con discapacidad intelectual o con autismo.","Persoas con discapacidade intelectual ou con autismo.")}</li>
+          <li>${T("Personas con dislexia.","Persoas con dislexia.")}</li>
+          <li>${T("Personas mayores.","Persoas maiores.")}</li>
+          <li>${T("Personas que ven poco o no ven, o que confunden los colores.","Persoas que ven pouco ou non ven, ou que confunden as cores.")}</li>
+          <li>${T("Vecinos llegados de otros países que están aprendiendo castellano o gallego.","Veciños chegados doutros países que están a aprender castelán ou galego.")}</li>
+          <li>${T("Niñas y niños del barrio, y quien acaba de llegar a Recatelo.","Nenas e nenos do barrio, e quen acaba de chegar a Recatelo.")}</li>
+        </ul>
+      </article>
+      <article class="card" data-noi18n><h3>${T("Lo que dicen nuestros Estatutos","O que din os nosos Estatutos")}</h3>
+        <p class="meta" style="margin:2px 0 8px">${T("Artículo 2º.- Fines. Punto 8º","Artigo 2º.- Fins. Punto 8º")}</p>
+        <blockquote class="body acc-cita">«…${T("la participación activa de los vecinos en la comunidad, prestando especial atención a colectivos desfavorecidos e incentive los valores de respeto, tolerancia e igualdad de todos y para todos","a participación activa dos veciños na comunidade, prestando especial atención a colectivos desfavorecidos e incentive os valores de respecto, tolerancia e igualdade de todos e para todos")}.»</blockquote>
+        <p class="body" style="margin-top:10px">${T("El punto 7º nos pide la igualdad de trato para todos los vecinos. Si solo se entera quien lee con soltura y ve bien, no tratamos igual a todos.","O punto 7º pídenos a igualdade de trato para todos os veciños. Se só se entera quen le con soltura e ve ben, non tratamos igual a todos.")}</p>
+        <p class="body">${T("Nuestros Estatutos todavía no nombran la accesibilidad. Por eso, en 2027 propondremos a la Asamblea General Extraordinaria cambiarlos para incluir la accesibilidad universal y la inclusión de las personas con discapacidad.","Os nosos Estatutos aínda non nomean a accesibilidade. Por iso, en 2027 propoñeremos á Asemblea Xeral Extraordinaria cambialos para incluír a accesibilidade universal e a inclusión das persoas con discapacidade.")}</p>
+      </article>
+      <article class="card" data-noi18n><h3>${T("Dentro de un proyecto más grande","Dentro dun proxecto máis grande")}</h3>
+        <p class="body">${T("El tríptico forma parte de nuestro proyecto «Recatelo participa: memoria, fiesta y barrio 2026», presentado al Concello de Lugo (Participación Cidadá). El primer paso para que más vecinos participen es que todos puedan entender qué hacemos.","O tríptico forma parte do noso proxecto «Recatelo participa: memoria, festa e barrio 2026», presentado ao Concello de Lugo (Participación Cidadá). O primeiro paso para que máis veciños participen é que todos poidan entender que facemos.")}</p>
+        <div style="margin-top:10px"><a class="btn ghost small" href="${esc(docHref(pdfP))}" target="_blank" rel="noopener">📄 ${T("Leer por qué lo hacemos (texto completo)","Ler por que o facemos (texto completo, en castelán)")}</a></div>
+      </article>`;
   },
   agenda(){
     /* Agenda Cultural Lugo (Marta, 14-nov): lista escrita por nosotros en agenda.js, sin enlaces a empresas.

@@ -31,7 +31,7 @@
   async function pdfCifrado(id){
     const k = await claveApp(); if(!k) return null;
     const r = await fetch("docs-c/" + id.slice(5) + ".enc", { cache: "no-cache" }); if(!r.ok) return null;
-    return URL.createObjectURL(new Blob([await descifrar(k, await r.arrayBuffer())], { type: "application/pdf" }));
+    return URL.createObjectURL(new Blob([await descifrar(k, await r.arrayBuffer())], { type: /\.jpe?g$/i.test(id) ? "image/jpeg" : "application/pdf" }));
   }
   async function firmarPendientes(){
     await ready; await new Promise(r => setTimeout(r, 30));
