@@ -1234,6 +1234,8 @@ function gestAvisos(avs){
     ${l.length?`<ul style="list-style:none;padding:0;margin:0" class="stack">${l.map(a=>`<li style="display:flex;gap:10px;align-items:center;justify-content:space-between;border-top:1px solid var(--line,#ddd);padding-top:8px"><div><strong>${esc(a.title||"")}</strong><div class="meta">${dias(a)}${a.date?` · Fecha del aviso: ${fmtDate(a.date)}`:""}</div></div><button type="button" class="btn ghost small" data-del="${esc(a.id)}">Borrar</button></li>`).join("")}</ul>`:`<p class="meta">No hay avisos publicados.</p>`}
   </details>`;
 }
+/* Orden de los avisos de arriba: por fecha, salvo que el aviso traiga «orden» (Marta, 18-nov: Arela justo después del calendario). */
+const ordAviso=a=>a.orden||a.date||a.sortDate||"9";
 /* Desde el 5-nov-2026 ningún aviso pasa solo a «Avisos anteriores»: solo la directiva lo quita (Marta). Los anteriores a esa fecha siguen donde estaban. */
 const CORTE_ANT="2026-11-05";
 /* El aviso de la reunión con Alcaldía del 4-nov sigue arriba con su sello. */
@@ -1588,7 +1590,7 @@ const VIEWS = {
   inicio(){
     const t = today();
     const avs = bySection("avisos");
-    const prox = avs.filter(a=>!a.date||a.date>=CORTE_ANT||esReuAlcReciente(a,t)).sort((a,b)=>(b.arriba?1:0)-(a.arriba?1:0)||(a.date||a.sortDate||"9").localeCompare(b.date||b.sortDate||"9"));
+    const prox = avs.filter(a=>!a.date||a.date>=CORTE_ANT||esReuAlcReciente(a,t)).sort((a,b)=>(b.arriba?1:0)-(a.arriba?1:0)||ordAviso(a).localeCompare(ordAviso(b)));
     const pas = sortDesc(avs.filter(a=>a.date&&a.date<CORTE_ANT&&!esReuAlcReciente(a,t)));
     return `${actividadSocios()}${S.canEdit?`<div class="row-actions" style="justify-content:flex-start"></div>`:""}<section class="hero">
         ${S.logo?`<img class="hero-logo" src="${imgSrc(S.logo)}" alt="Logo de la Asociación de Vecinos Parque de Rosalía de Castro-Recatelo">`:""}
@@ -1614,7 +1616,7 @@ const VIEWS = {
   },
   avisos(){
     const t=today(); const all=bySection("avisos");
-    const prox=all.filter(a=>!a.date||a.date>=CORTE_ANT||esReuAlcReciente(a,t)).sort((a,b)=>(b.arriba?1:0)-(a.arriba?1:0)||(a.date||a.sortDate||"9").localeCompare(b.date||b.sortDate||"9"));
+    const prox=all.filter(a=>!a.date||a.date>=CORTE_ANT||esReuAlcReciente(a,t)).sort((a,b)=>(b.arriba?1:0)-(a.arriba?1:0)||ordAviso(a).localeCompare(ordAviso(b)));
     const pas=sortDesc(all.filter(a=>a.date&&a.date<CORTE_ANT&&!esReuAlcReciente(a,t)));
     return `<div><h2>Avisos y reuniones de socios</h2><p class="lead">Convocatorias de asambleas y avisos importantes para el barrio.</p></div>
       <section class="stack"><h3>Próximos</h3>${prox.length?prox.map(avisoCard).join(""):emptyBox("No hay avisos próximos.","Añade una convocatoria con fecha, hora y lugar.")}</section>
