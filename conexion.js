@@ -142,8 +142,13 @@
     return () => listeners.get(key) && listeners.get(key).delete(run);
   }
   function refreshAll(){ for(const set of listeners.values()) set.forEach(fn => fn()); }
-  setInterval(() => { if(document.visibilityState === "visible") refreshAll(); }, 30000);
-  document.addEventListener("visibilitychange", () => { if(document.visibilityState === "visible") refreshAll(); });
+  // Si a alguien le bloquean el código (o deja de ser socio) con la app abierta, se le cierra al momento (Marta, 18-nov)
+  async function comprobarAcceso(){
+    if(!state.uid || !document.documentElement.classList.contains("dentro")) return;
+    try{ const { data, error } = await sb.rpc("es_socio"); if(!error && data === false) location.reload(); }catch(_){}
+  }
+  setInterval(() => { if(document.visibilityState === "visible"){ refreshAll(); comprobarAcceso(); } }, 30000);
+  document.addEventListener("visibilitychange", () => { if(document.visibilityState === "visible"){ refreshAll(); comprobarAcceso(); } });
 
   function docRef(coll, id){
     return {
