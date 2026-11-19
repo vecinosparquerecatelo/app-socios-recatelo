@@ -1957,8 +1957,8 @@ const VIEWS = {
   accesibilidad(){
     /* Accesibilidad (Marta, 18-nov): tríptico de lectura fácil y por qué lo hacemos. Imágenes y PDF cifrados en docs-c. */
     const gl=window.IDIOMA==="gl", T=(es,g)=>gl?g:es, L=gl?"galego":"castellano";
-    const pdfT="docs/Triptico-lectura-facil-"+L+".pdf", pdfP="docs/Por-que-hacemos-el-triptico-lectura-facil.pdf";
-    const cara=(n,tit)=>`<figure style="margin:0;display:grid;gap:6px"><a href="${esc(docHref("docs/Triptico-"+L+"-"+n+".jpg"))}" target="_blank" rel="noopener"><img src="${esc(imgSrc("docs/Triptico-"+L+"-"+n+".jpg"))}" alt="${tit}" style="display:block;width:100%;border-radius:10px;border:1px solid var(--line);background:#fff"></a><figcaption class="meta">${tit}</figcaption></figure>`;
+    const pdfT="docs/Triptico-Recatelo-"+L+".pdf", pdfP=gl?"docs/Por-que-facemos-o-triptico-galego.pdf":"docs/Por-que-hacemos-el-triptico-castellano.pdf"; // 19-nov: tríptico nuevo
+    const cara=(n,tit)=>`<figure style="margin:0;display:grid;gap:6px"><a href="${esc(docHref("docs/Triptico-Recatelo-"+L+"-"+n+".jpg"))}" target="_blank" rel="noopener"><img src="${esc(imgSrc("docs/Triptico-Recatelo-"+L+"-"+n+".jpg"))}" alt="${tit}" style="display:block;width:100%;border-radius:10px;border:1px solid var(--line);background:#fff"></a><figcaption class="meta">${tit}</figcaption></figure>`;
     const punto=(ico,txt)=>`<li><span>${ico}</span><span>${txt}</span></li>`;
     return `<style>.acc-l{list-style:none;padding:0;margin:4px 0 0;display:grid;gap:10px}.acc-l li{display:flex;gap:12px;align-items:flex-start;line-height:1.5}.acc-l li span:first-child{flex:none;width:34px;height:34px;border-radius:50%;background:var(--green-soft);display:grid;place-items:center;font-size:1.15rem}.acc-cita{margin:0;padding-left:12px;border-left:3px solid var(--green)}</style>
       <div data-noi18n><h3 style="margin:4px 0 6px">${T("Un barrio para todas las personas","Un barrio para todas as persoas")}</h3><p class="lead">${T("Queremos un barrio en el que todas las personas puedan enterarse de lo que hacemos, entenderlo y participar.","Queremos un barrio no que todas as persoas poidan enterarse do que facemos, entendelo e participar.")}</p></div>
@@ -1981,17 +1981,19 @@ const VIEWS = {
         <p class="body" style="margin-top:8px">${T("Lo que algunas personas necesitan, a todas nos viene bien: un texto claro se lee antes y se recuerda mejor.","O que algunhas persoas necesitan, a todas nos vén ben: un texto claro lese antes e recórdase mellor.")}</p>
       </article>
       <article class="card" data-noi18n style="gap:12px"><h3>${T("Nuestro tríptico en lectura fácil","O noso tríptico en lectura fácil")}</h3>
-        <p class="body">${T("Hemos hecho un folleto que explica en pocas palabras quiénes somos, qué hacemos durante el año y cómo puedes participar. Está en castellano y en gallego.","Fixemos un folleto que explica en poucas palabras quen somos, que facemos durante o ano e como podes participar. Está en castelán e en galego.")}</p>
+        <p class="body">${T("Hemos hecho un folleto que explica en pocas palabras quiénes somos, qué hacemos, qué pedimos para el barrio y cómo puedes participar. Está en castellano y en gallego.","Fixemos un folleto que explica en poucas palabras quen somos, que facemos, que pedimos para o barrio e como podes participar. Está en castelán e en galego.")}</p>
         <p class="body"><strong>${T("Vamos a imprimirlo y repartirlo por el barrio, para que todo el mundo conozca cómo avanzamos en inclusión.","Imos imprimilo e repartilo polo barrio, para que todo o mundo coñeza como avanzamos en inclusión.")}</strong></p>
-        ${cara(1,T("Cara exterior: portada, contacto y qué te ofrecemos","Cara exterior: portada, contacto e que che ofrecemos"))}
-        ${cara(2,T("Cara interior: quiénes somos, la fiesta del barrio y actividades del año","Cara interior: quen somos, a festa do barrio e actividades do ano"))}
+        ${cara(1,T("Cara exterior: apoyos para cada persona, contacto y portada","Cara exterior: apoios para cada persoa, contacto e portada"))}
+        ${cara(2,T("Cara interior: quiénes somos, lo que pedimos para el barrio y fiestas y actividades","Cara interior: quen somos, o que pedimos para o barrio e festas e actividades"))}
         <p class="meta" style="margin:0">${T("Toca una imagen para verla en grande.","Toca unha imaxe para vela en grande.")}</p>
         <ul class="acc-l">
+          ${punto("🤝",T("Nombra todas las discapacidades sensoriales y cognitivas con su nombre correcto, y explica qué apoyo damos a cada persona.","Nomea todas as discapacidades sensoriais e cognitivas co seu nome correcto, e explica que apoio damos a cada persoa."))}
           ${punto("🔠",T("Letra grande y muy clara, pensada para personas con baja visión. Sin cursivas ni frases en mayúsculas.","Letra grande e moi clara, pensada para persoas con baixa visión. Sen cursivas nin frases en maiúsculas."))}
           ${punto("🎨",T("Azul oscuro y naranja: las personas con daltonismo los distinguen bien. Evitamos el rojo y el verde.","Azul escuro e laranxa: as persoas con daltonismo distínguenos ben. Evitamos o vermello e o verde."))}
           ${punto("🔲",T("Un código QR que abre un correo para la asociación. Puedes escribirnos o mandarnos un audio.","Un código QR que abre un correo para a asociación. Podes escribirnos ou mandarnos un audio."))}
           ${punto("⠿",T("Un hueco para una pegatina en braille con el nombre de la asociación, la web y el correo. Ya hemos pedido presupuesto.","Un oco para unha pegatina en braille co nome da asociación, a web e o correo. Xa pedimos orzamento."))}
-          ${punto("👥",T("Antes de imprimirlo, queremos que lo lean algunas de las personas a las que va dirigido, para comprobar que se entiende.","Antes de imprimilo, queremos que o lean algunhas das persoas ás que vai dirixido, para comprobar que se entende."))}
+          ${punto("📚",T("Hay muchas versiones: impresa, PDF para el móvil y para lectores de pantalla, letra grande, audio y texto para braille. El vídeo en lengua de signos está en preparación.","Hai moitas versións: impresa, PDF para o móbil e para lectores de pantalla, letra grande, audio e texto para braille. O vídeo en lingua de signos está en preparación."))}
+          ${punto("👥",T("Queremos que lo lean personas a las que va dirigido y nos digan si se entiende. Si algo no se entiende, lo cambiaremos en la siguiente edición.","Queremos que o lean persoas ás que vai dirixido e nos digan se se entende. Se algo non se entende, cambiarémolo na seguinte edición."))}
         </ul>
         <div style="display:flex;flex-wrap:wrap;gap:8px"><a class="btn ghost small" href="${esc(docHref(pdfT))}" target="_blank" rel="noopener">📄 ${T("Abrir el tríptico (PDF)","Abrir o tríptico (PDF)")}</a></div>
       </article>
@@ -2014,7 +2016,7 @@ const VIEWS = {
       </article>
       <article class="card" data-noi18n><h3>${T("Dentro de un proyecto más grande","Dentro dun proxecto máis grande")}</h3>
         <p class="body">${T("El tríptico forma parte de nuestro proyecto «Recatelo participa: memoria, fiesta y barrio 2026», presentado al Concello de Lugo (Participación Cidadá). El primer paso para que más vecinos participen es que todos puedan entender qué hacemos.","O tríptico forma parte do noso proxecto «Recatelo participa: memoria, festa e barrio 2026», presentado ao Concello de Lugo (Participación Cidadá). O primeiro paso para que máis veciños participen é que todos poidan entender que facemos.")}</p>
-        <div style="margin-top:10px"><a class="btn ghost small" href="${esc(docHref(pdfP))}" target="_blank" rel="noopener">📄 ${T("Leer por qué lo hacemos (texto completo)","Ler por que o facemos (texto completo, en castelán)")}</a></div>
+        <div style="margin-top:10px"><a class="btn ghost small" href="${esc(docHref(pdfP))}" target="_blank" rel="noopener">📄 ${T("Leer por qué lo hacemos (explicación ampliada)","Ler por que o facemos (explicación ampliada)")}</a></div>
       </article>`;
   },
   agenda(){
