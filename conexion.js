@@ -555,6 +555,35 @@
     el.innerHTML = `<section class="card"><h3>Sin activar la app (${faltan.length})</h3><ul style="list-style:none;margin:0;padding:0">${filas || `<li class="acc-small">Todos los socios con código han activado la app.</li>`}</ul></section>`;
     el.querySelectorAll("[data-wa]").forEach(b => b.onclick = () => window.open("https://wa.me/?text=" + encodeURIComponent(mensaje(b.dataset.n, b.dataset.wa)), "_blank", "noopener"));
   };
+  // Pestaña Mi cuenta > «Códigos compartidos» (solo directiva): quién entró con el código de otro
+  window.cargarCompartidos = async (el) => {
+    const [r1, r2, r3] = await Promise.all([sb.rpc("nombres_codigos"), sb.rpc("listar_codigos"), sb.from("docs").select("id,data").eq("coll", "socios").limit(2000)]);
+    if(!el.isConnected) return;
+    if(r1.error || r2.error){ el.innerHTML = `<p class="body">No se puede mostrar todavía. Falta pegar en Supabase el texto supabase-nombres-codigos.sql.</p>`; return; }
+    const norm = v => String(v || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9ñ]+/g, " ").trim();
+    const parecido = (a, b) => { if(!a || !b) return false; if(a === b || a.includes(b) || b.includes(a)) return true;
+      const x = a.split(" "), y = b.split(" "); return x.length > 1 && y.length > 1 && x[0] === y[0] && x[1] === y[1]; };
+    const ficha = {}; (r3.data || []).forEach(d => { ficha[d.id] = (d.data && d.data.nombre) || ""; });
+    const porCodigo = {}; (r1.data || []).forEach(u => { (porCodigo[u.codigo] = porCodigo[u.codigo] || { codigo: u.codigo, titular: u.nombre, gente: [] }).gente.push(ficha[u.user_id] || ""); });
+    const sin = (r2.data || []).filter(k => k.activo && !k.usos);
+    // 1) Socios «sin activar» cuyo nombre aparece en Mis datos de alguien que entró con otro código
+    const encontrados = [];
+    sin.forEach(k => { const n = norm(k.nombre);
+      Object.values(porCodigo).forEach(c => c.gente.forEach(g => { if(c.codigo !== k.codigo && parecido(n, norm(g))) encontrados.push({ k, c, g }); })); });
+    // 2) Códigos usados por personas distintas (nombres en Mis datos que no se parecen entre sí ni al titular)
+    const distintos = Object.values(porCodigo).map(c => {
+      const t = norm(c.titular), otros = [];
+      c.gente.filter(Boolean).forEach(g => { const n = norm(g); if(!parecido(n, t) && !otros.some(o => parecido(norm(o), n))) otros.push(g); });
+      return { c, otros, sinDatos: c.gente.filter(g => !g).length };
+    }).filter(x => x.otros.length);
+    const clave = v => norm(v);
+    encontrados.sort((a, b) => clave(a.k.nombre).localeCompare(clave(b.k.nombre)));
+    distintos.sort((a, b) => clave(a.c.titular).localeCompare(clave(b.c.titular)));
+    const li = h => `<li style="border-top:1px solid var(--line);padding:8px 0">${h}</li>`;
+    el.innerHTML = `<section class="card"><h3>Sin activar, pero entraron con otro código (${encontrados.length})</h3><ul style="list-style:none;margin:0;padding:0">${encontrados.map(e => li(`<strong>${escH(e.k.nombre)}</strong><br><span class="acc-small">Su código ${escH(e.k.codigo)} está sin usar. Entró con el código de ${escH(e.c.titular)} (${escH(e.c.codigo)}) y en Mis datos puso «${escH(e.g)}».</span>`)).join("") || `<li class="acc-small">No hay ninguno.</li>`}</ul></section>
+      <section class="card"><h3>Códigos que usan personas distintas (${distintos.length})</h3><ul style="list-style:none;margin:0;padding:0">${distintos.map(d => li(`<strong>Código de ${escH(d.c.titular)}</strong> (${escH(d.c.codigo)})<br><span class="acc-small">También entró: ${d.otros.map(escH).join(", ")}${d.sinDatos ? ` · ${d.sinDatos} móvil${d.sinDatos > 1 ? "es" : ""} sin rellenar Mis datos` : ""}</span>`)).join("") || `<li class="acc-small">No hay ninguno.</li>`}</ul></section>
+      <p class="acc-small">Si alguien no rellenó «Mis datos» no se puede saber quién es. Un mismo nombre en dos móviles es la misma persona (por ejemplo, al cambiar a recatelo.es), no una pareja.</p>`;
+  };
   async function sinActivar(){
     const { data: lista } = await sb.rpc("listar_codigos");
     const clave = v => String(v || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();

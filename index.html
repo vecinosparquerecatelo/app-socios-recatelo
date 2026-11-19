@@ -1016,7 +1016,7 @@ const GROUPS = [
   {label:"Agenda Cultural Lugo", subs:[["agenda","Agenda Cultural Lugo"]]},
   {label:"Teléfonos de interés", subs:[["telefonos","Teléfonos de interés"]]},
   {label:"Fotos y carteles", subs:[["fotos","Fotos"],["carteles","Carteles"]]},
-  {label:"Mi cuenta", subs:[["misdatos","Mis datos"],["privacidad","Protección de datos"],["avisosact","Avisos activados"],["sinactivar","Sin activar la app"],["bloqueos","Bloquear códigos"]]}
+  {label:"Mi cuenta", subs:[["misdatos","Mis datos"],["privacidad","Protección de datos"],["avisosact","Avisos activados"],["sinactivar","Sin activar la app"],["compartidos","Códigos compartidos"],["bloqueos","Bloquear códigos"]]}
 ];
 const TABS = GROUPS.flatMap(g=>g.subs.map(([id,label])=>({id,label})));
 TABS.push({id:"buscar",label:"Buscar"}); // se abre desde el botón 🔍 Buscar, junto a «Cerrar sesión»
@@ -1588,6 +1588,11 @@ const VIEWS = {
     if(!S.canEdit) return `<div><h2>Sin activar la app</h2><p class="lead">Esta pestaña es solo para la directiva.</p></div>`;
     setTimeout(()=>{ const el=document.getElementById("sinact"); if(el && window.cargarSinActivar) window.cargarSinActivar(el); },0);
     return `<div><h2>Socios sin activar la app</h2><p class="lead">Solo lo ve la directiva. Socios que tienen código pero todavía no han entrado nunca en la app. Con el botón de WhatsApp se les puede reenviar su código.</p></div><div id="sinact" class="stack"><p class="meta">Cargando…</p></div>`;
+  },
+  compartidos(){
+    if(!S.canEdit) return `<div><h2>Códigos compartidos</h2><p class="lead">Esta pestaña es solo para la directiva.</p></div>`;
+    setTimeout(()=>{ const el=document.getElementById("compart"); if(el && window.cargarCompartidos) window.cargarCompartidos(el); },0);
+    return `<div><h2>Códigos compartidos</h2><p class="lead">Solo lo ve la directiva. Socios que salen «sin activar» pero entraron con el código de otra persona (por ejemplo, su pareja), y códigos que usan personas distintas. Se sabe por el nombre que cada uno puso en «Mis datos».</p></div><div id="compart" class="stack"><p class="meta">Cargando…</p></div>`;
   },
   bloqueos(){
     if(!S.canEdit) return `<div><h2>Bloquear códigos</h2><p class="lead">Esta pestaña es solo para la directiva.</p></div>`;
@@ -2455,7 +2460,7 @@ function render(){
   else if(gateFicha) html += `<div class="next"><span class="eyebrow">Un último paso</span><h3>Rellena tus datos de socio</h3><span>Así la directiva sabe quién eres y puede contactarte. Solo tendrás que hacerlo una vez y solo los ve la directiva.</span></div>` + VIEWS.misdatos();
   else {
     const g = groupOf(S.tab);
-    const gsubs=g.subs.filter(([id])=>(id!=="avisosact"&&id!=="sinactivar"&&id!=="bloqueos"&&id!=="prensaborrar"&&id!=="quienvota")||S.canEdit);
+    const gsubs=g.subs.filter(([id])=>(id!=="avisosact"&&id!=="sinactivar"&&id!=="compartidos"&&id!=="bloqueos"&&id!=="prensaborrar"&&id!=="quienvota")||S.canEdit);
     if(gsubs.length>1) html += `<div class="filters" role="tablist" aria-label="${esc(g.label)}">${gsubs.map(([id,l])=>`<button data-go="${id}" aria-pressed="${S.tab===id}">${l}${pestNueva(id)?` <span class="punto-rojo" aria-label="Novedad"></span>`:""}</button>`).join("")}</div>`;
     html += VIEWS[S.tab]();
   }
