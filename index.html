@@ -1146,9 +1146,9 @@ function attach(it){ return (it.photo ? `<img class="att" src="${imgSrc(it.photo
 /* ---------- quién ha abierto cada documento (solo lo ve la directiva) ---------- */
 function lectoresDe(id){
   if(!S.canEdit) return "";
-  const l=S.lectAll.filter(d=>d.vistos&&d.vistos[id]).map(d=>({uid:d.uid, ...d.vistos[id]})).sort((a,b)=>(b.ultima||"").localeCompare(a.ultima||""));
+  const l=S.lectAll.filter(d=>d.vistos&&d.vistos[id]).map(d=>({uid:d.uid, uids:d.uids, codigo:d.codigo, titular:d.titular, ...d.vistos[id]})).sort((a,b)=>(b.ultima||"").localeCompare(a.ultima||""));
   if(!l.length) return `<p class="meta">👁 Ningún socio lo ha abierto todavía (solo lo ve la directiva)</p>`;
-  return `<details class="lectores"><summary class="meta">👁 Lo han abierto ${l.length} ${l.length===1?"socio":"socios"} (solo lo ve la directiva)</summary><ul>${l.map(x=>`<li>${esc(nombreDe(x.uid))} · ${x.ultima?new Date(x.ultima).toLocaleDateString("es-ES",{day:"numeric",month:"short"}):""}${x.veces>1?" · "+x.veces+" veces":""}</li>`).join("")}</ul></details>`;
+  return `<details class="lectores"><summary class="meta">👁 Lo han abierto ${l.length} ${l.length===1?"socio":"socios"} (solo lo ve la directiva)</summary><ul>${l.map(x=>`<li>${esc(nombreDeL(x))} · ${x.ultima?new Date(x.ultima).toLocaleDateString("es-ES",{day:"numeric",month:"short"}):""}${x.veces>1?" · "+x.veces+" veces":""}</li>`).join("")}</ul></details>`;
 }
 async function registrarLectura(id){
   if(!S.db||!S.uid||S.canEdit||!id) return;
@@ -1185,12 +1185,12 @@ function registrarPestana(tab){
   }catch(e){} });
 }
 function quienMiraFotos(){
-  const filas=[]; for(const d of (S.lectAll||[])) for(const [alb,x] of Object.entries(d.fotos||{})) filas.push({uid:d.uid, alb, ...x});
+  const filas=[]; for(const d of (S.lectAll||[])) for(const [alb,x] of Object.entries(d.fotos||{})) filas.push({uid:d.uid, uids:d.uids, codigo:d.codigo, titular:d.titular, alb, ...x});
   const albs=[...new Set(filas.map(f=>f.alb))].sort((a,b)=>{ const ia=ALBUMES.indexOf(a), ib=ALBUMES.indexOf(b); return (ia<0?99:ia)-(ib<0?99:ib); });
   return `<div class="filters" data-filter="fotos"><button data-f="todas">← Todas las carpetas</button></div>
     <div><h2>👁 Quién mira las fotos</h2><p class="lead">Solo lo ve la directiva. Cuenta las veces que cada socio abre una carpeta y cuántas fotos amplía. Se cuenta desde el 26 de octubre de 2026.</p></div>
     ${albs.length?albs.map(a=>{ const l=filas.filter(f=>f.alb===a).sort((x,y)=>(y.ultima||"").localeCompare(x.ultima||""));
-      return `<details class="card lectores"><summary><strong>${esc(a)}</strong> <span class="meta">· ${l.length} ${l.length===1?"socio":"socios"}</span></summary><ul>${l.map(f=>`<li>${esc(nombreDe(f.uid))}: abrió la carpeta ${f.veces||0} ${(f.veces||0)===1?"vez":"veces"}${f.grandes?`, amplió ${f.grandes} foto${f.grandes===1?"":"s"}`:""} · última vez el ${fechaHora(f.ultima)}</li>`).join("")}</ul></details>`; }).join("")
+      return `<details class="card lectores"><summary><strong>${esc(a)}</strong> <span class="meta">· ${l.length} ${l.length===1?"socio":"socios"}</span></summary><ul>${l.map(f=>`<li>${esc(nombreDeL(f))}: abrió la carpeta ${f.veces||0} ${(f.veces||0)===1?"vez":"veces"}${f.grandes?`, amplió ${f.grandes} foto${f.grandes===1?"":"s"}`:""} · última vez el ${fechaHora(f.ultima)}</li>`).join("")}</ul></details>`; }).join("")
       :`<div class="empty"><strong>Todavía no hay datos.</strong>Cuando los socios abran carpetas de fotos, aparecerán aquí.</div>`}`;
 }
 /* cada vez que un socio abre la app se apunta una entrada (una por sesión) */
@@ -1208,19 +1208,43 @@ function fechaHora(x){ return x?new Date(x).toLocaleString("es-ES",{day:"numeric
 function actividadSocios(){
   if(!S.canEdit) return "";
   const titulo=id=>{ const it=S.items.find(i=>i.id===id); return it?(it.title||"Documento"):"Documento borrado"; };
-  const l=(S.lectAll||[]).map(d=>({uid:d.uid, app:d.app||null, docs:Object.entries(d.vistos||{}), fotos:d.fotos||{}, pest:d.pestanas||{}})).filter(d=>d.app||d.docs.length||Object.keys(d.fotos||{}).length||Object.keys(d.pest||{}).length)
+  const l=(S.lectAll||[]).map(d=>({uid:d.uid, uids:d.uids, codigo:d.codigo, titular:d.titular, app:d.app||null, docs:Object.entries(d.vistos||{}), fotos:d.fotos||{}, pest:d.pestanas||{}})).filter(d=>d.app||d.docs.length||Object.keys(d.fotos||{}).length||Object.keys(d.pest||{}).length)
     .sort((a,b)=>((b.app&&b.app.ultima)||"").localeCompare((a.app&&a.app.ultima)||""));
   const total=l.reduce((n,d)=>n+((d.app&&d.app.veces)||0),0);
   return `<details class="card lectores"><summary><strong>👁 Actividad de los socios</strong> <span class="meta">(solo lo ve la directiva)</span></summary>
     <p class="meta">${l.length} ${l.length===1?"socio ha":"socios han"} entrado o abierto documentos · ${total} ${total===1?"entrada":"entradas"} en total. Las entradas se cuentan desde el 23 de octubre de 2026, y las pestañas desde el 26 de octubre.</p>
-    ${l.length?`<ul>${l.map(d=>`<li><strong>${esc(nombreDe(d.uid))}</strong>: ${d.app?`${d.app.veces} ${d.app.veces===1?"entrada":"entradas"}, la última el ${fechaHora(d.app.ultima)}`:"sin entradas contadas"}${d.docs.length?`<br><span class="meta">Ha abierto: ${d.docs.map(([id,x])=>`${esc(titulo(id))}${x.veces>1?" ("+x.veces+" veces)":""}`).join(" · ")}</span>`:`<br><span class="meta">No ha abierto ningún documento.</span>`}${Object.keys(d.pest).length?`<br><span class="meta">Pestañas: ${Object.entries(d.pest).sort((a,b)=>(b[1].veces||0)-(a[1].veces||0)).map(([t,x])=>`${esc((TABS.find(z=>z.id===t)||{label:t}).label)} (${x.veces||0})`).join(" · ")}</span>`:""}${Object.keys(d.fotos).length?`<br><span class="meta">Fotos: ${Object.entries(d.fotos).map(([a,x])=>`${esc(a)} (${x.veces||0})`).join(" · ")}</span>`:""}</li>`).join("")}</ul>`:`<p>Todavía no hay datos.</p>`}
+    ${l.length?`<ul>${l.map(d=>`<li><strong>${esc(nombreDeL(d))}</strong>: ${d.app?`${d.app.veces} ${d.app.veces===1?"entrada":"entradas"}, la última el ${fechaHora(d.app.ultima)}`:"sin entradas contadas"}${d.docs.length?`<br><span class="meta">Ha abierto: ${d.docs.map(([id,x])=>`${esc(titulo(id))}${x.veces>1?" ("+x.veces+" veces)":""}`).join(" · ")}</span>`:`<br><span class="meta">No ha abierto ningún documento.</span>`}${Object.keys(d.pest).length?`<br><span class="meta">Pestañas: ${Object.entries(d.pest).sort((a,b)=>(b[1].veces||0)-(a[1].veces||0)).map(([t,x])=>`${esc((TABS.find(z=>z.id===t)||{label:t}).label)} (${x.veces||0})`).join(" · ")}</span>`:""}${Object.keys(d.fotos).length?`<br><span class="meta">Fotos: ${Object.entries(d.fotos).map(([a,x])=>`${esc(a)} (${x.veces||0})`).join(" · ")}</span>`:""}</li>`).join("")}</ul>`:`<p>Todavía no hay datos.</p>`}
   </details>`;
+}
+/* Un socio con varios móviles (mismo código) cuenta como uno solo en la actividad (Marta, 19-nov) */
+function juntarMoviles(lista,cods){
+  const sumar=(A,B)=>{ const o={...(A||{})}; for(const [k,x] of Object.entries(B||{})){ const y=o[k];
+    o[k]=!y?{...x}:{...y, ...x, primera:[y.primera,x.primera].filter(Boolean).sort()[0], ultima:[y.ultima,x.ultima].filter(Boolean).sort().pop(), veces:(y.veces||0)+(x.veces||0), grandes:(y.grandes||0)+(x.grandes||0)}; } return o; };
+  const g={}, orden=[];
+  const pareceA=(a,b)=>{ a=claveNombre(a); b=claveNombre(b); if(!a||!b) return false; if(a===b||a.includes(b)||b.includes(a)) return true; const x=a.split(" "), y=b.split(" "); return x.length>1&&y.length>1&&x[0]===y[0]&&x[1]===y[1]; };
+  for(const d of lista){ const c=cods[d.uid], fi=S.fichasAll.find(f=>f.uid===d.uid);
+    // Otra persona con el mismo código (p. ej. la pareja, con su propio nombre en «Mis datos») se cuenta aparte
+    const k=c&&!(fi&&fi.nombre&&!pareceA(fi.nombre,c.nombre))?"c:"+c.codigo:"u:"+d.uid;
+    if(!g[k]){ g[k]={...d, uids:[d.uid], codigo:c?c.codigo:null, titular:c?c.nombre:""}; orden.push(k); continue; }
+    const r=g[k]; r.uids.push(d.uid);
+    if(!S.fichasAll.some(f=>f.uid===r.uid) && S.fichasAll.some(f=>f.uid===d.uid)) r.uid=d.uid; // se muestra con el nombre de «Mis datos»
+    r.vistos=sumar(r.vistos,d.vistos); r.fotos=sumar(r.fotos,d.fotos); r.pestanas=sumar(r.pestanas,d.pestanas);
+    if(d.app) r.app=r.app?sumar({a:r.app},{a:d.app}).a:{...d.app};
+  }
+  return orden.map(k=>g[k]);
+}
+function nombreDeL(d){
+  if(!(d.uids&&d.uids.length>1)) return nombreDe(d.uid);
+  const f=S.fichasAll.find(x=>d.uids.includes(x.uid)&&x.nombre);  // todas las fichas del grupo son de la misma persona
+  return `${(f&&f.nombre)||d.titular||nombreDe(d.uid)} (código ${d.codigo} · ${d.uids.length} móviles)`;
 }
 function startLecturas(){
   if(!S.db||!S.canEdit) return;
   S.db.collection("lecturas").onSnapshot(async snap=>{
-    S.lectAll=snap.docs.map(d=>({uid:d.id,...d.data()}));
-    const faltan=S.lectAll.map(d=>d.uid).filter(u=>!S.names[u]);
+    const crudo=snap.docs.map(d=>({uid:d.id,...d.data()}));
+    let cods={}; try{ cods=window.codigosUsuarios?await window.codigosUsuarios():{}; }catch(e){}
+    S.lectCrudo=crudo; S.lectCods=cods; S.lectAll=juntarMoviles(crudo,cods);
+    const faltan=crudo.map(d=>d.uid).filter(u=>!S.names[u]);
     if(faltan.length){ try{ const ps=await S.user.profiles(faltan); for(const u in ps) S.names[u]=ps[u].name||""; }catch(e){} }
     renderDatos();
   },()=>{});
@@ -2651,7 +2675,7 @@ $("#main").addEventListener("click", async e=>{
 async function startFicha(){
   if(!S.db || !S.user) return;
   if(S.uid) S.db.doc("socios/"+S.uid).onSnapshot(snap=>{ S.ficha=snap.exists?snap.data():null; S.fichaLoaded=true; renderDatos(); },()=>{ S.fichaLoaded=true; });
-  if(S.canEdit) S.db.collection("socios").onSnapshot(snap=>{ S.fichasAll=snap.docs.map(d=>({uid:d.id,...d.data()})); renderDatos(); },()=>{});
+  if(S.canEdit) S.db.collection("socios").onSnapshot(snap=>{ S.fichasAll=snap.docs.map(d=>({uid:d.id,...d.data()})); if(S.lectCrudo) S.lectAll=juntarMoviles(S.lectCrudo,S.lectCods||{}); renderDatos(); },()=>{});
 }
 $("#main").addEventListener("change", async e=>{
   if(e.target.id!=="est-in") return;

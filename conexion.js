@@ -230,6 +230,17 @@
   };
 
   let codigosCache = null;
+  // Código con el que entró cada móvil (solo directiva): { user_id: { codigo, nombre } }
+  window.codigosUsuarios = async () => {
+    if(!state.directiva) return {};
+    if(!codigosCache || Date.now() - codigosCache.t > 60000){
+      const { data, error } = await sb.rpc("nombres_codigos");
+      if(error) return codigosCache ? codigosCache.m : {};
+      const m = {}; (data || []).forEach(r => { m[r.user_id] = r; });
+      codigosCache = { t: Date.now(), m };
+    }
+    return codigosCache.m;
+  };
   const user = {
     isOwner: async () => state.directiva,
     canEdit: async () => state.directiva,
@@ -242,15 +253,18 @@
         const { data } = await sb.from("docs").select("id,data").eq("coll","socios").in("id", ids);
         (data || []).forEach(r => out[r.id] = { id: r.id, name: (r.data && r.data.nombre) || "" });
       }
-      // Si el socio no rellenó su nombre, se busca por el código con el que entró
+      // Si el socio no rellenó su nombre, se busca por el código con el que entró.
+      // Si con ese mismo código otro móvil sí tiene «Mis datos», es el mismo socio en otro móvil (Marta, 19-nov)
       if(state.directiva && ids.some(id => !(out[id] && out[id].name))){
         try{
-          if(!codigosCache || Date.now() - codigosCache.t > 60000){
-            const { data } = await sb.rpc("nombres_codigos");
-            const m = {}; (data || []).forEach(r => { m[r.user_id] = r; });
-            codigosCache = { t: Date.now(), m };
+          const m = await window.codigosUsuarios();
+          let conFicha = null;
+          for(const id of ids){
+            const c = m[id]; if(!c || (out[id] && out[id].name)) continue;
+            if(!conFicha){ const { data } = await sb.from("docs").select("id").eq("coll","socios").limit(5000); conFicha = new Set((data || []).map(r => r.id)); }
+            const otro = Object.keys(m).some(u => u !== id && m[u].codigo === c.codigo && conFicha.has(u));
+            out[id] = { id, name: (c.nombre || "") + " (código " + c.codigo + (otro ? " · otro móvil" : "") + ")" };
           }
-          ids.forEach(id => { const c = codigosCache.m[id]; if(c && !(out[id] && out[id].name)) out[id] = { id, name: (c.nombre || "") + " (código " + c.codigo + ")" }; });
         }catch(_){}
       }
       ids.forEach(id => { if(!out[id]) out[id] = { id, name: "" }; });
