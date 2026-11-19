@@ -577,11 +577,13 @@
       return { c, otros, sinDatos: c.gente.filter(g => !g).length };
     }).filter(x => x.otros.length);
     const clave = v => norm(v);
+    const sinRellenar = Object.values(porCodigo).filter(c => c.gente.some(g => !g)).sort((a, b) => clave(a.titular).localeCompare(clave(b.titular)));
     encontrados.sort((a, b) => clave(a.k.nombre).localeCompare(clave(b.k.nombre)));
     distintos.sort((a, b) => clave(a.c.titular).localeCompare(clave(b.c.titular)));
     const li = h => `<li style="border-top:1px solid var(--line);padding:8px 0">${h}</li>`;
     el.innerHTML = `<section class="card"><h3>Sin activar, pero entraron con otro código (${encontrados.length})</h3><ul style="list-style:none;margin:0;padding:0">${encontrados.map(e => li(`<strong>${escH(e.k.nombre)}</strong><br><span class="acc-small">Su código ${escH(e.k.codigo)} está sin usar. Entró con el código de ${escH(e.c.titular)} (${escH(e.c.codigo)}) y en Mis datos puso «${escH(e.g)}».</span>`)).join("") || `<li class="acc-small">No hay ninguno.</li>`}</ul></section>
       <section class="card"><h3>Códigos que usan personas distintas (${distintos.length})</h3><ul style="list-style:none;margin:0;padding:0">${distintos.map(d => li(`<strong>Código de ${escH(d.c.titular)}</strong> (${escH(d.c.codigo)})<br><span class="acc-small">También entró: ${d.otros.map(escH).join(", ")}${d.sinDatos ? ` · ${d.sinDatos} móvil${d.sinDatos > 1 ? "es" : ""} sin rellenar Mis datos` : ""}</span>`)).join("") || `<li class="acc-small">No hay ninguno.</li>`}</ul></section>
+      <section class="card"><h3>Entraron pero no rellenaron «Mis datos» (${sinRellenar.length})</h3><ul style="list-style:none;margin:0;padding:0">${sinRellenar.map(c => li(`<strong>Código de ${escH(c.titular)}</strong> (${escH(c.codigo)})<br><span class="acc-small">${c.gente.filter(g => !g).length} móvil${c.gente.filter(g => !g).length > 1 ? "es" : ""} sin datos${c.gente.some(Boolean) ? " · en otro móvil con este código sí rellenaron los datos" : " · nadie con este código ha rellenado los datos"}</span>`)).join("") || `<li class="acc-small">No hay ninguno.</li>`}</ul></section>
       <p class="acc-small">Si alguien no rellenó «Mis datos» no se puede saber quién es. Un mismo nombre en dos móviles es la misma persona (por ejemplo, al cambiar a recatelo.es), no una pareja.</p>`;
   };
   async function sinActivar(){

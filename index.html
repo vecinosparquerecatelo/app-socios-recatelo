@@ -1592,7 +1592,7 @@ const VIEWS = {
   compartidos(){
     if(!S.canEdit) return `<div><h2>Códigos compartidos</h2><p class="lead">Esta pestaña es solo para la directiva.</p></div>`;
     setTimeout(()=>{ const el=document.getElementById("compart"); if(el && window.cargarCompartidos) window.cargarCompartidos(el); },0);
-    return `<div><h2>Códigos compartidos</h2><p class="lead">Solo lo ve la directiva. Socios que salen «sin activar» pero entraron con el código de otra persona (por ejemplo, su pareja), y códigos que usan personas distintas. Se sabe por el nombre que cada uno puso en «Mis datos».</p></div><div id="compart" class="stack"><p class="meta">Cargando…</p></div>`;
+    return `<div><h2>Códigos compartidos</h2><p class="lead">Solo lo ve la directiva. Socios que salen «sin activar» pero entraron con el código de otra persona (por ejemplo, su pareja), códigos que usan personas distintas y quién entró sin rellenar sus datos. Se sabe por el nombre que cada uno puso en «Mis datos».</p></div><div id="compart" class="stack"><p class="meta">Cargando…</p></div>`;
   },
   bloqueos(){
     if(!S.canEdit) return `<div><h2>Bloquear códigos</h2><p class="lead">Esta pestaña es solo para la directiva.</p></div>`;
