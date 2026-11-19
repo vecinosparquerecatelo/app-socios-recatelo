@@ -542,6 +542,19 @@
       window.cargarBloqueos(el, inp.value);
     });
   };
+  // Pestaña Mi cuenta > «Sin activar la app» (solo directiva)
+  window.cargarSinActivar = async (el) => {
+    const { data, error } = await sb.rpc("listar_codigos");
+    if(!el.isConnected) return;
+    if(error){ el.innerHTML = `<p class="body">No se puede mostrar la lista ahora mismo. Inténtalo de nuevo en un rato.</p>`; return; }
+    const clave = v => String(v || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+    const faltan = (Array.isArray(data) ? data : []).filter(k => k.activo && !k.usos).sort((a, b) => clave(a.nombre).localeCompare(clave(b.nombre)));
+    const filas = faltan.map(k => `<li style="display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;justify-content:space-between;border-top:1px solid var(--line);padding:8px 0">
+        <span><strong>${escH(k.nombre)}</strong><br><span class="acc-small">Código ${escH(k.codigo)}</span></span>
+        <button class="btn ghost small" data-wa="${escH(k.codigo)}" data-n="${escH(k.nombre)}">Reenviar por WhatsApp</button></li>`).join("");
+    el.innerHTML = `<section class="card"><h3>Sin activar la app (${faltan.length})</h3><ul style="list-style:none;margin:0;padding:0">${filas || `<li class="acc-small">Todos los socios con código han activado la app.</li>`}</ul></section>`;
+    el.querySelectorAll("[data-wa]").forEach(b => b.onclick = () => window.open("https://wa.me/?text=" + encodeURIComponent(mensaje(b.dataset.n, b.dataset.wa)), "_blank", "noopener"));
+  };
   async function sinActivar(){
     const { data: lista } = await sb.rpc("listar_codigos");
     const clave = v => String(v || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
