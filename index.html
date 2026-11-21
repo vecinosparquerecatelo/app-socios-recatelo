@@ -2434,20 +2434,35 @@ function botonCierre(it, past){
   const c=!!it.inscCerrada;
   return `<div class="opc-dir"><span class="meta">Solo directiva:</span><button type="button" class="btn small ${c?"":"ghost"}" data-opc="${esc(it.id)}" data-campo="inscCerrada" data-val="${c?"0":"1"}">${c?"🔓 Volver a abrir la inscripción":"🔒 Cerrar la inscripción"}</button></div>`;
 }
+/* Sello «Realizado» sobre un curso ya hecho (Marta, 21-nov: curso del ictus). Lo pone la directiva con su botón (campo «realizado»);
+   el del ictus del 21-nov lo lleva ya puesto. Un curso realizado no enseña nada de inscripción (los inscritos siguen guardados). */
+const ICTUS_HECHO = it => it.date==="2026-11-21" && /ictus/i.test(it.title||"");
+function cursoRealizado(it){ return !!it.realizado || ICTUS_HECHO(it); }
+const TEXTO_REALIZADO = {
+  es:"Este sábado 21 de noviembre se ha realizado el curso de prevención del ictus y atención temprana, en O Vello Cárcere.\n\nAgradecemos inmensamente la información que nos ha trasladado el grupo de Daño y Parálisis Cerebral de Cruz Roja. Ha sido muy interesante que nos explicaran las causas, los síntomas y todo lo relacionado con la prevención del ictus.",
+  gl:"Este sábado 21 de novembro realizouse o curso de prevención do ictus e atención temperá, en O Vello Cárcere.\n\nAgradecemos inmensamente a información que nos trasladou o grupo de Dano e Parálise Cerebral de Cruz Vermella. Foi moi interesante que nos explicasen as causas, os síntomas e todo o relacionado coa prevención do ictus."
+};
+function botonRealizado(it){
+  if(!S.canEdit || ICTUS_HECHO(it)) return "";
+  const r=!!it.realizado;
+  return `<div class="opc-dir"><span class="meta">Solo directiva:</span><button type="button" class="btn small ${r?"ghost":"sol"}" data-opc="${esc(it.id)}" data-campo="realizado" data-val="${r?"0":"1"}">${r?"Quitar «Realizado»":"✔ Marcar como realizado"}</button></div>`;
+}
 function cursoCard(it, past){
+  const hecho=cursoRealizado(it);
   const yo = !!(S.insc&&S.insc.cursos&&S.insc.cursos[it.id]);
   let action="";
-  if(!past && it.inscCerrada && yo && !S.canEdit) action = `<div class="row-actions"><span class="pill p-green" style="align-self:center">Estás apuntado/a</span></div>`;
+  if(hecho) action="";
+  else if(!past && it.inscCerrada && yo && !S.canEdit) action = `<div class="row-actions"><span class="pill p-green" style="align-self:center">Estás apuntado/a</span></div>`;
   else if(!past && !it.inscCerrada && S.uid && !S.inscBlocked) action = yo
     ? `<div class="row-actions"><span class="pill p-green" style="align-self:center">Estás apuntado/a</span><button class="btn ghost small" data-baja="${esc(it.id)}">Darme de baja</button></div>`
     : `<div class="row-actions"><button class="btn" data-alta="${esc(it.id)}">Apuntarme</button></div>`;
-  let admin="";
-  if(!past && !it.inscCerrada && S.uid && !S.inscBlocked && it.familiares!==false) action+=famBox(it);
-  if(!past) action=numApuntados(it)+action;
-  admin=listaInsc(it)+opcionesDir(it,true)+botonCierre(it,past);
-  return `<article class="card"><div class="meta"><span class="pill p-blue">Curso</span>${it.date?`<span>${past?"":"Empieza el "}${fmtDate(it.date)}</span>`:`<span class="pill p-amber">${esc(it.cuando||"Fecha por determinar")}</span>`}${it.plazas&&!S.canEdit?`<span>${esc(it.plazas)} plazas</span>`:""}</div>
+  if(!hecho && !past && !it.inscCerrada && S.uid && !S.inscBlocked && it.familiares!==false) action+=famBox(it);
+  if(!hecho && !past) action=numApuntados(it)+action;
+  const admin = hecho ? botonRealizado(it) : listaInsc(it)+opcionesDir(it,true)+botonCierre(it,past)+botonRealizado(it);
+  const txt = hecho && ICTUS_HECHO(it) ? `<p class="body" data-noi18n>${esc(window.IDIOMA==="gl"?TEXTO_REALIZADO.gl:TEXTO_REALIZADO.es)}</p>` : (it.body?`<p class="body">${esc(B(it))}</p>`:"");
+  return `<article class="card${hecho?" con-sello":""}">${hecho?`<div class="sello-sol" aria-label="Realizado"><span>✔ REALIZADO</span></div>`:""}<div class="meta"><span class="pill p-blue">Curso</span>${it.date?`<span>${past||hecho?"":"Empieza el "}${fmtDate(it.date)}</span>`:`<span class="pill p-amber">${esc(it.cuando||"Fecha por determinar")}</span>`}${it.plazas&&!S.canEdit&&!hecho?`<span>${esc(it.plazas)} plazas</span>`:""}</div>
     <h3>${esc(T(it))}</h3>${it.time||it.place?`<div class="meta">${it.time?"🕒 "+esc(it.time):""}${it.time&&it.place?" · ":""}${it.place?"📍 "+esc(it.place):""}</div>`:""}
-    ${it.body?`<p class="body">${esc(B(it))}</p>`:""}${attach(it)}${cierreCurso(it,past)}${action}${admin}${adminRow(it)}</article>`;
+    ${txt}${attach(it)}${hecho?"":cierreCurso(it,past)}${action}${admin}${adminRow(it)}</article>`;
 }
 function estLabel(t){ if(window.trGL) t=trGL(t); const parts=t.split(/[.:]\s*/); let l=(parts.length>1?parts.slice(1).join(" "):t).trim().replace(/\.$/,"")||t; l=l.toLowerCase(); return l.charAt(0).toUpperCase()+l.slice(1); }
 function colNews(it){
