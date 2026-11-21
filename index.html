@@ -1060,7 +1060,7 @@ function imgSrc(id){ return window.blobUrl ? window.blobUrl(id) : "/_blob/"+enco
 /* ---------- navegación ---------- */
 function mercVisto(){ try{ let v=localStorage.getItem("recatelo-merc-visto"); if(!v){ v=new Date().toISOString(); localStorage.setItem("recatelo-merc-visto",v); } return v; }catch(_){ return new Date().toISOString(); } }
 function cursosVisto(){ try{ let v=localStorage.getItem("recatelo-cursos-visto"); if(!v){ v="2026-11-01T00:00:00Z"; localStorage.setItem("recatelo-cursos-visto",v); } return v; }catch(_){ return new Date().toISOString(); } }
-function cursosNuevos(){ if(S.tab==="cursos"){ try{ localStorage.setItem("recatelo-cursos-visto",new Date().toISOString()); }catch(_){} return false; } const v=cursosVisto(); return (S.items||[]).some(i=>i.section==="cursos" && (i.updatedAt||i.createdAt||"")>v); }
+function cursosNuevos(){ if(S.tab==="cursos"){ try{ localStorage.setItem("recatelo-cursos-visto",new Date().toISOString()); }catch(_){} return false; } const v=cursosVisto(); return (S.items||[]).some(i=>i.section==="cursos" && (ICTUS_HECHO(i)&&"2026-11-21T20:50:00Z">(i.updatedAt||"") ? "2026-11-21T20:50:00Z" : (i.updatedAt||i.createdAt||""))>v); } /* 21-nov: punto rojo en Cursos por el sello «Realizado» del ictus */
 function mercNuevos(){ if(S.tab==="mercadillo") return 0; const v=mercVisto(); let n=0; for(const d of S.mercAll) if(d.uid!==S.uid) for(const a of (d.anuncios||[])) if((a.at||"")>v) n++; return n; }
 // Pestañas nuevas con punto rojo hasta que cada socio las abre (se recuerda en este móvil)
 const PEST_NUEVAS=["bienestar","arboles","prensa","telefonos","encuestas","agenda","comousar","proyectos"];
