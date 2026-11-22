@@ -1216,6 +1216,18 @@ function actividadSocios(){
     ${l.length?`<ul>${l.map(d=>`<li><strong>${esc(nombreDeL(d))}</strong>: ${d.app?`${d.app.veces} ${d.app.veces===1?"entrada":"entradas"}, la última el ${fechaHora(d.app.ultima)}`:"sin entradas contadas"}${d.docs.length?`<br><span class="meta">Ha abierto: ${d.docs.map(([id,x])=>`${esc(titulo(id))}${x.veces>1?" ("+x.veces+" veces)":""}`).join(" · ")}</span>`:`<br><span class="meta">No ha abierto ningún documento.</span>`}${Object.keys(d.pest).length?`<br><span class="meta">Pestañas: ${Object.entries(d.pest).sort((a,b)=>(b[1].veces||0)-(a[1].veces||0)).map(([t,x])=>`${esc((TABS.find(z=>z.id===t)||{label:t}).label)} (${x.veces||0})`).join(" · ")}</span>`:""}${Object.keys(d.fotos).length?`<br><span class="meta">Fotos: ${Object.entries(d.fotos).map(([a,x])=>`${esc(a)} (${x.veces||0})`).join(" · ")}</span>`:""}</li>`).join("")}</ul>`:`<p>Todavía no hay datos.</p>`}
   </details>`;
 }
+/* Ranking de pestañas: cuántos socios abren cada una y cuántas veces, con sus nombres (solo directiva; Marta, 22-nov) */
+function pestanasMasVistas(){
+  if(!S.canEdit) return "";
+  const pt={};
+  for(const d of (S.lectAll||[])) for(const [t,x] of Object.entries(d.pestanas||{})){ const r=pt[t]||(pt[t]={socios:[],veces:0}); r.socios.push({d,x}); r.veces+=(x.veces||0); }
+  const l=Object.entries(pt).sort((a,b)=>b[1].socios.length-a[1].socios.length||b[1].veces-a[1].veces);
+  const nom=t=>(TABS.find(z=>z.id===t)||{label:t}).label;
+  return `<details class="card lectores"><summary><strong>📊 Pestañas que más miran los socios</strong> <span class="meta">(solo lo ve la directiva)</span></summary>
+    <p class="meta">De más a menos socios. Cada vez que un socio abre la app y entra en una pestaña cuenta como una visita. Se cuenta desde el 26 de octubre de 2026. Inicio sale siempre alto porque la app se abre ahí. Pulsa una pestaña para ver quién la mira.</p>
+    ${l.length?l.map(([t,r],i)=>`<details class="lectores"><summary>${i+1}. <strong>${esc(nom(t))}</strong> <span class="meta">· ${r.socios.length} ${r.socios.length===1?"socio":"socios"} · ${r.veces} ${r.veces===1?"visita":"visitas"}</span></summary><ul>${r.socios.sort((a,b)=>(b.x.veces||0)-(a.x.veces||0)).map(({d,x})=>`<li>${esc(nombreDeL(d))}: ${x.veces||0} ${(x.veces||0)===1?"vez":"veces"} · última el ${fechaHora(x.ultima)}</li>`).join("")}</ul></details>`).join(""):`<p>Todavía no hay datos.</p>`}
+  </details>`;
+}
 /* Un socio con varios móviles (mismo código) cuenta como uno solo en la actividad (Marta, 19-nov) */
 function juntarMoviles(lista,cods){
   const sumar=(A,B)=>{ const o={...(A||{})}; for(const [k,x] of Object.entries(B||{})){ const y=o[k];
@@ -1628,7 +1640,7 @@ const VIEWS = {
     const avs = bySection("avisos");
     const prox = avs.filter(a=>!a.date||a.date>=CORTE_ANT||esReuAlcReciente(a,t)).sort((a,b)=>(b.arriba?1:0)-(a.arriba?1:0)||ordAviso(a).localeCompare(ordAviso(b)));
     const pas = sortDesc(avs.filter(a=>a.date&&a.date<CORTE_ANT&&!esReuAlcReciente(a,t)));
-    return `${actividadSocios()}${S.canEdit?`<div class="row-actions" style="justify-content:flex-start"></div>`:""}<section class="hero">
+    return `${actividadSocios()}${pestanasMasVistas()}${S.canEdit?`<div class="row-actions" style="justify-content:flex-start"></div>`:""}<section class="hero">
         ${S.logo?`<img class="hero-logo" src="${imgSrc(S.logo)}" alt="Logo de la Asociación de Vecinos Parque de Rosalía de Castro-Recatelo">`:""}
         ${S.canEdit&&S.assets?`<div><label class="btn ghost small" style="display:inline-block;cursor:pointer">${S.logo?"Cambiar logo":"Subir el logo de la asociación"}<input type="file" id="logo-in" accept="image/png,image/jpeg,image/webp,image/svg+xml" hidden></label> <span class="meta" id="logo-msg"></span></div>`:""}
         <span class="eyebrow">Parque de Rosalía de Castro · Recatelo · Lugo</span>
