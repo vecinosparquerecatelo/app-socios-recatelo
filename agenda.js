@@ -6,6 +6,8 @@ const TEL_CONCELLO = {tel:"010", tel2:"982 297 350"}; // Concello de Lugo: 010; 
 const TEL_DEPUTACION = {tel:"982 260 000"};
 const TEL_CIRCULO = {tel:"982 225 456"}; // Círculo das Artes, oficina (11:00-13:00 y 16:30-20:30)
 window.AGENDA = [
+  // Marta, 24-nov: lo organiza una socia; mantener hasta que pase (no quitar en las puestas al día)
+  {d:"2026-11-27", h:"19:00", t:"Entrega de premios del II Certamen Fotográfico Kósima Llamas, «Visiones de un instante». Lo organiza nuestra vecina y socia Pilar Llamas.", tgl:"Entrega de premios do II Certame Fotográfico Kósima Llamas, «Visiones de un instante». Organízao a nosa veciña e socia Pilar Llamas.", l:"Biblioteca Pública de Lugo"},
   {d:"2026-11-26", h:"18:00", t:"«A máquina do tempo» (a partir de 4 años)", tgl:"«A máquina do tempo» (a partir de 4 anos)", l:"Museo MIHL", ...TEL_CONCELLO},
   {d:"2026-12-03", h:"20:30", t:"Teatro: «Black Box, unha saga épica»", tgl:"Teatro: «Black Box, unha saga épica»", l:"Auditorio Gustavo Freire", ...TEL_CONCELLO},
   {d:"2026-12-10", h:"18:00", t:"«Nadal cheo de contos» (cuentos de Navidad)", tgl:"«Nadal cheo de contos» (contos de Nadal)", l:"Biblioteca Municipal", ...TEL_CONCELLO},
