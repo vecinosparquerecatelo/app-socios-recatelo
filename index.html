@@ -1289,9 +1289,10 @@ function avisoCard(it){
   const texto = `<h3>${esc(T(it))}</h3>${it.place?`<div class="meta">📍 ${esc(it.place)}</div>`:""}
     ${it.body?`<p class="body">${esc(B(it))}</p>`:""}`;
   return `<article class="card${it.solucionado||it.realizado?" con-sello":""}">${selloTexto?"":sol}<div class="meta">${tipo}${it.date?`<span>${fmtDate(it.date)}${it.time?" · "+esc(it.time):""}</span>`:""}</div>
-    ${selloTexto?`<div class="sello-zona">${sol}${texto}</div>`:texto}${cartelAviso(it)}${attach(it)}${fotoAviso(it)}${videoAviso(it)}${it.apuntarse?inscAviso(it):""}${it.sinBotones?"":opcionesDir(it,false)+bSol}${adminRow(it)}</article>`;
+    ${it.cartelArriba?cartelAviso(it):""}${selloTexto?`<div class="sello-zona">${sol}${texto}</div>`:texto}${it.cartelArriba?"":cartelAviso(it)}${attach(it)}${fotoAviso(it)}${videoAviso(it)}${it.apuntarse?inscAviso(it):""}${it.sinBotones?"":opcionesDir(it,false)+bSol}${adminRow(it)}</article>`;
 }
-/* Cartel entero dentro del aviso, sin recortar (Marta, 18-nov: showroom de Arela). Campo «cartel» con la ruta de la imagen. */
+/* Cartel entero dentro del aviso, sin recortar (Marta, 18-nov: showroom de Arela). Campo «cartel» con la ruta de la imagen.
+   Con «cartelArriba» el cartel va encima y el texto debajo (Marta, 24-nov: certamen Kósima Llamas). */
 function cartelAviso(it){ return it.cartel ? `<img src="${esc(it.cartel)}" alt="${esc(T(it))}" loading="lazy" style="display:block;width:100%;max-width:420px;height:auto;margin:8px auto 0;border-radius:10px" onerror="this.remove()">` : ""; }
 /* Botón para colgar una foto de la galería del móvil en el aviso (solo directiva). Marta, 6-nov: aviso de la enredadera. */
 const AVISOS_CON_FOTO = ["aviso-desbroce-villalba-mourelo"];
