@@ -12,6 +12,7 @@ window.GL_DICT = {
 "Prensa":"Prensa",
 "Prensa, radio y televisión":"Prensa, radio e televisión",
 "Prensa, radio y TV":"Prensa, radio e TV",
+"Plenos municipales":"Plenos municipais",
 "Otras noticias":"Outras noticias",
 "Lo que han publicado los periódicos, la radio, la televisión y las instituciones sobre nuestra asociación y nuestro barrio. Pulsa en cada noticia para leerla.":"O que publicaron os xornais, a radio, a televisión e as institucións sobre a nosa asociación e o noso barrio. Preme en cada noticia para lela.",
 "📰 Leer la noticia":"📰 Ler a noticia",
