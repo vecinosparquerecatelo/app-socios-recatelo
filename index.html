@@ -1796,10 +1796,17 @@ const VIEWS = {
     if(![...MTIPOS,"Empleo",CTIPO].includes(S.filter.mercadillo)) S.filter.mercadillo = list.length ? pestMerc(list[0].tipo) : MTIPOS[0];
     const f=S.filter.mercadillo;
     list = f==="Empleo" ? list.filter(a=>ETIPOS.includes(a.tipo)) : list.filter(a=>a.tipo===f);
-    const card = a => `<article class="card"><div class="meta">${a.uid!==S.uid&&(a.at||"")>S.mercAntes?`<span class="pill p-red">Nuevo</span>`:""}<span class="pill ${a.tipo==="Dono"?"p-green":a.tipo==="Compro"?"p-amber":a.tipo==="Trueque"?"p-blue":a.tipo==="Alquilo"?"p-green":a.tipo==="Ofrezco empleo"?"p-blue":a.tipo==="Busco empleo"?"p-amber":a.tipo===CTIPO?"p-green":"p-red"}">${esc(a.tipo)}</span>${a.precio?`<span><strong>${esc(a.precio)}</strong></span>`:""}<span>${a.at?new Date(a.at).toLocaleDateString("es-ES",{day:"numeric",month:"long"}):""}</span>${a.editado?`<span>(corregido)</span>`:""}</div>
+    /* Sello «Alquilado» (Marta, 27-nov: anuncio de Lola). Campo «alquilado» que pone la directiva; un anuncio de Alquilo de Lola lo lleva ya puesto.
+       Con el sello no se enseña el teléfono ni el correo. */
+    const alq = a => a.alquilado===true || (a.alquilado!==false && a.tipo==="Alquilo" && /\blola\b/i.test([a.nombre,a.contacto,a.titulo,a.texto].join(" ")));
+    const sinTel = t => String(t||"").replace(/(?:\b(?:ll[aá]m[a-z]*|tel[eé]fono|tlf|tfno|tel|whatsapp|m[oó]vil|contacto)\b[^.\n\d]{0,20})?\+?\d[\d .\-]{7,}\d/gi,"").replace(/\s+([.,;:])/g,"$1").replace(/([.,;:])(?:\s*[.,;:])+/g,"$1").replace(/[^\s,;\/]+@[^\s,;\/]+\.[a-z]{2,}/ig,"").replace(/[ \t]{2,}/g," ").replace(/^[\s.,;:]+/,"").trim();
+    const bAlq = a => S.canEdit && a.tipo==="Alquilo" ? `<div class="opc-dir"><span class="meta">Solo directiva:</span><button type="button" class="btn small ${alq(a)?"ghost":"sol"}" data-merc-alq="${esc(a.uid)}|${esc(a.id)}" data-val="${alq(a)?"0":"1"}">${alq(a)?"Quitar «Alquilado»":"✔ Marcar como alquilado"}</button></div>` : "";
+    const card = a => alq(a) ? `<article class="card con-sello"><div class="sello-sol" aria-label="Alquilado"><span>✔ ALQUILADO</span></div><div class="meta"><span class="pill p-green">${esc(a.tipo)}</span>${a.precio?`<span><strong>${esc(a.precio)}</strong></span>`:""}<span>${a.at?new Date(a.at).toLocaleDateString("es-ES",{day:"numeric",month:"long"}):""}</span></div>
+      <h3>${esc(sinTel(a.titulo))}</h3>${a.texto&&sinTel(a.texto)?`<p class="body">${esc(sinTel(a.texto))}</p>`:""}${(a.fotos||[]).length?`<div class="merc-fotos">${a.fotos.map(f=>`<img src="${imgSrc(f)}" alt="" loading="lazy" onerror="this.remove()">`).join("")}</div>`:""}${a.nombre?`<p class="body">${esc(a.nombre)}</p>`:""}
+      ${bAlq(a)}${(a.uid===S.uid||S.canEdit)?`<div class="row-actions"><button class="btn ghost small" data-merc-edit="${esc(a.uid)}|${esc(a.id)}">Editar anuncio</button><button class="btn ghost small" data-merc-del="${esc(a.uid)}|${esc(a.id)}">Quitar anuncio</button></div>`:""}</article>` : `<article class="card"><div class="meta">${a.uid!==S.uid&&(a.at||"")>S.mercAntes?`<span class="pill p-red">Nuevo</span>`:""}<span class="pill ${a.tipo==="Dono"?"p-green":a.tipo==="Compro"?"p-amber":a.tipo==="Trueque"?"p-blue":a.tipo==="Alquilo"?"p-green":a.tipo==="Ofrezco empleo"?"p-blue":a.tipo==="Busco empleo"?"p-amber":a.tipo===CTIPO?"p-green":"p-red"}">${esc(a.tipo)}</span>${a.precio?`<span><strong>${esc(a.precio)}</strong></span>`:""}<span>${a.at?new Date(a.at).toLocaleDateString("es-ES",{day:"numeric",month:"long"}):""}</span>${a.editado?`<span>(corregido)</span>`:""}</div>
       <h3>${esc(a.titulo)}</h3>${a.texto?`<p class="body">${esc(a.texto)}</p>`:""}${(a.fotos||[]).length?`<div class="merc-fotos">${a.fotos.map(f=>`<img src="${imgSrc(f)}" alt="" loading="lazy" onerror="this.remove()">`).join("")}</div>`:""}<p class="body"><strong>Contacto:</strong> ${esc(a.contacto)}${a.nombre?" · "+esc(a.nombre):""}</p>
       ${a.uid!==S.uid?mercContacto(a):""}
-      ${(a.uid===S.uid||S.canEdit)?`<div class="row-actions"><button class="btn ghost small" data-merc-edit="${esc(a.uid)}|${esc(a.id)}">Editar anuncio</button><button class="btn ghost small" data-merc-del="${esc(a.uid)}|${esc(a.id)}">Quitar anuncio</button></div>`:""}</article>`;
+      ${bAlq(a)}${(a.uid===S.uid||S.canEdit)?`<div class="row-actions"><button class="btn ghost small" data-merc-edit="${esc(a.uid)}|${esc(a.id)}">Editar anuncio</button><button class="btn ghost small" data-merc-del="${esc(a.uid)}|${esc(a.id)}">Quitar anuncio</button></div>`:""}</article>`;
     let form="";
     if(S.uid && !S.noDb) form = `<details class="card" id="mc-box"><summary><strong>Poner un anuncio</strong></summary><form id="mc-form" novalidate style="display:grid;gap:12px;margin-top:12px">
       <div class="two">${field("mc-tipo","Qué quieres hacer",sel("mc-tipo",[...MTIPOS,...ETIPOS,CTIPO],f==="Empleo"?"Ofrezco empleo":f))}${field("mc-precio","Precio o sueldo (opcional)",`<input id="mc-precio" placeholder="Por ejemplo: 20 € o 50 €/mes">`)}</div>
@@ -2657,6 +2664,8 @@ $("#main").addEventListener("submit", async e=>{
   }
 });
 $("#main").addEventListener("click", async e=>{
+  const ma=e.target.closest("[data-merc-alq]"); if(ma){ const [u,id]=ma.dataset.mercAlq.split("|"), d=S.mercAll.find(x=>x.uid===u); if(!d) return; const v=ma.dataset.val==="1"; ma.disabled=true;
+    try{ await S.db.doc("mercadillo/"+u).set({anuncios:(d.anuncios||[]).map(a=>a.id===id?{...a,alquilado:v}:a)}); }catch(x){ ma.disabled=false; alert("No se ha podido guardar. Vuelve a intentarlo."); } return; }
   const me=e.target.closest("[data-merc-edit]"); if(me){ const [u,id]=me.dataset.mercEdit.split("|"); mercEditar(u,id); return; }
   const b=e.target.closest("[data-merc-del]"); if(!b) return;
   const [u,id]=b.dataset.mercDel.split("|");
