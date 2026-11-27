@@ -1817,7 +1817,7 @@ const VIEWS = {
       <p class="err" id="mc-err" hidden></p><div class="row-actions"><button class="btn" id="mc-send">Publicar anuncio</button></div></form></details>`;
     return `<div><h2>Mercadiño</h2><p class="lead">Alquila, vende, dona, compra o haz trueque entre vecinos, ofrece o busca empleo en la pestaña Empleo, y da a conocer tu comercio o tu oficio en «Comercio y profesionales del barrio». Solo los socios ven los anuncios. Si te interesa uno, pulsa “Me interesa” y le escribes directamente a quien lo publicó.</p></div>
       ${form}${filterBar("mercadillo",[...MTIPOS,"Empleo",CTIPO],true).replace(/<button data-f="([^"]+)"([^>]*)>([^<]*)<\/button>/g,(m,v,r,l)=>nuevoEn(v)?`<button data-f="${v}"${r}>${l} 🔴</button>`:m)}
-      <section class="stack">${list.length?list.map(card).join(""):emptyBox(f==="Empleo"?"No hay ofertas ni demandas de empleo todavía.":f===CTIPO?"Todavía no hay comercios ni profesionales del barrio.":"No hay anuncios todavía.","Pon el primero con “Poner un anuncio”.")}</section>`;
+      <section class="stack">${list.length?list.map(card).join(""):emptyBox(f==="Empleo"?"No hay ofertas ni demandas de empleo todavía.":f===CTIPO?"Todavía no hay comercios ni profesionales del barrio.":"No hay anuncios todavía.","Pon el primero con “Poner un anuncio”.")}</section>${todosMercDir()}`;
   },
   sugerencias(){
     const list=sortDesc(S.items.filter(i=>i.section==="sugerencias"||(i.section==="quejas"&&i.kind!=="proyecto")));
@@ -2681,6 +2681,15 @@ function mercPrevia(a){
   const cerrar=()=>{ $("#sheet-root").innerHTML=""; fotos.forEach(u=>{ try{ URL.revokeObjectURL(u); }catch(_){} }); };
   $("#mp-x").onclick=()=>{ cerrar(); const t=$("#mc-titulo"); t&&t.focus(); };
   $("#mp-ok").onclick=()=>{ cerrar(); S.mcRevisado=true; const f=$("#mc-form"); if(f) f.requestSubmit(); };
+}
+/* Todos los anuncios guardados, de todas las pestañas (solo directiva). Marta, 27-nov: no encontraba el del trastero. */
+function todosMercDir(){
+  if(!S.canEdit) return "";
+  const ok=[...MTIPOS,...ETIPOS,CTIPO], todos=[];
+  for(const d of S.mercAll||[]) for(const a of (d.anuncios||[])) if(a) todos.push({...a,uid:d.uid});
+  todos.sort((x,y)=>(y.at||"").localeCompare(x.at||""));
+  const fila=a=>`<li style="padding:10px 0;border-top:1px solid var(--line)"><div class="meta"><span class="pill ${ok.includes(a.tipo)?"p-green":"p-red"}">${esc(a.tipo||"Sin pestaña")}</span><span>${a.at?new Date(a.at).toLocaleDateString("es-ES",{day:"numeric",month:"long"}):""}</span>${a.nombre?`<span>${esc(a.nombre)}</span>`:""}</div><strong>${esc(a.titulo||"(sin título)")}</strong><div class="row-actions" style="justify-content:flex-start;margin-top:6px"><button class="btn ghost small" data-merc-edit="${esc(a.uid)}|${esc(a.id)}">Editar o cambiar de pestaña</button></div></li>`;
+  return `<details class="card" style="margin-top:16px"><summary><strong>Todos los anuncios guardados</strong> (${todos.length}) <span class="meta">Solo directiva</span></summary><p class="meta" style="margin:8px 0 0">Todos los anuncios de todas las pestañas, del más nuevo al más antiguo. Si uno está en la pestaña equivocada, pulsa «Editar o cambiar de pestaña».</p><ul style="list-style:none;margin:8px 0 0;padding:0">${todos.length?todos.map(fila).join(""):"<li>No hay anuncios guardados.</li>"}</ul></details>`;
 }
 function mercEditar(u,id){
   const d=S.mercAll.find(x=>x.uid===u), a=d&&(d.anuncios||[]).find(x=>x.id===id); if(!a) return;
