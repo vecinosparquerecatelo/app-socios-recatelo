@@ -1069,7 +1069,7 @@ const PEST_NUEVAS=["fotos","plenos","bienestar","arboles","prensa","telefonos","
 // documentos de «Documentos de la asociación» (Inicio) con punto rojo delante; se quita en cada móvil al pulsarlo
 const DOCS_NUEVOS=["reunion-alcaldia-4-nov-2026-conclusiones","proyecto-horas-sociales-vandalismo","inclusion-lectura-facil"];
 // Avisos nuevos con punto rojo delante del título (Marta, 27-nov): se quita en cada móvil al pulsar el aviso
-const AVISOS_NUEVOS=["aviso-contenedores-cidade-viveiro","aviso-senal-paso-cebra-isaac-diaz-pardo","aviso-bolardo-isaac-diaz-pardo"];
+const AVISOS_NUEVOS=["aviso-senal-paso-cebra-isaac-diaz-pardo","aviso-bolardo-isaac-diaz-pardo"];
 function avisoNuevo(id){ if(!AVISOS_NUEVOS.includes(id)) return false; try{ return !localStorage.getItem("recatelo-aviso-visto-"+id); }catch(_){ return false; } }
 document.addEventListener("click", e=>{ const a=e.target.closest("article"), d=a&&a.querySelector("[data-avnuevo]"); if(d){ try{ localStorage.setItem("recatelo-aviso-visto-"+d.dataset.avnuevo,"1"); }catch(_){} d.remove(); } }, true);
 // Carpetas de fotos con punto rojo hasta que cada socio las abre (Marta, 27-nov)
