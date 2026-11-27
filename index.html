@@ -1005,19 +1005,11 @@ Castro-Recatelo a partir do documento orixinal en castelán.</em></p>
 <script src="conexion.js"></script>
 <script>
 const GROUPS = [
-  {label:"Inicio", subs:[["inicio","Inicio"]]},
-  {label:"Cómo usar la app", subs:[["comousar","Cómo usar la app"]]},
-  {label:"Cursos", subs:[["cursos","Cursos"]]},
-  {label:"Mercadiño", subs:[["mercadillo","Mercadiño"]]},
-  {label:"La asociación", subs:[["reuniones","Reuniones"],["proyectos","Proyectos notificados y registrados"],["colectivos","Colectivos"],["estatutos","Estatutos"],["bienestar","Bienestar animal"],["arboles","Protección arboleda"]]},
-  {label:"Parque Rosalía BIC", subs:[["bic","Parque Rosalía BIC"]]},
-  {label:"Encuestas", subs:[["encuestas","Encuestas"],["quienvota","Quién vota"]]},
-  {label:"Sugerencias", subs:[["sugerencias","Sugerencias"],["incidencias","Avisos del barrio"]]},
-  {label:"Prensa, radio y TV", subs:[["prensa","Prensa, radio y televisión"],["prensaborrar","Borrar noticias"]]},
-  {label:"Plenos municipales", subs:[["plenos","Plenos municipales"]]},
-  {label:"Agenda Cultural Lugo", subs:[["agenda","Agenda Cultural Lugo"]]},
-  {label:"Teléfonos de interés", subs:[["telefonos","Teléfonos de interés"]]},
-  {label:"Fotos y carteles", subs:[["fotos","Fotos"],["carteles","Carteles"]]},
+  {label:"Inicio", subs:[["inicio","Inicio"],["comousar","Cómo usar la app"]]},
+  {label:"El barrio", subs:[["sugerencias","Sugerencias"],["incidencias","Avisos del barrio"],["encuestas","Encuestas"],["quienvota","Quién vota"],["mercadillo","Mercadiño"]]},
+  {label:"La asociación", subs:[["reuniones","Reuniones"],["proyectos","Proyectos notificados y registrados"],["colectivos","Colectivos"],["estatutos","Estatutos"],["bienestar","Bienestar animal"],["arboles","Protección arboleda"],["bic","Parque Rosalía BIC"]]},
+  {label:"Actividades", subs:[["cursos","Cursos"],["agenda","Agenda Cultural Lugo"],["fotos","Fotos"],["carteles","Carteles"]]},
+  {label:"Concello y prensa", subs:[["plenos","Plenos municipales"],["prensa","Prensa, radio y televisión"],["prensaborrar","Borrar noticias"],["telefonos","Teléfonos de interés"]]},
   {label:"Mi cuenta", subs:[["misdatos","Mis datos"],["privacidad","Protección de datos"],["avisosact","Avisos activados"],["sinactivar","Sin activar la app"],["compartidos","Códigos compartidos"],["bloqueos","Bloquear códigos"]]}
 ];
 const TABS = GROUPS.flatMap(g=>g.subs.map(([id,label])=>({id,label})));
@@ -1096,7 +1088,7 @@ const PEST_VER={telefonos:"2"}; // 11-nov: teléfonos nuevos (Cruz Roja, mujer, 
 function pestNueva(id){ if(!PEST_NUEVAS.includes(id)) return false; const k="recatelo-visto-"+id+(PEST_VER[id]?"-"+PEST_VER[id]:""); if(S.tab===id){ try{ localStorage.setItem(k,"1"); }catch(_){} return false; } try{ return !localStorage.getItem(k); }catch(_){ return false; } }
 function renderTabs(){
   const cur = groupOf(S.tab), nm = mercNuevos(), cn = cursosNuevos(), an = PEST_NUEVAS.filter(pestNueva).length>0;
-  $("#tabs").innerHTML = GROUPS.map(g=>`<button role="tab" data-tab="${g===cur?S.tab:g.subs[0][0]}" aria-selected="${g===cur}">${g.label==="Plenos municipales"?`<span class="tab-sello" aria-hidden="true">${SELLO_PLENO(18)}</span>`:""}${g.label}${g.label==="Cursos"&&cn?` <span class="punto-rojo" aria-label="Novedad en Cursos"></span>`:""}${g.subs.some(([id])=>pestNueva(id))?` <span class="punto-rojo" aria-label="Novedad"></span>`:""}${g.label==="Mercadiño"&&nm?` <span class="nuevo-n" aria-label="${nm} nuevos">${nm}</span>`:""}</button>`).join("");
+  $("#tabs").innerHTML = GROUPS.map(g=>`<button role="tab" data-tab="${g===cur?S.tab:g.subs[0][0]}" aria-selected="${g===cur}">${g.subs.some(([id])=>id==="plenos")?`<span class="tab-sello" aria-hidden="true">${SELLO_PLENO(18)}</span>`:""}${g.label}${g.subs.some(([id])=>id==="cursos")&&cn?` <span class="punto-rojo" aria-label="Novedad en Cursos"></span>`:""}${g.subs.some(([id])=>pestNueva(id))?` <span class="punto-rojo" aria-label="Novedad"></span>`:""}${g.subs.some(([id])=>id==="mercadillo")&&nm?` <span class="nuevo-n" aria-label="${nm} nuevos">${nm}</span>`:""}</button>`).join("");
 }
 $("#tabs").addEventListener("click", e=>{ const b=e.target.closest("[data-tab]"); if(b) go(b.dataset.tab); });
 function go(tab){
