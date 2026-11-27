@@ -1577,6 +1577,27 @@ function moverFotosForm(){
     cerrar(); alert(`Listo: ${ok} foto${ok===1?"":"s"} movida${ok===1?"":"s"} a «${dest}»${mal?`. ${mal} no se ${mal===1?"ha":"han"} podido mover`:""}.`);
   };
 }
+/* Capturas de pantalla (WhatsApp) con varias fotos juntas en «Fotos denuncia» (Marta, 27-nov): las fotos ya van separadas.
+   La directiva ve las capturas encontradas (más del doble de altas que anchas) y las borra con un botón. */
+const WA={hechas:false, malas:[]};
+async function buscarCapturasWA(){
+  if(WA.hechas||!S.canEdit) return; WA.hechas=true;
+  const cand=S.items.filter(i=>i.section==="fotos"&&!i.socio&&i.album==="Fotos denuncia"&&i.photo&&!/pdf/.test(i.photoType||"")&&!SEMILLAS.some(x=>x.id===i.id));
+  const malas=[];
+  await Promise.all(cand.map(async it=>{ try{ const u=await imgSrcF(it.photo), im=new Image(); await new Promise((ok,ko)=>{ im.onload=ok; im.onerror=ko; im.src=u; }); if(im.naturalWidth && im.naturalHeight/im.naturalWidth>1.9) malas.push(it.id); }catch(_){} }));
+  WA.malas=malas; if(malas.length && S.tab==="fotos" && S.filter.fotos==="Fotos denuncia") render();
+}
+function avisoCapturasWA(){
+  const ids=WA.malas.filter(id=>S.items.some(i=>i.id===id)); if(!ids.length) return "";
+  const its=ids.map(id=>S.items.find(i=>i.id===id));
+  return `<div class="card" id="wa-box"><h3>Capturas de WhatsApp con varias fotos juntas (solo directiva)</h3><p class="meta">Hay ${ids.length} captura${ids.length===1?"":"s"} de pantalla con la hora y varias fotos juntas. Las fotos ya están separadas en esta carpeta, una a una. Revisa que son estas y bórralas.</p>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin:10px 0">${its.map(it=>`<img src="${imgSrc(it.photo)}" alt="" style="height:110px;border-radius:6px;border:1px solid var(--line,#ddd)">`).join("")}</div>
+    <p class="err" id="wa-err" hidden></p><div class="row-actions"><button type="button" class="btn danger small" id="wa-borrar">Borrar ${ids.length===1?"esta captura":"estas "+ids.length+" capturas"}</button></div></div>`;
+}
+document.addEventListener("click", async e=>{ const b=e.target.closest("#wa-borrar"); if(!b) return; b.disabled=true; b.textContent="Borrando…"; let mal=0;
+  for(const id of WA.malas){ const it=S.items.find(i=>i.id===id); if(!it) continue; try{ await S.db.collection("items").doc(id).delete(); if(it.photo&&S.assets){ try{ await S.assets.delete(it.photo) }catch(_){} } S.items=S.items.filter(i=>i.id!==id); }catch(_){ mal++; } }
+  if(mal){ const er=$("#wa-err"); if(er){ er.textContent="No se han podido borrar "+mal+". Vuelve a intentarlo."; er.hidden=false; } b.disabled=false; b.textContent="Volver a intentarlo"; return; }
+  WA.malas=[]; render(); });
 function pieDe(it){ const t=(T(it)||"").replace(/\s*[·\-–,(]?\s*(publicad[ao] (el )?)?(\d{1,2}[\/.\-]\d{1,2}[\/.\-]\d{2,4}|\d{4}-\d{2}-\d{2})\)?/gi,"").trim(); return t && t!=="Foto" && t!==it.album ? t : ""; }
 /* listado de documentos (proyectos, reuniones y BIC) debajo del aviso de la fiesta */
 function listaDocs(){
@@ -1815,7 +1836,7 @@ const VIEWS = {
       return `<div><h2>Fotos</h2><p class="lead">Las fotos de las Festas de Recatelo y de las demás actividades del barrio, por carpetas.</p></div>${S.canEdit?`<div class="filters" data-filter="fotos"><button data-f="__vistas">👁 Quién mira las fotos (solo directiva)</button></div>`:""}
         <section class="carpetas" data-filter="fotos">${albs.map(card).join("")}</section>`;
     }
-    const list=all.filter(i=>(i.album||"Otros")===f); S.verList=list.filter(i=>i.photo); registrarFoto(f); carpetaNueva(f);
+    const list=all.filter(i=>(i.album||"Otros")===f); S.verList=list.filter(i=>i.photo); registrarFoto(f); carpetaNueva(f); if(S.canEdit&&f==="Fotos denuncia") setTimeout(buscarCapturasWA,0);
     const trimAll = S.canEdit && list.length ? `<div class="row-actions">${!SOC_ALBS.includes(f)&&list.some(i=>i.photo&&!i.socio)?`<button type="button" class="btn ghost small" data-pix-all>Pixelar las caras de toda la carpeta</button>`:""}<button type="button" class="btn ghost small" data-mover-fotos>Mover fotos a otra carpeta</button></div>` : "";
     const puedeSubir = SOC_ALBS.includes(f) && S.uid && !S.canEdit && !S.noDb && (window.subirFotoSocio || S.assets);
     const n=(S.fsElegidas||[]).length;
@@ -1826,7 +1847,7 @@ const VIEWS = {
       <p class="err" id="fs-err" hidden></p><div class="row-actions"><button class="btn" id="fs-send">Subir ${n>1?n+" fotos":"foto"}</button></div></form>` : "";
     return `<div class="filters" data-filter="fotos"><button data-f="todas">← Todas las carpetas</button></div>
       <div><h2>${esc(f)}</h2><p class="lead">${list.length} foto${list.length===1?"":"s"}</p></div>${subir}
-      ${trimAll}${list.length?`<section class="photos">${list.map(it=>photoCard(it, S.verList.indexOf(it))).join("")}</section>`:emptyBox("Esta carpeta todavía está vacía.",S.canEdit?"Pulsa “+ Añadir foto” para subir la primera.":"Pronto subiremos las fotos.")}`;
+      ${trimAll}${S.canEdit&&f==="Fotos denuncia"?avisoCapturasWA():""}${list.length?`<section class="photos">${list.map(it=>photoCard(it, S.verList.indexOf(it))).join("")}</section>`:emptyBox("Esta carpeta todavía está vacía.",S.canEdit?"Pulsa “+ Añadir foto” para subir la primera.":"Pronto subiremos las fotos.")}`;
   },
   buzon(sinIntro){
     const intro = sinIntro ? "" : `<div><h2>Buzón de sugerencias</h2><p class="lead">Cuéntale a la directiva lo que te preocupa del barrio o lo que mejorarías. Solo la directiva lee los mensajes.</p></div>`;
