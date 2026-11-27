@@ -1065,9 +1065,16 @@ function cursosVisto(){ try{ let v=localStorage.getItem("recatelo-cursos-visto")
 function cursosNuevos(){ if(S.tab==="cursos"){ try{ localStorage.setItem("recatelo-cursos-visto",new Date().toISOString()); }catch(_){} return false; } const v=cursosVisto(); return (S.items||[]).some(i=>i.section==="cursos" && (ICTUS_HECHO(i)&&"2026-11-21T20:50:00Z">(i.updatedAt||"") ? "2026-11-21T20:50:00Z" : (i.updatedAt||i.createdAt||""))>v); } /* 21-nov: punto rojo en Cursos por el sello «Realizado» del ictus */
 function mercNuevos(){ if(S.tab==="mercadillo") return 0; const v=mercVisto(); let n=0; for(const d of S.mercAll) if(d.uid!==S.uid) for(const a of (d.anuncios||[])) if((a.at||"")>v) n++; return n; }
 // Pestañas nuevas con punto rojo hasta que cada socio las abre (se recuerda en este móvil)
-const PEST_NUEVAS=["plenos","bienestar","arboles","prensa","telefonos","encuestas","agenda","comousar","proyectos"];
+const PEST_NUEVAS=["fotos","plenos","bienestar","arboles","prensa","telefonos","encuestas","agenda","comousar","proyectos"];
 // documentos de «Documentos de la asociación» (Inicio) con punto rojo delante; se quita en cada móvil al pulsarlo
 const DOCS_NUEVOS=["reunion-alcaldia-4-nov-2026-conclusiones","proyecto-horas-sociales-vandalismo","inclusion-lectura-facil"];
+// Avisos nuevos con punto rojo delante del título (Marta, 27-nov): se quita en cada móvil al pulsar el aviso
+const AVISOS_NUEVOS=["aviso-contenedores-cidade-viveiro","aviso-senal-paso-cebra-isaac-diaz-pardo","aviso-bolardo-isaac-diaz-pardo"];
+function avisoNuevo(id){ if(!AVISOS_NUEVOS.includes(id)) return false; try{ return !localStorage.getItem("recatelo-aviso-visto-"+id); }catch(_){ return false; } }
+document.addEventListener("click", e=>{ const a=e.target.closest("article"), d=a&&a.querySelector("[data-avnuevo]"); if(d){ try{ localStorage.setItem("recatelo-aviso-visto-"+d.dataset.avnuevo,"1"); }catch(_){} d.remove(); } }, true);
+// Carpetas de fotos con punto rojo hasta que cada socio las abre (Marta, 27-nov)
+const CARPETAS_NUEVAS=["Fotos denuncia","Curso de cestería tradicional 2025"];
+function carpetaNueva(a){ if(!CARPETAS_NUEVAS.includes(a)) return false; const k="recatelo-carpeta-vista-27nov-"+a; if(S.tab==="fotos"&&S.filter.fotos===a){ try{ localStorage.setItem(k,"1"); }catch(_){} return false; } try{ return !localStorage.getItem(k); }catch(_){ return false; } }
 function docNuevo(id){ if(!DOCS_NUEVOS.includes(id)) return false; try{ return !localStorage.getItem("recatelo-doc-visto-"+id); }catch(_){ return false; } }
 // Vídeos de «Cómo usar la app»: el botón grande ▶ arranca el vídeo y desaparece
 document.addEventListener("click", e=>{ const b=e.target.closest(".vplay"); if(!b) return; const v=b.parentNode.querySelector("video"); b.remove(); if(v) v.play().catch(()=>{}); });
@@ -1297,7 +1304,7 @@ function avisoCard(it){
   const bSol = S.canEdit ? `<div class="row-actions"><button type="button" class="btn small ${it.solucionado?"ghost":"sol"}" data-sol="${esc(it.id)}">${reuAlc ? (it.solucionado?"Quitar «Realizada»":"✔ Marcar como realizada") : (it.solucionado?"Quitar «Solucionado»":"✔ Marcar como solucionado")}</button></div>` : "";
   /* Reunión con Alcaldía con foto: el sello «Realizada» va sobre el texto, no sobre la foto (Marta, 7-nov). */
   const selloTexto = reuAlc && it.solucionado && it.photo;
-  const texto = `<h3>${esc(T(it))}</h3>${it.place?`<div class="meta">📍 ${esc(it.place)}</div>`:""}
+  const texto = `<h3>${avisoNuevo(it.id)?`<span class="punto-rojo" data-avnuevo="${esc(it.id)}" aria-label="Novedad" style="vertical-align:middle;margin:0 8px 0 0"></span>`:""}${esc(T(it))}</h3>${it.place?`<div class="meta">📍 ${esc(it.place)}</div>`:""}
     ${it.body?`<p class="body">${esc(B(it))}</p>`:""}`;
   return `<article class="card${it.solucionado||it.realizado?" con-sello":""}">${selloTexto?"":sol}<div class="meta">${tipo}${it.date?`<span>${fmtDate(it.date)}${it.time?" · "+esc(it.time):""}</span>`:""}</div>
     ${it.cartelArriba?cartelAviso(it):""}${selloTexto?`<div class="sello-zona">${sol}${texto}</div>`:texto}${it.cartelArriba?"":cartelAviso(it)}${attach(it)}${fotoAviso(it)}${videoAviso(it)}${it.apuntarse?inscAviso(it):""}${it.sinBotones?"":opcionesDir(it,false)+bSol}${adminRow(it)}</article>`;
@@ -1570,7 +1577,7 @@ function moverFotosForm(){
     cerrar(); alert(`Listo: ${ok} foto${ok===1?"":"s"} movida${ok===1?"":"s"} a «${dest}»${mal?`. ${mal} no se ${mal===1?"ha":"han"} podido mover`:""}.`);
   };
 }
-function pieDe(it){ const t=(it.title||"").replace(/\s*[·\-–,(]?\s*(publicad[ao] (el )?)?(\d{1,2}[\/.\-]\d{1,2}[\/.\-]\d{2,4}|\d{4}-\d{2}-\d{2})\)?/gi,"").trim(); return t && t!=="Foto" && t!==it.album ? t : ""; }
+function pieDe(it){ const t=(T(it)||"").replace(/\s*[·\-–,(]?\s*(publicad[ao] (el )?)?(\d{1,2}[\/.\-]\d{1,2}[\/.\-]\d{2,4}|\d{4}-\d{2}-\d{2})\)?/gi,"").trim(); return t && t!=="Foto" && t!==it.album ? t : ""; }
 /* listado de documentos (proyectos, reuniones y BIC) debajo del aviso de la fiesta */
 function listaDocs(){
   const docs=[];
@@ -1804,11 +1811,11 @@ const VIEWS = {
     const albs=[...ALBUMES.filter(a=>a!=="Otros"), ...new Set(all.map(i=>i.album||"Otros").filter(a=>!ALBUMES.includes(a))), "Otros"];
     if(f==="todas"){
       const card=a=>{ const ps=all.filter(i=>(i.album||"Otros")===a); if(a==="Otros"&&!ps.length) return ""; const c=ps.find(i=>i.photo&&!/pdf/.test(i.photoType||""));
-        return `<button class="carpeta" data-f="${esc(a)}"><span class="cov">${c?`<img src="${imgSrc(c.photo)}" alt="" loading="lazy">`:"📁"}</span><strong>${esc(a)}</strong><span class="meta">${ps.length} foto${ps.length===1?"":"s"}</span></button>`; };
+        return `<button class="carpeta" data-f="${esc(a)}"><span class="cov">${c?`<img src="${imgSrc(c.photo)}" alt="" loading="lazy">`:"📁"}</span><strong>${esc(a)}${carpetaNueva(a)?` <span class="punto-rojo" aria-label="Novedad"></span>`:""}</strong><span class="meta">${ps.length} foto${ps.length===1?"":"s"}</span></button>`; };
       return `<div><h2>Fotos</h2><p class="lead">Las fotos de las Festas de Recatelo y de las demás actividades del barrio, por carpetas.</p></div>${S.canEdit?`<div class="filters" data-filter="fotos"><button data-f="__vistas">👁 Quién mira las fotos (solo directiva)</button></div>`:""}
         <section class="carpetas" data-filter="fotos">${albs.map(card).join("")}</section>`;
     }
-    const list=all.filter(i=>(i.album||"Otros")===f); S.verList=list.filter(i=>i.photo); registrarFoto(f);
+    const list=all.filter(i=>(i.album||"Otros")===f); S.verList=list.filter(i=>i.photo); registrarFoto(f); carpetaNueva(f);
     const trimAll = S.canEdit && list.length ? `<div class="row-actions">${!SOC_ALBS.includes(f)&&list.some(i=>i.photo&&!i.socio)?`<button type="button" class="btn ghost small" data-pix-all>Pixelar las caras de toda la carpeta</button>`:""}<button type="button" class="btn ghost small" data-mover-fotos>Mover fotos a otra carpeta</button></div>` : "";
     const puedeSubir = SOC_ALBS.includes(f) && S.uid && !S.canEdit && !S.noDb && (window.subirFotoSocio || S.assets);
     const n=(S.fsElegidas||[]).length;
