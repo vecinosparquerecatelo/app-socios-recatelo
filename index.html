@@ -2057,7 +2057,9 @@ const VIEWS = {
       <div data-noi18n class="stack">
       <div class="pleno-cab"><div class="pleno-sello">${SELLO_PLENO(118)}</div>
         <h2>${T("Plenos municipales","Plenos municipais")}</h2>
-        <p class="lead">${T("Aquí podréis ver los plenos municipales del Concello de Lugo, que se celebran el último jueves de cada mes. Esperamos que os sea de utilidad para ver lo que se vota y lo que se habla en cada pleno.","Aquí poderedes ver os plenos municipais do Concello de Lugo, que se celebran o último xoves de cada mes. Agardamos que vos sexa de utilidade para ver o que se vota e o que se fala en cada pleno.")}</p></div>
+        <p class="lead">${T("Aquí podréis ver los plenos municipales del Concello de Lugo, que se celebran el último jueves de cada mes. Esperamos que os sea de utilidad para ver lo que se vota y lo que se habla en cada pleno.","Aquí poderedes ver os plenos municipais do Concello de Lugo, que se celebran o último xoves de cada mes. Agardamos que vos sexa de utilidade para ver o que se vota e o que se fala en cada pleno.")}</p>
+        <a class="btn ghost small" href="https://www.youtube.com/@concellodelugooficial/streams" target="_blank" rel="noopener">▶ ${T("Canal oficial del Concello en YouTube","Canle oficial do Concello en YouTube")}</a>
+        <p class="meta" style="margin:0">${T("Vídeos públicos del Concello de Lugo","Vídeos públicos do Concello de Lugo")}</p></div>
       <article class="card pleno-prox"><span class="ico" aria-hidden="true"><small>${MESES[prox.getMonth()].slice(0,3).toUpperCase()}</small><b>${prox.getDate()}</b></span><div><p class="meta">${T("Próximo pleno ordinario","Próximo pleno ordinario")}</p><p><strong>${larga(iso(prox))}</strong></p><p class="meta" style="margin-top:2px">${T("Fecha habitual. El Concello puede cambiarla.","Data habitual. O Concello pode cambiala.")}</p></div></article>
       <section class="stack"><h3>${T("Vídeos de los plenos","Vídeos dos plenos")}</h3>
       ${lista.length?lista.map(ficha).join(""):`<article class="card pleno-vacio">${T("Muy pronto estará aquí el vídeo del primer pleno.","Moi pronto estará aquí o vídeo do primeiro pleno.")}</article>`}
